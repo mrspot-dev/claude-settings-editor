@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="de" style="color-scheme: dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code Settings Editor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Space Grotesk', 'system-ui', 'sans-serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            bg: { DEFAULT: '#0A0A0F', alt: '#12121A', muted: '#1A1A24', elevated: '#22222E' },
+            fg: { DEFAULT: '#FAFAFA', muted: '#71717A', dim: '#52525B' },
+            accent: { DEFAULT: '#F59E0B', hover: '#FBBF24', muted: 'rgba(245, 158, 11, 0.15)' },
+            glass: { DEFAULT: 'rgba(26, 26, 36, 0.6)', hover: 'rgba(26, 26, 36, 0.8)', solid: '#1A1A24' },
+            border: { DEFAULT: 'rgba(255, 255, 255, 0.08)', hover: 'rgba(255, 255, 255, 0.15)', accent: 'rgba(245, 158, 11, 0.3)' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #0A0A0F; color: #FAFAFA; }
+    .font-display { font-family: 'Space Grotesk', system-ui, sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Noise texture overlay */
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.015;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+    /* Tab transition with stagger */
+    .tab-content { animation: fadeIn 0.25s cubic-bezier(0.22, 1, 0.36, 1); }
+    .tab-content > * { animation: staggerIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    .tab-content > *:nth-child(1) { animation-delay: 0.03s; }
+    .tab-content > *:nth-child(2) { animation-delay: 0.06s; }
+    .tab-content > *:nth-child(3) { animation-delay: 0.09s; }
+    .tab-content > *:nth-child(4) { animation-delay: 0.12s; }
+    .tab-content > *:nth-child(5) { animation-delay: 0.15s; }
+    .tab-content > *:nth-child(6) { animation-delay: 0.18s; }
+    .tab-content > *:nth-child(7) { animation-delay: 0.21s; }
+    .tab-content > *:nth-child(8) { animation-delay: 0.24s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes staggerIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Toggle switch */
+    .toggle { position: relative; width: 44px; height: 24px; border-radius: 12px; cursor: pointer; transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1); border: 1px solid rgba(255,255,255,0.06); }
+    .toggle:hover { border-color: rgba(255,255,255,0.15); transform: scale(1.05); }
+    .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #71717A; transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1); box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+    .toggle.active { background: #F59E0B !important; box-shadow: 0 0 24px rgba(245, 158, 11, 0.3); border-color: rgba(245,158,11,0.4); }
+    .toggle.active::after { transform: translateX(20px); background: #0A0A0F; }
+    .toggle.active:hover { box-shadow: 0 0 30px rgba(245, 158, 11, 0.45); }
+
+    /* Focus glow */
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: rgba(245, 158, 11, 0.5) !important;
+      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2), 0 0 20px rgba(245, 158, 11, 0.1);
+    }
+
+    /* Select styling */
+    select.setting-input {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23F59E0B' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 40px !important;
+      cursor: pointer;
+      border-left: 3px solid rgba(245, 158, 11, 0.15);
+    }
+    select.setting-input.has-value {
+      border-left: 3px solid #F59E0B;
+      background-color: rgba(245, 158, 11, 0.06);
+      color: #FBBF24;
+    }
+    select.setting-input:hover {
+      background-color: rgba(245, 158, 11, 0.08);
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+    select option { background: #1A1A24; color: #FAFAFA; padding: 10px; }
+    select option:checked { background: #F59E0B; color: #0A0A0F; font-weight: 600; }
+
+    /* Notification slide */
+    .notification-enter { animation: slideIn 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-16px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+    /* JSON preview */
+    .json-preview { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; }
+    .json-preview .key { color: #FBBF24; }
+    .json-preview .string { color: #34d399; }
+    .json-preview .number { color: #818cf8; }
+    .json-preview .boolean { color: #f472b6; }
+    .json-preview .null { color: #71717A; }
+
+    /* Glass card */
+    .glass {
+      background: rgba(26, 26, 36, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .glass:hover { border-color: rgba(255, 255, 255, 0.15); box-shadow: 0 4px 24px rgba(0,0,0,0.2); }
+
+    /* Ambient orb */
+    .ambient-orb {
+      position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.04) 0%, transparent 70%);
+      filter: blur(120px);
+    }
+
+    /* Buttons */
+    .btn-primary { transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
+    .btn-primary:hover { filter: brightness(1.15); box-shadow: 0 0 24px rgba(245, 158, 11, 0.45); transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0) scale(0.97); }
+
+    .btn-secondary { transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
+    .btn-secondary:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.3); transform: translateY(-1px); box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+    .btn-secondary:active { transform: translateY(0) scale(0.97); }
+
+    .btn-danger { transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
+    .btn-danger:hover { background: rgba(239,68,68,0.12); box-shadow: 0 0 20px rgba(239,68,68,0.2); transform: translateY(-1px); }
+    .btn-danger:active { transform: translateY(0) scale(0.97); }
+  </style>
+</head>
+<body class="min-h-screen relative overflow-hidden" x-data="settingsEditor()">
+
+  <!-- Ambient Orbs -->
+  <div class="ambient-orb" style="width:600px;height:600px;top:-200px;right:-100px;"></div>
+  <div class="ambient-orb" style="width:500px;height:500px;bottom:-150px;left:-100px;"></div>
+  <div class="ambient-orb" style="width:400px;height:400px;top:40%;left:30%;background:radial-gradient(circle, rgba(245,158,11,0.02) 0%, transparent 70%);"></div>
+
+  <!-- Notification Toast -->
+  <div x-show="notification.show" x-transition
+       class="notification-enter fixed top-4 right-4 z-50 px-5 py-3 rounded-full shadow-lg font-medium text-sm flex items-center gap-2 glass"
+       :class="notification.type === 'success'
+         ? 'text-emerald-300 border-emerald-500/20'
+         : notification.type === 'error'
+         ? 'text-red-300 border-red-500/20'
+         : 'text-amber-300 border-amber-500/20'"
+       style="backdrop-filter:blur(12px)">
+    <span x-text="notification.message"></span>
+  </div>
+
+  <div class="flex h-screen overflow-hidden relative z-10">
+
+    <!-- ═══════════════ SIDEBAR ═══════════════ -->
+    <aside class="w-56 flex-shrink-0 flex flex-col border-r border-[rgba(255,255,255,0.08)]" style="background: rgba(18, 18, 26, 0.8); backdrop-filter: blur(12px);">
+      <!-- Logo -->
+      <div class="px-4 py-5 border-b border-[rgba(255,255,255,0.08)]">
+        <h1 class="font-display font-bold text-base tracking-tight text-white flex items-center gap-2.5">
+          <span class="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-amber-600 flex items-center justify-center text-bg text-xs font-bold shadow-[0_0_24px_rgba(245,158,11,0.35)]">CC</span>
+          Settings Editor
+        </h1>
+        <p class="text-[10px] text-fg-dim/40 mt-1.5 font-mono">v1.0 · made with 💛</p>
+        <p class="text-[10px] text-fg-dim/40 mt-0.5 font-mono">by <a href="https://github.com/mrspot-dev" target="_blank" class="text-fg-muted hover:text-accent transition-colors">mrspot-dev</a></p>
+      </div>
+
+      <!-- Nav Tabs -->
+      <nav class="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
+        <template x-for="tab in tabs.filter(t => t.id !== 'separator')" :key="tab.id">
+          <button @click="activeTab = tab.id"
+                  :class="activeTab === tab.id
+                    ? 'bg-accent/10 text-accent border-accent/25 shadow-[inset_0_0_20px_rgba(245,158,11,0.06)]'
+                    : 'text-fg-muted border-transparent hover:bg-[rgba(255,255,255,0.04)] hover:text-fg hover:translate-x-0.5'"
+                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border"
+                  :style="tab.id === 'design-prompts' ? 'margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06);' : ''">
+            <span x-html="tab.icon" class="w-4 h-4 flex-shrink-0" :class="activeTab === tab.id ? 'opacity-100' : 'opacity-50'"></span>
+            <span x-text="tab.label"></span>
+            <span x-show="activeTab === tab.id" class="ml-auto w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_8px_rgba(245,158,11,0.6)]"></span>
+          </button>
+        </template>
+      </nav>
+
+      <!-- File Info -->
+      <div class="px-3 py-3 border-t border-[rgba(255,255,255,0.08)] text-xs text-fg-dim">
+        <div x-show="fileName" class="flex items-center gap-1.5 truncate">
+          <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          <span x-text="fileName" class="truncate font-mono"></span>
+          <span x-show="unsaved" class="text-accent ml-auto">*</span>
+        </div>
+        <div x-show="!fileName" class="text-fg-dim/50 italic">Keine Datei geladen</div>
+      </div>
+    </aside>
+
+    <!-- ═══════════════ MAIN ═══════════════ -->
+    <main class="flex-1 flex flex-col overflow-visible">
+
+      <!-- Header Bar -->
+      <header class="flex items-center justify-between px-6 py-3.5 border-b border-[rgba(255,255,255,0.08)] flex-shrink-0 overflow-visible" style="background: #12121A; position: relative; z-index: 40;">
+        <div>
+          <h2 class="font-display font-bold text-lg text-white tracking-tight flex items-center gap-2" x-text="tabs.find(t => t.id === activeTab)?.label"></h2>
+          <p class="text-xs text-fg-muted mt-0.5" x-text="tabs.find(t => t.id === activeTab)?.desc"></p>
+        </div>
+        <!-- Design Prompts: Search centered in header -->
+        <div x-show="activeTab === 'design-prompts'" class="flex-1 max-w-md mx-6">
+          <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input x-model="designSearch" type="text" placeholder="Style suchen…"
+                   class="w-full pl-9 pr-4 py-2 rounded-xl text-sm font-body text-fg placeholder-fg-dim focus:outline-none transition-all border border-[rgba(255,255,255,0.08)] focus:border-accent/40 bg-[rgba(255,255,255,0.04)]" />
+          </div>
+        </div>
+        <div class="flex items-center gap-2" x-show="activeTab !== 'design-prompts'">
+          <!-- Template Picker -->
+          <div class="relative" x-data="{ tplOpen: false }">
+            <button @click="tplOpen = !tplOpen" class="btn-secondary px-4 py-1.5 text-xs font-mono font-medium rounded-full border border-accent/30 text-accent hover:bg-accent/10 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+              Templates
+              <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': tplOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div x-show="tplOpen" @click.away="tplOpen = false" x-transition
+                 class="absolute right-0 top-full mt-2 rounded-2xl overflow-hidden z-50 bg-[#12121A] flex"
+                 :class="customTemplates.length > 0 ? 'w-[38rem]' : 'w-80'"
+                 style="border: 1px solid #2A2A36; box-shadow: 0 20px 60px #000, 0 0 0 1px #1A1A24;">
+              <!-- Left: Built-in Templates -->
+              <div class="w-80 flex-shrink-0 overflow-y-auto" style="max-height: 70vh;">
+                <!-- Save as Template -->
+                <div class="px-4 py-3 bg-[#16161F] border-b border-[#2A2A36]">
+                  <template x-if="!showSaveTplDialog">
+                    <button @click.stop="showSaveTplDialog = true" class="w-full text-left text-xs font-display font-semibold text-accent hover:text-white transition-colors flex items-center gap-1.5">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                      Aktuelle Settings als Template speichern
+                    </button>
+                  </template>
+                  <template x-if="showSaveTplDialog">
+                    <div class="flex gap-2">
+                      <input x-model="newTplName" @keydown.enter="saveAsTemplate()" @keydown.escape="showSaveTplDialog = false; newTplName = ''" x-init="$nextTick(() => $el.focus())"
+                             placeholder="Template-Name…" class="flex-1 px-2.5 py-1.5 text-xs rounded-lg bg-[#0A0A10] border border-[#2A2A36] text-fg placeholder-fg-dim focus:border-accent/50 focus:outline-none" />
+                      <button @click="saveAsTemplate()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-accent text-bg hover:bg-accent/90 transition-colors">Speichern</button>
+                      <button @click="showSaveTplDialog = false; newTplName = ''" class="px-2 py-1.5 text-xs text-fg-dim hover:text-fg transition-colors">&times;</button>
+                    </div>
+                  </template>
+                </div>
+                <div class="px-4 py-2 bg-[#12121A] border-b border-[#2A2A36]/50">
+                  <p class="text-[10px] font-semibold text-fg-dim uppercase tracking-wider">Vorlagen</p>
+                </div>
+                <div class="py-1 bg-[#12121A]">
+                  <template x-for="tpl in templates" :key="tpl.id">
+                    <button @click="applyTemplate(tpl.id); tplOpen = false"
+                            class="w-full text-left px-4 py-2.5 group bg-[#12121A] hover:bg-[#1E1E2A] transition-colors">
+                      <div class="flex items-center gap-2.5">
+                        <span class="w-2 h-2 rounded-full flex-shrink-0" :class="tpl.color"></span>
+                        <div class="flex-1 min-w-0">
+                          <div class="text-sm font-medium text-fg group-hover:text-accent transition-colors" x-text="tpl.name"></div>
+                          <div class="text-[11px] text-fg-dim mt-0.5 leading-snug" x-text="tpl.desc"></div>
+                        </div>
+                      </div>
+                    </button>
+                  </template>
+                </div>
+              </div>
+              <!-- Right: Custom Templates -->
+              <template x-if="customTemplates.length > 0">
+                <div class="flex-1 border-l border-[#2A2A36] overflow-y-auto" style="max-height: 70vh;">
+                  <div class="px-4 py-3 bg-[#16161F] border-b border-[#2A2A36]">
+                    <p class="text-xs font-display font-semibold text-fg flex items-center gap-1.5">
+                      <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                      Eigene Templates
+                    </p>
+                  </div>
+                  <div class="py-1 bg-[#12121A]">
+                    <template x-for="tpl in customTemplates" :key="tpl.id">
+                      <div class="w-full flex items-center px-4 py-2.5 group bg-[#12121A] hover:bg-[#1E1E2A] transition-colors">
+                        <button @click="applyTemplate(tpl.id); tplOpen = false" class="flex-1 text-left flex items-center gap-2.5 min-w-0">
+                          <span class="w-2 h-2 rounded-full flex-shrink-0" :class="tpl.color"></span>
+                          <div class="flex-1 min-w-0">
+                            <div class="text-sm font-medium text-fg group-hover:text-accent transition-colors" x-text="tpl.name"></div>
+                            <div class="text-[11px] text-fg-dim mt-0.5 leading-snug" x-text="tpl.desc"></div>
+                          </div>
+                        </button>
+                        <button @click.stop="deleteCustomTemplate(tpl.id)" class="ml-2 p-1 rounded text-fg-dim hover:text-red-400 hover:bg-red-400/10 transition-colors flex-shrink-0" title="Template löschen">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+          <div class="w-px h-5 bg-[rgba(255,255,255,0.08)]"></div>
+          <button @click="openFile()" class="btn-secondary px-4 py-1.5 text-xs font-mono font-medium rounded-full border border-[rgba(255,255,255,0.15)] text-fg">
+            Open
+          </button>
+          <button @click="saveFile()" class="btn-secondary px-4 py-1.5 text-xs font-mono font-medium rounded-full border border-[rgba(255,255,255,0.15)] text-fg">
+            Save
+          </button>
+          <button @click="exportJson()" class="btn-primary px-4 py-1.5 text-xs font-mono font-medium rounded-full bg-accent text-bg">
+            Export JSON
+          </button>
+          <button @click="resetSettings()" class="btn-danger px-4 py-1.5 text-xs font-mono font-medium rounded-full text-red-400 border border-red-500/20">
+            Reset
+          </button>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <div class="flex-1 overflow-y-auto" style="background: radial-gradient(ellipse at top, rgba(245, 158, 11, 0.02) 0%, transparent 50%);">
+        <div class="max-w-3xl mx-auto px-6 py-8">
+
+          <!-- ═══ TAB: General ═══ -->
+          <div x-show="activeTab === 'general'" class="tab-content space-y-6">
+            <div class="settings-group">
+              <label class="setting-label">Model</label>
+              <p class="setting-desc">Das Standard-Modell für Claude Code. Aliases zeigen immer auf die neueste Version — wenn Anthropic ein neues Modell released, wechselt der Alias automatisch. Leer = Opus (das stärkste Modell, Standard bei Max-Abo).</p>
+              <select x-model="settings.model" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.model }">
+                <option value="">Opus (Standard — stärkstes Reasoning, ideal für komplexe Tasks)</option>
+                <option value="opus">Opus — Stärkstes Reasoning, ideal für Architektur & komplexe Probleme</option>
+                <option value="sonnet">Sonnet — Schneller & günstiger, für die meisten täglichen Coding-Tasks ausreichend</option>
+                <option value="haiku">Haiku — Am schnellsten und günstigsten, für einfache Aufgaben</option>
+                <option value="opusplan">OpusPlan — Opus denkt & plant, Sonnet schreibt den Code (Opus-Qualität, Sonnet-Kosten)</option>
+              </select>
+            </div>
+
+            <div class="settings-group">
+              <label class="setting-label">Effort Level</label>
+              <p class="setting-desc">Wie viel Denkaufwand Claude in Antworten steckt. Bei "low" antwortet Claude knapp und schnell — gut für einfache Fragen. "high" aktiviert tieferes Reasoning mit mehr Kontext-Analyse — ideal für Code-Reviews, Architektur-Entscheidungen und Debugging.</p>
+              <select x-model="settings.effortLevel" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.effortLevel }">
+                <option value="">Standard (high)</option>
+                <option value="low">Low — Schnelle, knappe Antworten</option>
+                <option value="medium">Medium — Ausgewogen</option>
+                <option value="high">High — Gründlich und detailliert</option>
+              </select>
+            </div>
+
+            <div class="settings-group">
+              <label class="setting-label">Output Style</label>
+              <p class="setting-desc">Steuert den Stil der Antworten. Plugins wie "Explanatory Output Style" oder "Learning Output Style" registrieren eigene Styles, die man hier per Name aktiviert. Der Style beeinflusst Ausführlichkeit, Struktur und Tonalität — nicht die Fähigkeiten.</p>
+              <div x-data="{ custom: false }" class="flex gap-2">
+                <template x-if="!custom">
+                  <select x-model="settings.outputStyle" @change="markUnsaved()" class="setting-input flex-1" :class="{ 'has-value': settings.outputStyle }">
+                    <option value="">Standard (kein Style)</option>
+                    <option value="explanatory">Explanatory — Erklärender Output mit Insights</option>
+                    <option value="learning">Learning — Didaktisch, lernorientiert</option>
+                    <option value="concise">Concise — Kurz und knapp</option>
+                    <option value="verbose">Verbose — Ausführlich und detailliert</option>
+                    <option value="formal">Formal — Sachlich und professionell</option>
+                    <option value="casual">Casual — Locker und umgangssprachlich</option>
+                  </select>
+                </template>
+                <template x-if="custom">
+                  <input type="text" x-model="settings.outputStyle" @input="markUnsaved()" placeholder="Eigenen Style eingeben…" class="setting-input flex-1">
+                </template>
+                <button @click="custom = !custom; if(!custom && !['','explanatory','learning','concise','verbose','formal','casual'].includes(settings.outputStyle)) settings.outputStyle = ''" class="px-3 py-2 rounded-xl text-xs font-mono border border-[rgba(255,255,255,0.08)] hover:border-accent/30 hover:text-accent transition-colors" :class="custom ? 'text-accent border-accent/30' : 'text-fg-dim'" x-text="custom ? 'Liste' : 'Eigener'"></button>
+              </div>
+            </div>
+
+            <div class="settings-group">
+              <label class="setting-label">Language</label>
+              <p class="setting-desc">Die Sprache, in der Claude antwortet. Leer = Englisch.</p>
+              <div x-data="{ custom: false }" class="flex gap-2">
+                <template x-if="!custom">
+                  <select x-model="settings.language" @change="markUnsaved()" class="setting-input flex-1" :class="{ 'has-value': settings.language }">
+                    <option value="">Standard (English)</option>
+                    <option value="Deutsch">Deutsch</option>
+                    <option value="Bayrisch">Bayrisch</option>
+                    <option value="Deutsch, Code auf Englisch">Deutsch, Code auf Englisch</option>
+                    <option value="English">English</option>
+                    <option value="Français">Français</option>
+                    <option value="Español">Español</option>
+                    <option value="Japanese">Japanese</option>
+                    <option value="Korean">Korean</option>
+                    <option value="Chinese">Chinese</option>
+                  </select>
+                </template>
+                <template x-if="custom">
+                  <input type="text" x-model="settings.language" @input="markUnsaved()" placeholder="Eigene Sprache eingeben…" class="setting-input flex-1">
+                </template>
+                <button @click="custom = !custom; if(!custom && !['','Deutsch','Bayrisch','Deutsch, Code auf Englisch','English','Français','Español','Japanese','Korean','Chinese'].includes(settings.language)) settings.language = ''" class="px-3 py-2 rounded-xl text-xs font-mono border border-[rgba(255,255,255,0.08)] hover:border-accent/30 hover:text-accent transition-colors" :class="custom ? 'text-accent border-accent/30' : 'text-fg-dim'" x-text="custom ? 'Liste' : 'Eigener'"></button>
+              </div>
+            </div>
+
+            <div class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label class="setting-label">Always Thinking Enabled</label>
+                <p class="setting-desc">Aktiviert den "Thinking"-Modus permanent. Claude zeigt dann seinen internen Denkprozess vor jeder Antwort — hilfreich um nachzuvollziehen, wie Entscheidungen getroffen werden. Verbraucht mehr Tokens, gibt aber maximale Transparenz.</p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.alwaysThinkingEnabled }" @click="settings.alwaysThinkingEnabled = !settings.alwaysThinkingEnabled; markUnsaved()"></div>
+            </div>
+
+            <div class="settings-group">
+              <label class="setting-label">Auto-Updates Channel</label>
+              <p class="setting-desc">Welchen Release-Kanal Claude Code für automatische Updates verwendet.</p>
+              <select x-model="settings.autoUpdatesChannel" @change="markUnsaved()" class="setting-input has-value">
+                <option value="latest">Latest — Neueste Features, evtl. instabiler</option>
+                <option value="stable">Stable — Stabile Releases</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- ═══ TAB: Permissions ═══ -->
+          <div x-show="activeTab === 'permissions'" class="tab-content space-y-6">
+
+            <!-- Info-Box: Wie Permissions funktionieren -->
+            <div class="settings-group !bg-[rgba(245,158,11,0.04)] !border-accent/20" x-data="{ infoOpen: false }">
+              <button @click="infoOpen = !infoOpen" class="w-full flex items-center justify-between text-left">
+                <div class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <span class="setting-label !mb-0 text-accent/90">Wie Permissions funktionieren</span>
+                </div>
+                <svg class="w-4 h-4 text-fg-dim transition-transform" :class="{ 'rotate-180': infoOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+              <div x-show="infoOpen" x-collapse class="mt-3 space-y-3 text-sm text-fg-muted">
+                <p><strong class="text-fg">Priorität:</strong> <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">deny</code> schlägt <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">ask</code> schlägt <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">allow</code>. Was in Deny steht, wird immer blockiert — egal was Allow sagt.</p>
+                <p><strong class="text-fg">Syntax:</strong> Nur Tool-Name = gesamtes Tool. Mit Pattern = nur bestimmte Aufrufe.</p>
+                <div class="grid grid-cols-2 gap-2 font-mono text-xs">
+                  <div class="px-2.5 py-1.5 rounded-lg bg-bg-muted border border-[rgba(255,255,255,0.06)]"><span class="text-emerald-400">Bash(npm run *)</span> <span class="text-fg-dim ml-1">— alle npm-Scripts</span></div>
+                  <div class="px-2.5 py-1.5 rounded-lg bg-bg-muted border border-[rgba(255,255,255,0.06)]"><span class="text-emerald-400">Read</span> <span class="text-fg-dim ml-1">— alle Dateien lesen</span></div>
+                  <div class="px-2.5 py-1.5 rounded-lg bg-bg-muted border border-[rgba(255,255,255,0.06)]"><span class="text-red-400">Read(./.env*)</span> <span class="text-fg-dim ml-1">— .env blockieren</span></div>
+                  <div class="px-2.5 py-1.5 rounded-lg bg-bg-muted border border-[rgba(255,255,255,0.06)]"><span class="text-red-400">Read(~/.ssh/*)</span> <span class="text-fg-dim ml-1">— SSH-Keys blockieren</span></div>
+                </div>
+                <p><strong class="text-fg">Pfad-Prefixe (Read/Edit/Write):</strong> <code class="font-mono text-xs bg-bg-muted px-1 rounded">/path</code> = Projekt-Root, <code class="font-mono text-xs bg-bg-muted px-1 rounded">~/path</code> = Home-Dir, <code class="font-mono text-xs bg-bg-muted px-1 rounded">//path</code> = Absoluter Pfad, <code class="font-mono text-xs bg-bg-muted px-1 rounded">./path</code> = CWD</p>
+                <p><strong class="text-fg">Tipp:</strong> Viel in <span class="text-emerald-400">Allow</span> + Gefährliches in <span class="text-red-400">Deny</span> = schnelles Arbeiten ohne Risiko. Nutze <span class="text-amber-400">Ask</span> für Dinge, die du vor Ausführung prüfen willst (z.B. Deploys, Pushes).</p>
+              </div>
+            </div>
+
+            <!-- Permission Presets -->
+            <div class="settings-group">
+              <label class="setting-label flex items-center gap-2">
+                <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+                Permission Presets
+              </label>
+              <p class="setting-desc">Schnellstart-Vorlagen nur für Permissions. Ändert nur Allow/Ask/Deny und Default Mode — alle anderen Settings (Plugins, Hooks, etc.) bleiben unberührt.</p>
+              <div class="grid grid-cols-2 gap-2 mt-3">
+                <template x-for="pp in permPresets" :key="pp.id">
+                  <button @click="applyPermPreset(pp.id)"
+                          class="text-left px-3.5 py-3 rounded-xl bg-bg-muted border transition-all duration-200"
+                          :class="pp.color">
+                    <div class="flex items-center gap-2 mb-0.5">
+                      <span class="text-base" x-text="pp.icon"></span>
+                      <span class="font-medium text-sm text-fg" x-text="pp.name"></span>
+                    </div>
+                    <p class="text-xs text-fg-dim leading-snug" x-text="pp.desc"></p>
+                  </button>
+                </template>
+              </div>
+            </div>
+
+            <div class="settings-group">
+              <label class="setting-label">Default Permission Mode</label>
+              <p class="setting-desc">Fallback, wenn keine Allow/Ask/Deny-Regel greift. <strong>allowPrompt</strong> = fragt immer (sicher, langsam). <strong>acceptEdits</strong> = Read/Edit/Write auto-erlaubt, Bash fragt (beste Balance). <strong>acceptAll</strong> = nichts fragt (gefährlich). <strong>plan</strong> = nur lesen, kein Schreiben.</p>
+              <select x-model="settings.permissions.defaultMode" @change="markUnsaved()" class="setting-input has-value">
+                <option value="allowPrompt">allowPrompt — Vor jeder Aktion fragen (Standard)</option>
+                <option value="acceptEdits">acceptEdits — Datei-Ops erlaubt, Bash fragt (Empfohlen)</option>
+                <option value="acceptAll">acceptAll — Alles erlauben (Vorsicht!)</option>
+                <option value="plan">plan — Nur lesen, keine Änderungen</option>
+              </select>
+            </div>
+
+            <div class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label class="setting-label">Bypass-Modus deaktivieren</label>
+                <p class="setting-desc">Der Bypass-Modus erlaubt es normalerweise, alle Permissions temporär zu überspringen. Wenn deaktiviert, kann niemand diesen Modus nutzen — sinnvoll für Teams oder Shared-Configs, wo strikte Kontrolle gewünscht ist.</p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1"
+                   :class="{ 'active': settings.permissions.disableBypassPermissionsMode === 'disable' }"
+                   @click="settings.permissions.disableBypassPermissionsMode = settings.permissions.disableBypassPermissionsMode === 'disable' ? '' : 'disable'; markUnsaved()"></div>
+            </div>
+
+            <!-- Allow Rules -->
+            <div class="settings-group">
+              <label class="setting-label flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span> Allow Rules
+                <span class="text-xs font-normal text-fg-dim font-sans">— automatisch erlaubt, keine Rückfrage</span>
+              </label>
+              <p class="setting-desc">Tools und Patterns die Claude automatisch ausführen darf. <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">Bash(npm run *)</code> erlaubt alle npm-Scripts, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">Read</code> ohne Pattern erlaubt das gesamte Tool. Je mehr hier steht, desto weniger Bestätigungen brauchst du. Wildcards (<code class="font-mono text-xs bg-bg-muted px-1 rounded">*</code>) matchen beliebige Zeichen inkl. Leerzeichen.</p>
+              <div class="space-y-2 mt-3">
+                <template x-for="(rule, i) in settings.permissions.allow" :key="'allow-'+i">
+                  <div class="flex items-center gap-2 group">
+                    <code class="flex-1 font-mono text-sm text-emerald-300 px-3 py-2 rounded-xl glass border-emerald-500/20 shadow-[inset_0_0_12px_rgba(16,185,129,0.04)]" x-text="rule"></code>
+                    <button @click="settings.permissions.allow.splice(i, 1); markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                  </div>
+                </template>
+              </div>
+              <div class="flex items-center gap-2 mt-3">
+                <select x-model="newPerm.allowTool" class="setting-input !w-36 flex-shrink-0" :class="{ 'has-value': newPerm.allowTool }">
+                  <option value="">Tool...</option>
+                  <template x-for="t in permTools"><option :value="t" x-text="t"></option></template>
+                </select>
+                <input type="text" x-model="newPerm.allowPattern" @keydown.enter="addPermRule('allow')" placeholder="Pattern (z.B. npm run *)" class="setting-input flex-1">
+                <button @click="addPermRule('allow')" class="btn-primary px-3 py-2 text-xs font-mono font-medium rounded-xl bg-emerald-500 text-bg">+</button>
+              </div>
+              <div class="mt-2 flex flex-wrap gap-1.5">
+                <template x-for="s in permSuggestions" :key="s">
+                  <button @click="addPermSuggestion('allow', s)" class="text-xs px-2.5 py-1 rounded-full bg-bg-muted text-fg-muted border border-[rgba(255,255,255,0.06)] hover:border-emerald-500/30 hover:text-emerald-400 hover:bg-emerald-500/5 transition-all duration-200" x-text="s"></button>
+                </template>
+              </div>
+            </div>
+
+            <!-- Ask Rules -->
+            <div class="settings-group">
+              <label class="setting-label flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"></span> Ask Rules
+                <span class="text-xs font-normal text-fg-dim font-sans">— erfordert Bestätigung vor Ausführung</span>
+              </label>
+              <p class="setting-desc">Für Aktionen, die du vor Ausführung prüfen willst. Claude zeigt dir den Befehl und wartet auf dein OK. Ideal für Deploys, Force-Pushes und andere Dinge mit externem Effekt. Überschreibt Allow-Rules, wird aber von Deny überschrieben.</p>
+              <div class="space-y-2 mt-3">
+                <template x-for="(rule, i) in settings.permissions.ask" :key="'ask-'+i">
+                  <div class="flex items-center gap-2 group">
+                    <code class="flex-1 font-mono text-sm text-amber-300 px-3 py-2 rounded-xl glass border-amber-500/20 shadow-[inset_0_0_12px_rgba(245,158,11,0.04)]" x-text="rule"></code>
+                    <button @click="settings.permissions.ask.splice(i, 1); markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                  </div>
+                </template>
+              </div>
+              <div class="flex items-center gap-2 mt-3">
+                <select x-model="newPerm.askTool" class="setting-input !w-36 flex-shrink-0" :class="{ 'has-value': newPerm.askTool }">
+                  <option value="">Tool...</option>
+                  <template x-for="t in permTools"><option :value="t" x-text="t"></option></template>
+                </select>
+                <input type="text" x-model="newPerm.askPattern" @keydown.enter="addPermRule('ask')" placeholder="Pattern (z.B. git push *)" class="setting-input flex-1">
+                <button @click="addPermRule('ask')" class="btn-primary px-3 py-2 text-xs font-mono font-medium rounded-xl bg-amber-500 text-bg">+</button>
+              </div>
+              <div class="mt-2 flex flex-wrap gap-1.5">
+                <template x-for="s in askSuggestions" :key="'ask-sug-'+s">
+                  <button @click="addPermSuggestion('ask', s)" class="text-xs px-2.5 py-1 rounded-full bg-bg-muted text-fg-muted border border-[rgba(255,255,255,0.06)] hover:border-amber-500/30 hover:text-amber-400 hover:bg-amber-500/5 transition-all duration-200" x-text="s"></button>
+                </template>
+              </div>
+            </div>
+
+            <!-- Deny Rules -->
+            <div class="settings-group">
+              <label class="setting-label flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]"></span> Deny Rules
+                <span class="text-xs font-normal text-fg-dim font-sans">— immer blockiert, höchste Priorität</span>
+              </label>
+              <p class="setting-desc">Harte Blockade — Claude kann diese Aktionen nicht ausführen, auch nicht mit Bestätigung. <strong>Deny überschreibt alles andere.</strong> Hierher gehören destruktive Befehle (<code class="font-mono text-xs bg-bg-muted px-1 rounded">rm -rf</code>, <code class="font-mono text-xs bg-bg-muted px-1 rounded">sudo</code>, <code class="font-mono text-xs bg-bg-muted px-1 rounded">dd</code>), System-Manipulation (<code class="font-mono text-xs bg-bg-muted px-1 rounded">chmod</code>, <code class="font-mono text-xs bg-bg-muted px-1 rounded">shutdown</code>) und Zugriff auf sensible Dateien (<code class="font-mono text-xs bg-bg-muted px-1 rounded">.env</code>, <code class="font-mono text-xs bg-bg-muted px-1 rounded">~/.ssh</code>).</p>
+              <div class="space-y-2 mt-3">
+                <template x-for="(rule, i) in settings.permissions.deny" :key="'deny-'+i">
+                  <div class="flex items-center gap-2 group">
+                    <code class="flex-1 font-mono text-sm text-red-300 px-3 py-2 rounded-xl glass border-red-500/20 shadow-[inset_0_0_12px_rgba(239,68,68,0.04)]" x-text="rule"></code>
+                    <button @click="settings.permissions.deny.splice(i, 1); markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                  </div>
+                </template>
+              </div>
+              <div class="flex items-center gap-2 mt-3">
+                <select x-model="newPerm.denyTool" class="setting-input !w-36 flex-shrink-0" :class="{ 'has-value': newPerm.denyTool }">
+                  <option value="">Tool...</option>
+                  <template x-for="t in permTools"><option :value="t" x-text="t"></option></template>
+                </select>
+                <input type="text" x-model="newPerm.denyPattern" @keydown.enter="addPermRule('deny')" placeholder="Pattern (z.B. rm -rf *)" class="setting-input flex-1">
+                <button @click="addPermRule('deny')" class="btn-primary px-3 py-2 text-xs font-mono font-medium rounded-xl bg-red-500 text-white">+</button>
+              </div>
+              <div class="mt-2 flex flex-wrap gap-1.5">
+                <template x-for="s in denySuggestions" :key="'deny-sug-'+s">
+                  <button @click="addPermSuggestion('deny', s)" class="text-xs px-2.5 py-1 rounded-full bg-bg-muted text-fg-muted border border-[rgba(255,255,255,0.06)] hover:border-red-500/30 hover:text-red-400 hover:bg-red-500/5 transition-all duration-200" x-text="s"></button>
+                </template>
+              </div>
+            </div>
+
+            <!-- Additional Directories -->
+            <div class="settings-group">
+              <label class="setting-label">Additional Directories</label>
+              <p class="setting-desc">Zusätzliche Verzeichnisse, auf die Claude zugreifen darf. Standardmäßig sieht Claude nur den aktuellen Projektordner. Hier kannst du z.B. Shared Libraries, Dokumentation oder andere Repos freigeben. Relative Pfade (../docs/) und Home-Pfade (~/shared/) funktionieren.</p>
+              <div class="space-y-2 mt-3">
+                <template x-for="(dir, i) in settings.permissions.additionalDirectories" :key="'dir-'+i">
+                  <div class="flex items-center gap-2 group">
+                    <code class="flex-1 font-mono text-sm text-fg-muted px-3 py-2 rounded-xl glass" x-text="dir"></code>
+                    <button @click="settings.permissions.additionalDirectories.splice(i, 1); markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                  </div>
+                </template>
+              </div>
+              <div class="flex items-center gap-2 mt-3">
+                <input type="text" x-model="newAdditionalDir" @keydown.enter="addAdditionalDir()" placeholder="z.B. ../docs/ oder ~/shared-code/" class="setting-input flex-1">
+                <button @click="addAdditionalDir()" class="btn-secondary px-3 py-2 text-xs font-mono font-medium rounded-xl border border-[rgba(255,255,255,0.15)] text-fg">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ TAB: Plugins ═══ -->
+          <div x-show="activeTab === 'plugins'" class="tab-content space-y-4">
+            <div class="relative">
+              <input type="text" x-model="pluginSearch" placeholder="Plugins durchsuchen..." class="setting-input pl-9">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+
+            <template x-for="cat in pluginCategories" :key="cat.name">
+              <div>
+                <h3 class="font-mono text-[11px] font-semibold uppercase tracking-wider text-fg-dim mb-2 mt-6" x-text="cat.name"></h3>
+                <div class="space-y-1.5">
+                  <template x-for="p in cat.plugins.filter(p => !pluginSearch || p.name.toLowerCase().includes(pluginSearch.toLowerCase()) || p.desc.toLowerCase().includes(pluginSearch.toLowerCase()))" :key="p.id">
+                    <div class="flex items-start gap-3 p-3.5 rounded-2xl glass transition-all duration-300 hover:bg-glass-hover group"
+                         :class="settings.enabledPlugins[p.id] ? 'border-accent/15 shadow-[0_0_15px_rgba(245,158,11,0.03)]' : ''">
+                      <div class="toggle bg-bg-elevated mt-0.5 flex-shrink-0"
+                           :class="{ 'active': settings.enabledPlugins[p.id] }"
+                           @click="settings.enabledPlugins[p.id] = !settings.enabledPlugins[p.id]; markUnsaved()"></div>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                          <span class="font-display text-sm font-medium text-fg" x-text="p.name"></span>
+                          <span x-show="p.community" class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-violet-500/15 text-violet-400 border border-violet-500/20">Community</span>
+                        </div>
+                        <div class="text-xs text-fg-muted mt-0.5" x-text="p.desc"></div>
+                        <code class="text-[10px] font-mono text-fg-dim/50 mt-1 block" x-text="p.id"></code>
+                        <div x-show="p.install" class="mt-1.5 flex items-center gap-1.5">
+                          <span class="text-[10px] text-fg-dim font-mono">Install:</span>
+                          <code class="text-[10px] font-mono text-accent/70 cursor-pointer hover:text-accent transition-colors" x-text="p.install" @click="navigator.clipboard.writeText(p.install); notify('Install-Befehl kopiert!')"></code>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- ═══ TAB: Hooks ═══ -->
+          <div x-show="activeTab === 'hooks'" class="tab-content space-y-6">
+            <div class="p-5 rounded-2xl glass border-amber-500/10 text-sm text-fg-muted space-y-2">
+              <span class="text-accent font-display font-semibold block">Hooks — Automatisierung per Event</span>
+              <p>Hooks führen automatisch Shell-Befehle oder Webhooks aus, wenn bestimmte Events eintreten. Typische Anwendungen:</p>
+              <ul class="list-none space-y-1 text-xs text-fg-dim">
+                <li>→ <span class="text-fg-muted">PostToolUse + Edit:</span> Auto-Linting nach jeder Dateiänderung</li>
+                <li>→ <span class="text-fg-muted">PreToolUse + Bash:</span> Gefährliche Befehle abfangen und blockieren</li>
+                <li>→ <span class="text-fg-muted">SessionStart:</span> Projekt-Kontext laden oder Benachrichtigung senden</li>
+              </ul>
+              <p class="text-xs">Jeder Hook braucht einen <span class="text-accent">Matcher</span> (welches Tool betroffen ist) und einen oder mehrere <span class="text-accent">Actions</span> (was ausgeführt wird). Async-Hooks laufen im Hintergrund und blockieren Claude nicht.</p>
+            </div>
+
+            <template x-for="(eventHooks, event) in settings.hooks" :key="event">
+              <div class="rounded-2xl glass overflow-hidden">
+                <div class="flex items-center justify-between px-4 py-2.5" style="background: rgba(26, 26, 36, 0.8);">
+                  <span class="font-mono text-sm font-semibold text-accent" x-text="event"></span>
+                  <button @click="delete settings.hooks[event]; markUnsaved()" class="text-fg-dim hover:text-red-400 text-xs font-mono transition-colors">Remove</button>
+                </div>
+                <template x-for="(group, gi) in eventHooks" :key="event+'-'+gi">
+                  <div class="p-4 border-t border-[rgba(255,255,255,0.06)] space-y-3">
+                    <div class="flex items-center gap-2">
+                      <label class="text-xs text-fg-dim font-mono tracking-wide w-16 flex-shrink-0">Matcher</label>
+                      <input type="text" x-model="group.matcher" @input="markUnsaved()" placeholder="z.B. Edit, Bash(npm *)" class="setting-input flex-1 !text-sm">
+                    </div>
+                    <template x-for="(hook, hi) in group.hooks" :key="event+'-'+gi+'-'+hi">
+                      <div class="ml-4 p-3 rounded-xl space-y-2 relative" style="background: rgba(10,10,15,0.4); border: 1px solid rgba(255,255,255,0.05);">
+                        <button @click="group.hooks.splice(hi, 1); if(!group.hooks.length) eventHooks.splice(gi,1); markUnsaved()" class="absolute top-2 right-2 text-fg-dim hover:text-red-400 text-sm transition-colors">&times;</button>
+                        <div class="flex items-center gap-2">
+                          <label class="text-xs text-fg-dim font-mono tracking-wide w-16 flex-shrink-0">Type</label>
+                          <select x-model="hook.type" @change="markUnsaved()" class="setting-input flex-1 !text-sm has-value">
+                            <option value="command">Command — Shell-Befehl ausführen</option>
+                            <option value="http">HTTP — Webhook aufrufen</option>
+                          </select>
+                        </div>
+                        <div x-show="hook.type === 'command'" class="flex items-center gap-2">
+                          <label class="text-xs text-fg-dim font-mono tracking-wide w-16 flex-shrink-0">Cmd</label>
+                          <input type="text" x-model="hook.command" @input="markUnsaved()" placeholder="z.B. npm run lint:fix" class="setting-input flex-1 !text-sm font-mono">
+                        </div>
+                        <div x-show="hook.type === 'http'" class="flex items-center gap-2">
+                          <label class="text-xs text-fg-dim font-mono tracking-wide w-16 flex-shrink-0">URL</label>
+                          <input type="text" x-model="hook.url" @input="markUnsaved()" placeholder="https://hooks.example.com/webhook" class="setting-input flex-1 !text-sm font-mono">
+                        </div>
+                        <div class="flex items-center gap-4">
+                          <div class="flex items-center gap-2">
+                            <label class="text-xs text-fg-dim font-mono tracking-wide">Timeout</label>
+                            <input type="number" x-model.number="hook.timeout" @input="markUnsaved()" placeholder="30000" class="setting-input !w-24 !text-sm">
+                            <span class="text-xs text-fg-dim">ms</span>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <label class="text-xs text-fg-dim font-mono tracking-wide">Async</label>
+                            <div class="toggle bg-bg-elevated" style="width:36px;height:20px" :class="{ 'active': hook.async }" @click="hook.async = !hook.async; markUnsaved()"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                    <button @click="group.hooks.push({type:'command',command:'',timeout:30000,async:false}); markUnsaved()" class="text-xs font-mono text-accent hover:text-accent-hover ml-4 transition-colors">+ Hook hinzufügen</button>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <div class="border border-dashed border-[rgba(255,255,255,0.1)] rounded-2xl p-4 hover:border-accent/20 transition-colors">
+              <div class="flex items-center gap-2">
+                <select x-model="newHookEvent" class="setting-input flex-1" :class="{ 'has-value': newHookEvent }">
+                  <option value="">Event auswählen...</option>
+                  <template x-for="e in hookEvents" :key="e.id">
+                    <option :value="e.id" x-text="e.id + ' — ' + e.desc"></option>
+                  </template>
+                </select>
+                <button @click="addHookEvent()" :disabled="!newHookEvent" class="btn-primary px-4 py-2 text-xs font-mono font-medium rounded-xl bg-accent text-bg disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none">+ Event</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ TAB: Sandbox ═══ -->
+          <div x-show="activeTab === 'sandbox'" class="tab-content space-y-6">
+            <div class="p-5 rounded-2xl glass border-blue-500/10 text-sm text-fg-muted space-y-2">
+              <span class="text-blue-400 font-display font-semibold block">Sandbox — Dateisystem & Netzwerk isolieren</span>
+              <p>Die Sandbox schränkt ein, auf welche Dateien und Netzwerk-Ressourcen Claude zugreifen kann. Wenn aktiviert, werden alle Bash-Befehle und Dateizugriffe in einer isolierten Umgebung ausgeführt.</p>
+              <p class="text-xs text-fg-dim">Pfad-Prefixes: <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">//</code> = absoluter Pfad, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">~/</code> = Home-Verzeichnis, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">./</code> = relativ zum Projekt. Sinnvoll wenn Claude in sensiblen Umgebungen läuft oder du verhindern willst, dass z.B. ~/.ssh oder ~/.aws gelesen werden.</p>
+            </div>
+
+            <div class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label class="setting-label">Sandbox aktivieren</label>
+                <p class="setting-desc">Alle Bash-Befehle und Dateizugriffe werden in einer Sandbox ausgeführt.</p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.sandbox.enabled }" @click="settings.sandbox.enabled = !settings.sandbox.enabled; markUnsaved()"></div>
+            </div>
+
+            <template x-for="list in [{key:'allowWrite',label:'Filesystem — Allow Write',color:'emerald'},{key:'denyWrite',label:'Filesystem — Deny Write',color:'red'},{key:'denyRead',label:'Filesystem — Deny Read',color:'red'}]" :key="list.key">
+              <div class="settings-group">
+                <label class="setting-label" x-text="list.label"></label>
+                <div class="space-y-2 mt-3">
+                  <template x-for="(path, i) in settings.sandbox.filesystem[list.key]" :key="list.key+'-'+i">
+                    <div class="flex items-center gap-2 group">
+                      <code class="flex-1 font-mono text-sm px-3 py-2 rounded-xl glass"
+                            :class="list.color === 'emerald' ? 'text-emerald-300 border-emerald-500/15' : 'text-red-300 border-red-500/15'"
+                            x-text="path"></code>
+                      <button @click="settings.sandbox.filesystem[list.key].splice(i, 1); markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                    </div>
+                  </template>
+                </div>
+                <div class="flex items-center gap-2 mt-3">
+                  <input type="text" x-model="newSandboxPath[list.key]" @keydown.enter="addSandboxPath(list.key)" placeholder="z.B. //tmp/build, ~/.kube" class="setting-input flex-1">
+                  <button @click="addSandboxPath(list.key)" class="btn-primary px-3 py-2 text-xs font-mono font-medium rounded-xl text-white" :class="list.color === 'emerald' ? 'bg-emerald-500' : 'bg-red-500'">+</button>
+                </div>
+              </div>
+            </template>
+
+            <div class="settings-group">
+              <label class="setting-label">Network — Allowed Domains</label>
+              <p class="setting-desc">Domains, auf die Claude zugreifen darf. Wildcards möglich (z.B. *.npmjs.org).</p>
+              <div class="space-y-2 mt-3">
+                <template x-for="(d, i) in settings.sandbox.network.allowedDomains" :key="'domain-'+i">
+                  <div class="flex items-center gap-2 group">
+                    <code class="flex-1 font-mono text-sm text-blue-300 px-3 py-2 rounded-xl glass border-blue-500/15" x-text="d"></code>
+                    <button @click="settings.sandbox.network.allowedDomains.splice(i, 1); markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                  </div>
+                </template>
+              </div>
+              <div class="flex items-center gap-2 mt-3">
+                <input type="text" x-model="newDomain" @keydown.enter="addDomain()" placeholder="z.B. github.com, *.npmjs.org" class="setting-input flex-1">
+                <button @click="addDomain()" class="btn-primary px-3 py-2 text-xs font-mono font-medium rounded-xl bg-blue-500 text-white">+</button>
+              </div>
+            </div>
+
+            <div class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label class="setting-label">Allow Local Binding</label>
+                <p class="setting-desc">Erlaubt Prozessen innerhalb der Sandbox, auf lokale Ports zu binden (z.B. Dev-Server).</p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.sandbox.network.allowLocalBinding }" @click="settings.sandbox.network.allowLocalBinding = !settings.sandbox.network.allowLocalBinding; markUnsaved()"></div>
+            </div>
+          </div>
+
+          <!-- ═══ TAB: Environment ═══ -->
+          <div x-show="activeTab === 'env'" class="tab-content space-y-6">
+            <div class="p-5 rounded-2xl glass border-violet-500/10 text-sm text-fg-muted space-y-2">
+              <span class="text-violet-400 font-display font-semibold block">Umgebungsvariablen — Session-Konfiguration</span>
+              <p>Variablen die in jeder Claude Code Session gesetzt werden und von allen Bash-Befehlen gelesen werden können. Bestehende System-Variablen mit <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">$VAR_NAME</code> referenzieren.</p>
+              <p class="text-xs text-fg-dim">Nützlich um z.B. das Subagent-Modell zu steuern (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">CLAUDE_CODE_SUBAGENT_MODEL</code>), Node-Umgebungen zu setzen (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">NODE_ENV</code>), oder Prompt-Caching zu konfigurieren.</p>
+            </div>
+
+            <div class="space-y-2">
+              <template x-for="(val, key) in settings.env" :key="'env-'+key">
+                <div class="flex items-center gap-2 group">
+                  <code class="font-mono text-sm font-semibold text-violet-400 w-48 flex-shrink-0 truncate" x-text="key"></code>
+                  <code class="flex-1 font-mono text-sm text-fg-muted px-3 py-2 rounded-xl glass truncate" x-text="val"></code>
+                  <button @click="delete settings.env[key]; markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                </div>
+              </template>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input type="text" x-model="newEnvKey" placeholder="KEY" class="setting-input !w-48 flex-shrink-0 font-mono">
+              <input type="text" x-model="newEnvValue" @keydown.enter="addEnvVar()" placeholder="Value" class="setting-input flex-1 font-mono">
+              <button @click="addEnvVar()" class="btn-primary px-3 py-2 text-xs font-mono font-medium rounded-xl bg-violet-500 text-white">+</button>
+            </div>
+
+            <div>
+              <h4 class="text-[11px] font-mono text-fg-dim uppercase tracking-wider mb-2">Häufig verwendete Variablen</h4>
+              <div class="flex flex-wrap gap-1.5">
+                <template x-for="s in envSuggestions" :key="s.key">
+                  <button @click="newEnvKey = s.key; newEnvValue = s.default" class="text-xs px-2.5 py-1 rounded-full bg-bg-muted text-fg-muted border border-[rgba(255,255,255,0.06)] hover:border-violet-500/30 hover:text-violet-400 hover:bg-violet-500/5 font-mono transition-all duration-200" x-text="s.key"></button>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ TAB: Display & UI ═══ -->
+          <div x-show="activeTab === 'display'" class="tab-content space-y-6">
+            <div class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label class="setting-label">Spinner Tips anzeigen</label>
+                <p class="setting-desc">Zeigt hilfreiche Tipps im Spinner während Claude arbeitet.</p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.spinnerTipsEnabled }" @click="settings.spinnerTipsEnabled = !settings.spinnerTipsEnabled; markUnsaved()"></div>
+            </div>
+
+            <div class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label class="setting-label">Turn-Dauer anzeigen</label>
+                <p class="setting-desc">Zeigt nach jeder Antwort an, wie lange Claude gebraucht hat.</p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.showTurnDuration }" @click="settings.showTurnDuration = !settings.showTurnDuration; markUnsaved()"></div>
+            </div>
+
+            <div class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label class="setting-label">Reduced Motion</label>
+                <p class="setting-desc">Reduziert Animationen in der UI — hilfreich bei Motion Sensitivity.</p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.prefersReducedMotion }" @click="settings.prefersReducedMotion = !settings.prefersReducedMotion; markUnsaved()"></div>
+            </div>
+
+            <div class="settings-group">
+              <label class="setting-label">Status Line</label>
+              <p class="setting-desc">Eine permanente Statuszeile am unteren Rand des Terminals. Wird durch ein Shell-Script oder einen HTTP-Endpoint befüllt — kann z.B. Token-Verbrauch, aktives Modell, Kosten pro Session oder Git-Branch anzeigen. Das Script wird periodisch aufgerufen (Refresh-Intervall konfigurierbar).</p>
+              <div class="space-y-3 mt-3">
+                <div class="flex items-center gap-2">
+                  <label class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0">Type</label>
+                  <select x-model="settings.statusLine.type" @change="markUnsaved()" class="setting-input flex-1 !text-sm" :class="{ 'has-value': settings.statusLine.type }">
+                    <option value="">Keine Status Line</option>
+                    <option value="command">Command — Shell-Script</option>
+                    <option value="http">HTTP — Webhook URL</option>
+                  </select>
+                </div>
+                <div x-show="settings.statusLine.type === 'command'" class="flex items-center gap-2">
+                  <label class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0">Command</label>
+                  <input type="text" x-model="settings.statusLine.command" @input="markUnsaved()" placeholder="~/.claude/statusline.sh" class="setting-input flex-1 font-mono !text-sm">
+                </div>
+                <div x-show="settings.statusLine.type === 'http'" class="flex items-center gap-2">
+                  <label class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0">URL</label>
+                  <input type="text" x-model="settings.statusLine.url" @input="markUnsaved()" placeholder="http://localhost:3000/status" class="setting-input flex-1 font-mono !text-sm">
+                </div>
+                <div x-show="settings.statusLine.type" class="flex items-center gap-2">
+                  <label class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0">Refresh</label>
+                  <input type="number" x-model.number="settings.statusLine.refresh" @input="markUnsaved()" placeholder="5000" class="setting-input !w-32 !text-sm">
+                  <span class="text-xs text-fg-dim">ms</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group">
+              <label class="setting-label">Spinner Verbs</label>
+              <p class="setting-desc">Der Spinner zeigt Aktionswörter während Claude arbeitet (z.B. "Thinking", "Reading"). Hier eigene Wörter hinzufügen — im "Append"-Modus werden sie zu den Standard-Wörtern ergänzt, im "Replace"-Modus ersetzen sie diese komplett. Gut für Spaß oder Team-Branding.</p>
+              <div class="flex items-center gap-2 mt-3">
+                <select x-model="settings.spinnerVerbs.mode" @change="markUnsaved()" class="setting-input !w-44 !text-sm has-value">
+                  <option value="append">Append — Hinzufügen</option>
+                  <option value="replace">Replace — Ersetzen</option>
+                </select>
+              </div>
+              <div class="space-y-2 mt-3">
+                <template x-for="(v, i) in settings.spinnerVerbs.verbs" :key="'verb-'+i">
+                  <div class="flex items-center gap-2 group">
+                    <code class="flex-1 font-mono text-sm text-fg-muted px-3 py-2 rounded-xl glass" x-text="v"></code>
+                    <button @click="settings.spinnerVerbs.verbs.splice(i, 1); markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                  </div>
+                </template>
+              </div>
+              <div class="flex items-center gap-2 mt-3">
+                <input type="text" x-model="newSpinnerVerb" @keydown.enter="addSpinnerVerb()" placeholder="z.B. Pondering, Crafting" class="setting-input flex-1">
+                <button @click="addSpinnerVerb()" class="btn-secondary px-3 py-2 text-xs font-mono font-medium rounded-xl border border-[rgba(255,255,255,0.15)] text-fg">+</button>
+              </div>
+              <!-- Hint: verb count -->
+              <div class="mt-2 px-3 py-2 rounded-xl bg-bg-muted/50 border border-[rgba(255,255,255,0.04)] flex items-start gap-2">
+                <svg class="w-3.5 h-3.5 text-accent mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="text-[11px] text-fg-dim leading-relaxed">
+                  Aktuell <strong class="text-fg" x-text="settings.spinnerVerbs.verbs.length"></strong> Verbs im <strong class="text-fg" x-text="settings.spinnerVerbs.mode === 'replace' ? 'Replace' : 'Append'"></strong>-Modus.
+                  <span x-show="settings.spinnerVerbs.mode === 'replace' && settings.spinnerVerbs.verbs.length < 30" class="text-amber-400">Wenig Abwechslung — nutze Append-Modus oder füge mehr Verbs hinzu (30+ empfohlen).</span>
+                  <span x-show="settings.spinnerVerbs.mode === 'append'">Die ~30 Standard-Verbs bleiben erhalten + deine eigenen = mehr Rotation.</span>
+                </p>
+              </div>
+
+              <!-- Spinner Verb Presets -->
+              <div x-data="{ presetOpen: false }" class="mt-3">
+                <button @click="presetOpen = !presetOpen" class="text-xs font-mono text-fg-dim hover:text-accent transition-colors flex items-center gap-1.5">
+                  <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': presetOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                  Themen-Packs laden
+                </button>
+                <div x-show="presetOpen" x-transition class="mt-2 space-y-2">
+
+                  <!-- Save current verbs as pack -->
+                  <div x-show="settings.spinnerVerbs.verbs.length > 0" class="mb-2">
+                    <template x-if="!showSaveSpinnerPackDialog">
+                      <button @click="showSaveSpinnerPackDialog = true" class="w-full text-left p-2.5 rounded-xl border border-dashed border-[rgba(255,255,255,0.12)] hover:border-accent/40 hover:bg-accent/5 transition-all text-xs font-mono text-fg-dim hover:text-accent flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Aktuelle Verbs als Pack speichern
+                        <span class="ml-auto text-[10px] text-fg-dim" x-text="settings.spinnerVerbs.verbs.length + ' Verbs'"></span>
+                      </button>
+                    </template>
+                    <div x-show="showSaveSpinnerPackDialog" x-transition class="p-3 rounded-xl border border-accent/30 bg-accent/5 space-y-2">
+                      <div class="text-xs font-display font-semibold text-fg mb-1">Pack speichern</div>
+                      <input type="text" x-model="newSpinnerPackName" @keydown.enter="saveSpinnerPack()" placeholder="Pack-Name…" class="setting-input !text-sm w-full">
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-[10px] text-fg-dim font-mono">Icon:</span>
+                        <template x-for="emoji in spinnerPackEmojis" :key="emoji">
+                          <button @click="newSpinnerPackIcon = emoji" class="w-7 h-7 rounded-lg text-sm flex items-center justify-center transition-all" :class="newSpinnerPackIcon === emoji ? 'bg-accent/20 ring-1 ring-accent' : 'hover:bg-white/5'" x-text="emoji"></button>
+                        </template>
+                      </div>
+                      <div class="flex gap-2">
+                        <button @click="saveSpinnerPack()" :disabled="!newSpinnerPackName.trim()" class="flex-1 px-3 py-1.5 text-xs font-mono font-medium rounded-lg bg-accent/20 text-accent hover:bg-accent/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Speichern</button>
+                        <button @click="showSaveSpinnerPackDialog = false; newSpinnerPackName = ''" class="px-3 py-1.5 text-xs font-mono text-fg-dim hover:text-fg rounded-lg hover:bg-white/5 transition-colors">Abbrechen</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Mix All Button -->
+                  <div class="relative" @click.outside="activeSpinnerPack === '_mix' && (activeSpinnerPack = null)">
+                    <button @click="activeSpinnerPack = activeSpinnerPack === '_mix' ? null : '_mix'"
+                            @mouseenter="hoverSpinnerPack = '_mix'" @mouseleave="hoverSpinnerPack = null"
+                            class="w-full text-left p-3 rounded-xl border transition-all group"
+                            :class="activeSpinnerPack === '_mix' ? 'border-accent/60 bg-accent/10' : 'border-accent/30 hover:border-accent/60 bg-accent/5 hover:bg-accent/10'">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="text-sm">🎲</span>
+                        <span class="text-xs font-display font-semibold text-accent">Alles mixen</span>
+                        <span class="text-[10px] font-mono text-fg-dim ml-auto" x-text="'~' + spinnerPacks.reduce((a, p) => a + p.verbs.length, 0) + ' Verbs'"></span>
+                      </div>
+                      <div class="text-[10px] font-mono text-fg-dim leading-relaxed">Alle Packs kombiniert und zufällig gemischt.</div>
+                    </button>
+                    <!-- Hover Preview -->
+                    <div x-show="hoverSpinnerPack === '_mix' && activeSpinnerPack !== '_mix'" x-transition.opacity
+                         class="absolute z-20 left-0 right-0 top-full mt-1 p-2.5 rounded-xl border border-[rgba(255,255,255,0.1)] text-[10px] font-mono text-fg-dim leading-relaxed max-h-28 overflow-y-auto pointer-events-none"
+                         style="background: rgba(15,15,22,0.95); backdrop-filter: blur(12px);"
+                         x-text="spinnerPacks.flatMap(p => p.verbs).join(', ')">
+                    </div>
+                    <!-- Append/Replace Popover -->
+                    <div x-show="activeSpinnerPack === '_mix'" x-transition
+                         class="absolute z-30 left-0 right-0 top-full mt-1 p-2 rounded-xl border border-accent/30 flex gap-2"
+                         style="background: rgba(15,15,22,0.95); backdrop-filter: blur(12px);">
+                      <button @click="applySpinnerPack(spinnerMixPack, 'append')" class="flex-1 px-3 py-2 text-xs font-mono font-medium rounded-lg bg-accent/10 hover:bg-accent/20 text-accent transition-colors">+ Hinzufügen</button>
+                      <button @click="applySpinnerPack(spinnerMixPack, 'replace')" class="flex-1 px-3 py-2 text-xs font-mono font-medium rounded-lg bg-white/5 hover:bg-white/10 text-fg transition-colors">⟳ Ersetzen</button>
+                    </div>
+                  </div>
+
+                  <!-- Built-in Packs -->
+                  <div class="grid grid-cols-2 gap-2">
+                    <template x-for="pack in spinnerPacks" :key="pack.name">
+                      <div class="relative" @click.outside="activeSpinnerPack === pack.name && (activeSpinnerPack = null)">
+                        <button @click="activeSpinnerPack = activeSpinnerPack === pack.name ? null : pack.name"
+                                @mouseenter="hoverSpinnerPack = pack.name" @mouseleave="hoverSpinnerPack = null"
+                                class="w-full text-left p-3 rounded-xl border transition-all group"
+                                :class="activeSpinnerPack === pack.name ? 'border-accent/40 bg-accent/5' : 'border-[rgba(255,255,255,0.06)] hover:border-accent/30'"
+                                style="background: rgba(18,18,26,0.5);">
+                          <div class="flex items-center gap-2 mb-1">
+                            <span class="text-sm" x-text="pack.icon"></span>
+                            <span class="text-xs font-display font-semibold text-fg group-hover:text-accent transition-colors" x-text="pack.name"></span>
+                            <span class="text-[10px] font-mono text-fg-dim ml-auto" x-text="pack.verbs.length"></span>
+                          </div>
+                          <div class="text-[10px] font-mono text-fg-dim leading-relaxed" x-text="pack.verbs.slice(0, 4).join(', ') + '…'"></div>
+                        </button>
+                        <!-- Hover Preview -->
+                        <div x-show="hoverSpinnerPack === pack.name && activeSpinnerPack !== pack.name" x-transition.opacity
+                             class="absolute z-20 left-0 right-0 top-full mt-1 p-2.5 rounded-xl border border-[rgba(255,255,255,0.1)] text-[10px] font-mono text-fg-dim leading-relaxed max-h-28 overflow-y-auto pointer-events-none"
+                             style="background: rgba(15,15,22,0.95); backdrop-filter: blur(12px);"
+                             x-text="pack.verbs.join(', ')">
+                        </div>
+                        <!-- Append/Replace Popover -->
+                        <div x-show="activeSpinnerPack === pack.name" x-transition
+                             class="absolute z-30 left-0 right-0 top-full mt-1 p-2 rounded-xl border border-accent/30 flex gap-2"
+                             style="background: rgba(15,15,22,0.95); backdrop-filter: blur(12px);">
+                          <button @click="applySpinnerPack(pack.verbs, 'append')" class="flex-1 px-3 py-2 text-xs font-mono font-medium rounded-lg bg-accent/10 hover:bg-accent/20 text-accent transition-colors">+ Hinzufügen</button>
+                          <button @click="applySpinnerPack(pack.verbs, 'replace')" class="flex-1 px-3 py-2 text-xs font-mono font-medium rounded-lg bg-white/5 hover:bg-white/10 text-fg transition-colors">⟳ Ersetzen</button>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+
+                  <!-- Custom Packs -->
+                  <template x-if="customSpinnerPacks.length > 0">
+                    <div class="space-y-2 pt-2 border-t border-[rgba(255,255,255,0.06)]">
+                      <div class="text-[10px] font-mono text-fg-dim uppercase tracking-widest">Eigene Packs</div>
+                      <div class="grid grid-cols-2 gap-2">
+                        <template x-for="pack in customSpinnerPacks" :key="pack.id">
+                          <div class="relative group/custom" @click.outside="activeSpinnerPack === pack.id && (activeSpinnerPack = null)">
+                            <button @click="activeSpinnerPack = activeSpinnerPack === pack.id ? null : pack.id"
+                                    @mouseenter="hoverSpinnerPack = pack.id" @mouseleave="hoverSpinnerPack = null"
+                                    class="w-full text-left p-3 rounded-xl border transition-all group"
+                                    :class="activeSpinnerPack === pack.id ? 'border-accent/40 bg-accent/5' : 'border-[rgba(255,255,255,0.06)] hover:border-accent/30'"
+                                    style="background: rgba(18,18,26,0.5);">
+                              <div class="flex items-center gap-2 mb-1">
+                                <span class="text-sm" x-text="pack.icon"></span>
+                                <span class="text-xs font-display font-semibold text-fg group-hover:text-accent transition-colors" x-text="pack.name"></span>
+                                <span class="text-[10px] font-mono text-fg-dim ml-auto" x-text="pack.verbs.length"></span>
+                              </div>
+                              <div class="text-[10px] font-mono text-fg-dim leading-relaxed" x-text="pack.verbs.slice(0, 4).join(', ') + '…'"></div>
+                            </button>
+                            <!-- Delete button -->
+                            <button @click.stop="deleteSpinnerPack(pack.id)" class="absolute top-1.5 right-1.5 w-5 h-5 rounded-md flex items-center justify-center text-fg-dim hover:text-red-400 hover:bg-red-400/10 text-xs opacity-0 group-hover/custom:opacity-100 transition-all">&times;</button>
+                            <!-- Hover Preview -->
+                            <div x-show="hoverSpinnerPack === pack.id && activeSpinnerPack !== pack.id" x-transition.opacity
+                                 class="absolute z-20 left-0 right-0 top-full mt-1 p-2.5 rounded-xl border border-[rgba(255,255,255,0.1)] text-[10px] font-mono text-fg-dim leading-relaxed max-h-28 overflow-y-auto pointer-events-none"
+                                 style="background: rgba(15,15,22,0.95); backdrop-filter: blur(12px);"
+                                 x-text="pack.verbs.join(', ')">
+                            </div>
+                            <!-- Append/Replace Popover -->
+                            <div x-show="activeSpinnerPack === pack.id" x-transition
+                                 class="absolute z-30 left-0 right-0 top-full mt-1 p-2 rounded-xl border border-accent/30 flex gap-2"
+                                 style="background: rgba(15,15,22,0.95); backdrop-filter: blur(12px);">
+                              <button @click="applySpinnerPack(pack.verbs, 'append')" class="flex-1 px-3 py-2 text-xs font-mono font-medium rounded-lg bg-accent/10 hover:bg-accent/20 text-accent transition-colors">+ Hinzufügen</button>
+                              <button @click="applySpinnerPack(pack.verbs, 'replace')" class="flex-1 px-3 py-2 text-xs font-mono font-medium rounded-lg bg-white/5 hover:bg-white/10 text-fg transition-colors">⟳ Ersetzen</button>
+                            </div>
+                          </div>
+                        </template>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ TAB: Attribution ═══ -->
+          <div x-show="activeTab === 'attribution'" class="tab-content space-y-6">
+            <div class="settings-group">
+              <label class="setting-label">Commit Attribution</label>
+              <p class="setting-desc">Text der automatisch an Git-Commit-Messages angehängt wird (z.B. als Co-Author). Wird beim /commit Skill verwendet. Leer = keine Attribution. Viele Teams nutzen das für Transparenz, welche Commits mit AI-Hilfe entstanden sind.</p>
+              <input type="text" x-model="settings.attribution.commit" @input="markUnsaved()" placeholder="Co-Authored-By: Claude <noreply@anthropic.com>" class="setting-input font-mono">
+            </div>
+
+            <div class="settings-group">
+              <label class="setting-label">PR Attribution</label>
+              <p class="setting-desc">Text der in Pull-Request-Beschreibungen eingefügt wird.</p>
+              <input type="text" x-model="settings.attribution.pr" @input="markUnsaved()" placeholder="Generated with Claude Code" class="setting-input font-mono">
+            </div>
+          </div>
+
+          <!-- ═══ TAB: Advanced ═══ -->
+          <div x-show="activeTab === 'advanced'" class="tab-content space-y-6">
+            <div class="settings-group">
+              <label class="setting-label">Cleanup Period (Tage)</label>
+              <p class="setting-desc">Claude Code speichert Session-Transkripte lokal für Kontext-Wiederherstellung und Auto-Memory. Alte Sessions werden nach dieser Zeitspanne automatisch gelöscht. Standard ist 30 Tage — reduzieren spart Speicher, erhöhen behält mehr Kontext.</p>
+              <input type="number" x-model.number="settings.cleanupPeriodDays" @input="markUnsaved()" placeholder="30" class="setting-input !w-32">
+            </div>
+
+            <div class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label class="setting-label">Fast Mode Per-Session Opt-In</label>
+                <p class="setting-desc">Fast Mode nutzt dasselbe Modell mit schnellerem Output — ideal für einfache Tasks. Mit dieser Option muss man Fast Mode in jeder neuen Session explizit mit /fast aktivieren, statt dass er dauerhaft an bleibt.</p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.fastModePerSessionOptIn }" @click="settings.fastModePerSessionOptIn = !settings.fastModePerSessionOptIn; markUnsaved()"></div>
+            </div>
+
+            <div class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label class="setting-label">Alle Projekt-MCP-Server aktivieren</label>
+                <p class="setting-desc">MCP-Server (Model Context Protocol) erweitern Claude mit externen Tools — z.B. Datenbank-Zugriff, Browser-Automation oder API-Integrationen. Normalerweise fragt Claude bei jedem neuen MCP-Server um Erlaubnis. Diese Option genehmigt alle Server aus der Projekt-Config (.mcp.json) automatisch.</p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.enableAllProjectMcpServers }" @click="settings.enableAllProjectMcpServers = !settings.enableAllProjectMcpServers; markUnsaved()"></div>
+            </div>
+
+            <div class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label class="setting-label">.gitignore respektieren</label>
+                <p class="setting-desc">Dateien die in .gitignore stehen werden bei Vorschlägen und Suche ignoriert.</p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.respectGitignore }" @click="settings.respectGitignore = !settings.respectGitignore; markUnsaved()"></div>
+            </div>
+
+            <div class="settings-group">
+              <label class="setting-label">Teammate Mode</label>
+              <p class="setting-desc">Steuert, wie Claude Code mehrere parallele Agenten orchestriert. "Auto" lässt Claude entscheiden, "In-Process" läuft alles im selben Prozess (schneller, weniger Overhead), "Tmux" startet Agenten in separaten Terminal-Panes (besser für lange Tasks, eigene Logs pro Agent).</p>
+              <select x-model="settings.teamateMode" @change="markUnsaved()" class="setting-input has-value">
+                <option value="auto">Auto — Claude entscheidet automatisch</option>
+                <option value="in-process">In-Process — Agenten im selben Prozess</option>
+                <option value="tmux">Tmux — Agenten in separaten Tmux-Panes</option>
+              </select>
+            </div>
+
+            <div class="settings-group">
+              <label class="setting-label">Login-Methode erzwingen</label>
+              <p class="setting-desc">Erzwingt eine bestimmte Anmeldemethode für Claude Code.</p>
+              <select x-model="settings.forceLoginMethod" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.forceLoginMethod }">
+                <option value="">Nicht erzwingen</option>
+                <option value="claudeai">Claude AI — claude.ai Account</option>
+                <option value="console">Console — Anthropic Console API Key</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- ═══════════════ DESIGN PROMPTS TAB ═══════════════ -->
+          <div x-show="activeTab === 'design-prompts'" class="tab-content">
+            <!-- Category Filter Pills -->
+            <div class="flex flex-wrap gap-1.5 items-center mb-5">
+              <button @click="designCategory = ''"
+                      class="px-3 py-1.5 rounded-full text-xs font-mono border transition-all"
+                      :class="designCategory === '' ? 'border-accent/40 bg-accent/15 text-accent' : 'border-[rgba(255,255,255,0.08)] text-fg-dim hover:text-fg-muted hover:border-[rgba(255,255,255,0.15)]'">
+                Alle
+              </button>
+              <template x-for="cat in designCategories" :key="cat">
+                <button @click="designCategory = designCategory === cat ? '' : cat"
+                        class="px-3 py-1.5 rounded-full text-xs font-mono border transition-all"
+                        :class="designCategory === cat ? 'border-accent/40 bg-accent/15 text-accent' : 'border-[rgba(255,255,255,0.08)] text-fg-dim hover:text-fg-muted hover:border-[rgba(255,255,255,0.15)]'"
+                        x-text="cat">
+                </button>
+              </template>
+              <span class="text-[11px] font-mono text-fg-dim ml-2" x-text="filteredDesignStyles.length + ' Styles'"></span>
+            </div>
+
+            <!-- Style Cards Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <template x-for="style in filteredDesignStyles" :key="style.id">
+                <div class="rounded-xl border border-[rgba(255,255,255,0.07)] overflow-hidden bg-bg-alt hover:border-[rgba(255,255,255,0.12)] transition-all duration-200 hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
+                  <!-- Gradient accent bar -->
+                  <div class="h-1 w-full" :style="'background: linear-gradient(90deg, ' + style.palette[0] + ', ' + style.palette[1] + ', ' + (style.palette[2] || style.palette[0]) + ')'"></div>
+
+                  <div class="p-4">
+                    <!-- Header: Name + Palette -->
+                    <div class="flex items-start justify-between gap-3 mb-2">
+                      <div>
+                        <h3 class="font-display font-bold text-base text-white leading-tight" x-text="style.name"></h3>
+                        <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-mono text-fg-dim border border-[rgba(255,255,255,0.06)]" x-text="style.category"></span>
+                      </div>
+                      <div class="flex gap-1 flex-shrink-0 mt-0.5">
+                        <template x-for="(color, ci) in style.palette" :key="ci">
+                          <div class="relative group cursor-pointer" @click="copyColor(color)">
+                            <div class="w-5 h-5 rounded-full border border-black/30 hover:scale-125 transition-transform"
+                                 :style="'background:' + color"></div>
+                            <div class="absolute -bottom-7 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded text-[9px] font-mono bg-black/90 text-fg-muted whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10" x-text="color"></div>
+                          </div>
+                        </template>
+                      </div>
+                    </div>
+
+                    <!-- Description -->
+                    <p class="text-sm text-fg-muted leading-relaxed mb-2.5" x-text="style.desc"></p>
+
+                    <!-- Tags -->
+                    <div class="flex flex-wrap gap-1.5 mb-3">
+                      <template x-for="tag in style.tags" :key="tag">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-[rgba(255,255,255,0.03)] text-fg-dim border border-[rgba(255,255,255,0.04)]" x-text="tag"></span>
+                      </template>
+                    </div>
+
+                    <!-- Expand/Collapse -->
+                    <button @click="style.open = !style.open"
+                            class="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-[rgba(255,255,255,0.06)] text-xs font-mono text-fg-dim hover:text-accent hover:border-accent/30 transition-colors bg-[rgba(255,255,255,0.02)]">
+                      <span x-text="style.open ? 'Prompt verbergen' : 'AI Prompt anzeigen'"></span>
+                      <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="{ 'rotate-180': style.open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+
+                    <!-- Prompt Content (expandable) -->
+                    <div x-show="style.open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="mt-3">
+                      <div class="font-mono text-[11px] leading-relaxed text-fg-dim bg-[rgba(0,0,0,0.3)] border border-[rgba(255,255,255,0.04)] rounded-lg p-3 whitespace-pre-wrap break-words" x-text="style.prompt"></div>
+                      <button @click="copyDesignPrompt(style.prompt)"
+                              class="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-accent/20 text-xs font-mono text-accent hover:bg-accent/10 transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Prompt kopieren
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <!-- Empty State -->
+            <div x-show="filteredDesignStyles.length === 0" class="text-center py-16">
+              <p class="font-display text-xl text-fg-dim">Kein Style gefunden</p>
+              <p class="text-xs font-mono text-fg-dim mt-2">Versuch einen anderen Suchbegriff</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ═══ JSON Preview Panel ═══ -->
+      <div x-show="activeTab !== 'design-prompts'" class="border-t border-[rgba(255,255,255,0.08)] flex-shrink-0">
+        <button @click="jsonPreviewOpen = !jsonPreviewOpen" class="w-full flex items-center justify-between px-6 py-2.5 text-xs font-mono font-medium text-fg-dim hover:text-fg-muted transition-colors" style="background: rgba(18, 18, 26, 0.6);">
+          <span>JSON Preview</span>
+          <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': jsonPreviewOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 15l7-7 7 7"/></svg>
+        </button>
+        <div x-show="jsonPreviewOpen" x-transition class="max-h-72 overflow-auto px-6 py-4" style="background: linear-gradient(180deg, #06060B 0%, #08080D 100%); border-top: 1px solid rgba(245,158,11,0.08);">
+          <pre class="json-preview" x-html="syntaxHighlight(cleanJson())"></pre>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ═══════════════ COMPONENT STYLES ═══════════════ -->
+  <style>
+    .settings-group {
+      display: flex; flex-direction: column; gap: 10px;
+      padding: 28px 28px;
+      border-radius: 28px;
+      background: rgba(26, 26, 36, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      transition: border-color 0.25s ease, background 0.25s ease;
+    }
+    .settings-group:hover {
+      border-color: rgba(255, 255, 255, 0.08);
+      background: rgba(26, 26, 36, 0.5);
+    }
+    .setting-label { @apply block font-display text-sm font-semibold text-fg tracking-tight; }
+    .setting-desc { @apply text-xs text-fg-muted leading-relaxed; }
+    .setting-input {
+      @apply w-full px-3 py-2.5 text-sm rounded-xl transition-all duration-200;
+      background: rgba(18, 18, 26, 0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      color: #FAFAFA;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .setting-input::placeholder { color: #52525B; }
+    .setting-input:hover { border-color: rgba(255, 255, 255, 0.15); background: rgba(22, 22, 32, 0.8); }
+  </style>
+
+  <!-- ═══════════════ ALPINE COMPONENT ═══════════════ -->
+  <script>
+    function settingsEditor() {
+      return {
+        activeTab: 'general',
+        jsonPreviewOpen: false,
+        fileHandle: null,
+        fileName: '',
+        unsaved: false,
+        pluginSearch: '',
+        notification: { show: false, message: '', type: 'success' },
+
+        newPerm: { allowTool: '', allowPattern: '', askTool: '', askPattern: '', denyTool: '', denyPattern: '' },
+        newAdditionalDir: '',
+        newEnvKey: '',
+        newEnvValue: '',
+        newSandboxPath: { allowWrite: '', denyWrite: '', denyRead: '' },
+        newDomain: '',
+        newHookEvent: '',
+        newSpinnerVerb: '',
+        activeSpinnerPack: null,
+        hoverSpinnerPack: null,
+        showSaveSpinnerPackDialog: false,
+        newSpinnerPackName: '',
+        newSpinnerPackIcon: '📦',
+        spinnerPackEmojis: ['📦', '🎯', '🔥', '🌈', '🎮', '🚀', '💡', '🎵'],
+        customSpinnerPacks: JSON.parse(localStorage.getItem('claude-spinner-custom-packs') || '[]'),
+
+        spinnerPacks: [
+          { name: 'Star Wars', icon: '⚔️', verbs: ['Using the Force', 'There is no try', 'Sensing a disturbance', 'Consulting the Jedi Archives', 'Navigating hyperspace', 'Reaching the high ground', 'Training with Yoda', 'Letting the hate flow', 'Executing Order 66', 'Assembling the lightsaber', 'Mind-tricking the weak', 'Deflecting blasters', 'Trusting my feelings', 'Completing the training', 'Searching my feelings', 'Joining the dark side', 'This is the way'] },
+          { name: 'Star Trek', icon: '🖖', verbs: ['Engaging warp drive', 'Making it so', 'Resistance is futile', 'Assimilating knowledge', 'Scanning for lifeforms', 'Beaming up', 'Hailing frequencies open', 'Reversing the polarity', 'Raising shields', 'Setting phasers to stun', 'Entering the holodeck', 'Consulting the computer', 'Living long and prospering', 'Adapting — you will be assimilated', 'Boldly going', 'Rerouting through the deflector', 'It\'s life, Jim, but not as we know it'] },
+          { name: 'Breaking Bad', icon: '🧪', verbs: ['Cooking the batch', 'Saying my name', 'Applying chemistry', 'I am the one who knocks', 'Checking the purity — 99.1%', 'Staying out of my territory', 'Consulting Saul', 'Running the car wash', 'Calculating the yield', 'Tread lightly', 'Breaking bad', 'Yeah, science!', 'No half measures', 'Respecting the chemistry', 'Building an empire'] },
+          { name: 'Matrix', icon: '💊', verbs: ['Taking the red pill', 'Dodging bullets', 'Downloading kung fu', 'There is no spoon', 'Entering the Matrix', 'Following the white rabbit', 'Seeing the code', 'Freeing the mind', 'Choosing the path', 'Unplugging from the simulation', 'Glitching in the Matrix', 'What if I told you', 'Knowing kung fu', 'The Matrix has you', 'Whoa'] },
+          { name: 'Herr der Ringe', icon: '💍', verbs: ['Consulting Gandalf', 'You shall not pass', 'Crossing into Mordor', 'One does not simply', 'Lighting the beacons', 'Summoning the eagles', 'Gathering the fellowship', 'Speaking friend and entering', 'Second breakfasting', 'My precious', 'Wielding Andúril', 'Reading the scrolls', 'Destroying the ring', 'Po-ta-toes — boil em, mash em', 'And my axe!', 'A wizard is never late'] },
+          { name: 'Piraten', icon: '🏴‍☠️', verbs: ['Hoisting the sails', 'Walking the plank', 'Drinking rum', 'Why is the rum gone', 'Consulting the map', 'Searching for treasure', 'Raising the Jolly Roger', 'Loading the cannons', 'Navigating by stars', 'Plundering the code', 'Swabbing the deck', 'Parley!', 'That\'s got to be the best code I\'ve ever seen', 'Sailing to Tortuga'] },
+          { name: 'Büro-Alltag', icon: '☕', verbs: ['Kaffeemaschine bedienen', 'Meeting überleben', 'E-Mail löschen', 'Drucker reparieren', 'Ticket eskalieren', 'Stand-up überstehen', 'In der Warteschleife', 'Reply-All rückgängig machen', 'Deadline verschieben', 'WLAN suchen', 'Passwort vergessen', 'Browser-Tabs schließen'] },
+          { name: 'Philosophie', icon: '🤔', verbs: ['Cogito ergo sum', 'Contemplating existence', 'Questioning reality', 'Seeking the truth', 'Channeling Nietzsche', 'Pondering the void', 'Thinking therefore being', 'Debating free will', 'Embracing the absurd', 'Staring into the abyss', 'The abyss stares back', 'Achieving enlightenment'] },
+        ],
+        get spinnerMixPack() {
+          const all = [];
+          this.spinnerPacks.forEach(p => p.verbs.forEach(v => { if (!all.includes(v)) all.push(v); }));
+          // Shuffle for randomness
+          for (let i = all.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
+          return all;
+        },
+
+        customTemplates: JSON.parse(localStorage.getItem('claude-settings-custom-templates') || '[]'),
+        newTplName: '',
+        showSaveTplDialog: false,
+
+        permTools: ['Bash', 'Read', 'Edit', 'Write', 'Glob', 'Grep', 'WebFetch', 'WebSearch', 'Agent', 'NotebookEdit', 'mcp__*'],
+        permSuggestions: ['Bash(npm run *)', 'Bash(git *)', 'Bash(npx *)', 'Bash(node *)', 'Read', 'Edit', 'Write', 'Glob', 'Grep', 'WebSearch', 'WebFetch', 'Bash(ls *)', 'Bash(cat *)', 'Bash(mkdir *)', 'Bash(cp *)', 'Bash(mv *)', 'Bash(echo *)', 'Bash(wc *)', 'Bash(bun *)'],
+        denySuggestions: ['Bash(rm -rf *)', 'Bash(sudo *)', 'Bash(chmod *)', 'Bash(chown *)', 'Bash(shutdown *)', 'Bash(reboot *)', 'Bash(dd *)', 'Bash(mkfs *)', 'Bash(eval *)', 'Bash(exec *)', 'Bash(curl * | bash)', 'Bash(wget * | bash)', 'Bash(nc *)', 'Bash(shred *)', 'Bash(:(){ :|:& };:)', 'Read(./.env)', 'Read(./.env.*)', 'Read(~/.ssh/*)', 'Read(~/.aws/*)'],
+        askSuggestions: ['Bash(git push *)', 'Bash(git reset *)', 'Bash(docker *)', 'Bash(rm *)', 'Bash(firebase deploy *)', 'Bash(npm publish *)', 'Bash(gh pr *)'],
+
+        permPresets: [
+          { id: 'pp-safety', name: 'Safety First', desc: 'Breite Allow-Liste + harte Deny-Rules. Max Flow, min Risiko.', icon: '🛡', color: 'text-red-400 border-red-500/30 hover:bg-red-500/10' },
+          { id: 'pp-productive', name: 'Produktiv', desc: 'Gängige Dev-Tools erlaubt, kaum Deny. Schnelles Arbeiten.', icon: '⚡', color: 'text-blue-400 border-blue-500/30 hover:bg-blue-500/10' },
+          { id: 'pp-readonly', name: 'Nur Lesen', desc: 'Nur Read/Glob/Grep. Kein Schreiben, kein Bash.', icon: '👁', color: 'text-violet-400 border-violet-500/30 hover:bg-violet-500/10' },
+          { id: 'pp-lockdown', name: 'Lockdown', desc: 'Minimale Rechte, maximale Deny-Liste. Für Audits.', icon: '🔒', color: 'text-amber-400 border-amber-500/30 hover:bg-amber-500/10' },
+        ],
+
+        envSuggestions: [
+          { key: 'NODE_ENV', default: 'development' },
+          { key: 'CLAUDE_CODE_EFFORT_LEVEL', default: 'high' },
+          { key: 'CLAUDE_CODE_SUBAGENT_MODEL', default: 'claude-sonnet-4-6' },
+          { key: 'DISABLE_PROMPT_CACHING', default: '0' },
+        ],
+
+        templates: [
+          { id: 'beginner', name: 'Einsteiger — Sicher', desc: 'Fragt bei jeder Aktion. Ideal zum Kennenlernen von Claude Code.', color: 'bg-emerald-400' },
+          { id: 'developer', name: 'Entwickler — Produktiv', desc: 'Erlaubt gängige Tools automatisch. Gute Balance aus Speed und Kontrolle.', color: 'bg-blue-400' },
+          { id: 'poweruser', name: 'Power User — Maximal', desc: 'Volle Automatisierung, Thinking-Modus, alle Plugins. Für erfahrene User.', color: 'bg-accent' },
+          { id: 'team', name: 'Team — Sicher & Kontrolliert', desc: 'Strikte Permissions, Sandbox aktiv, Bypass deaktiviert. Für Shared-Configs.', color: 'bg-violet-400' },
+          { id: 'safetyfirst', name: 'Safety First — Smart Deny', desc: 'Breite Allow-Liste + umfassende Deny-Rules. Maximaler Flow, minimales Risiko.', color: 'bg-red-400' },
+          { id: 'minimal', name: 'Minimal — Clean Slate', desc: 'Leere Konfiguration, nur das Nötigste. Zum Selbst-Aufbauen.', color: 'bg-fg-dim' },
+        ],
+
+        designSearch: '',
+        designCategory: '',
+        designCategories: ['Minimal', 'Bold', 'Classic', 'Futuristic', 'Artistic', 'Corporate'],
+        designStyles: [
+          { id: 'saas', name: 'SaaS', category: 'Corporate', desc: 'Clean, conversion-optimierte Interfaces mit klarer Hierarchie.', tags: ['clean', 'conversion', 'trustworthy'], palette: ['#4F46E5','#7C3AED','#E0E7FF','#F8FAFC','#1E293B'], open: false, prompt: 'Design a SaaS dashboard/landing page with a clean, professional aesthetic. Use a light background (#F8FAFC) with deep indigo (#4F46E5) as the primary accent. Typography should be a modern geometric sans-serif with clear hierarchy: large bold headlines, medium-weight subheadings, regular body text. Cards should have subtle shadows (0 1px 3px rgba(0,0,0,0.1)) with rounded corners (12px). Use generous whitespace, a clear visual hierarchy, and trust-building elements like metric cards. CTAs should be prominent with rounded pill buttons in the primary color. Grid-based layout with 8px spacing system.' },
+          { id: 'claymorphism', name: 'Claymorphism', category: 'Artistic', desc: '3D-Clay-Look mit weichen, plastischen Formen und Pastelltoenen.', tags: ['3d', 'soft', 'playful', 'pastel'], palette: ['#E8D5F5','#F5D5E0','#D5EDF5','#FFF5D5','#2D2D3F'], open: false, prompt: 'Design a UI with claymorphism style — elements should look like soft, inflated 3D clay objects. Use pastel backgrounds (#F5F0FF) with rounded elements (border-radius: 20-30px). Each card/button should have a dual shadow: outer shadow (8px 8px 16px rgba(0,0,0,0.1)) and inner highlight (inset -4px -4px 8px rgba(255,255,255,0.6)). Colors should be soft pastels — lavender (#E8D5F5), blush (#F5D5E0), baby blue (#D5EDF5). Elements should feel puffy and tactile. Typography should be rounded and friendly (e.g., Nunito, Quicksand).' },
+          { id: 'neo-brutalism', name: 'Neo-Brutalism', category: 'Bold', desc: 'Rohe Interfaces mit dicken Borders, knalligen Farben und bewusst unfertiger Aesthetik.', tags: ['raw', 'bold', 'borders', 'loud'], palette: ['#FF6B6B','#FFE66D','#4ECDC4','#000000','#FFFFFF'], open: false, prompt: 'Design a neo-brutalist interface with raw, unapologetic energy. Use a white or bright yellow (#FFE66D) background. Every element gets a thick black border (3-4px solid #000). Cards and buttons have hard box-shadows offset to the bottom-right (4px 4px 0px #000) — no blur, no softness. Typography should be bold, chunky sans-serif with some elements in monospace. Use clashing, vivid colors: coral red (#FF6B6B), mint (#4ECDC4), bright yellow (#FFE66D). No rounded corners. Hover states should shift the shadow for a pressed effect.' },
+          { id: 'modern-dark', name: 'Modern Dark', category: 'Minimal', desc: 'Elegante dunkle Interfaces mit subtilen Glaseffekten und feinen Borders.', tags: ['dark', 'elegant', 'glass', 'refined'], palette: ['#0A0A0F','#1A1A2E','#A78BFA','#E2E8F0','#6366F1'], open: false, prompt: 'Design a modern dark UI with refined elegance. Base background should be near-black (#0A0A0F to #0F0F17). Use layered surfaces with subtle elevation: cards at rgba(255,255,255,0.03-0.06). Borders ultra-thin (1px) at rgba(255,255,255,0.06-0.1). Primary accent in soft violet (#A78BFA) or indigo (#6366F1). Add subtle backdrop-blur(12px) for floating elements. Use restrained gradients — faint radial glow behind hero elements. Every detail should feel considered and premium.' },
+          { id: 'cyberpunk', name: 'Cyberpunk', category: 'Futuristic', desc: 'Neon-getraenkte, dystopische Interfaces mit Glitch-Effekten und scharfen Kanten.', tags: ['neon', 'glitch', 'tech', 'dystopian'], palette: ['#0D0D0D','#00FFFF','#FF0080','#FFE600','#1A0033'], open: false, prompt: 'Design a cyberpunk interface dripping with neon energy. Black background (#0D0D0D) with elements lit by neon cyan (#00FFFF), hot pink (#FF0080), and electric yellow (#FFE600). Use monospace or tech fonts (e.g., Orbitron, Share Tech Mono). Elements should have sharp, angular shapes — clipped corners using clip-path. Add scan-line overlays and subtle glitch effects on hover. Borders should glow with box-shadow: 0 0 10px rgba(0,255,255,0.3). Use HUD-style elements: thin progress bars, data readouts, grid overlays.' },
+          { id: 'neumorphism', name: 'Neumorphism', category: 'Minimal', desc: 'Soft UI mit extrudierten Elementen die aus dem Hintergrund hervortreten.', tags: ['soft-ui', 'shadows', 'extruded', 'subtle'], palette: ['#E0E5EC','#A3B1C6','#FFFFFF','#D1D9E6','#6C63FF'], open: false, prompt: 'Design a neumorphic (soft UI) interface where elements appear extruded from the background. Use light gray background (#E0E5EC). Every element gets dual shadows: light shadow (top-left: -6px -6px 14px #FFFFFF) and dark shadow (bottom-right: 6px 6px 14px #D1D9E6). Pressed states invert to inset shadows. Border-radius generous (12-20px). Colors mostly monochromatic with single accent (#6C63FF) sparingly. Depth comes purely from shadows.' },
+          { id: 'flat-design', name: 'Flat Design', category: 'Minimal', desc: 'Minimalistisch, ohne Schatten oder 3D. Klare Farben, fokussiert auf Inhalt.', tags: ['minimal', 'no-shadows', 'simple'], palette: ['#2196F3','#FF5722','#4CAF50','#FFFFFF','#212121'], open: false, prompt: 'Design a flat UI with zero shadows, zero gradients, zero 3D effects. White background with bold, saturated flat colors: blue (#2196F3), orange (#FF5722), green (#4CAF50). Elements defined by color contrast alone. Typography geometric sans-serif with clear size hierarchy. Icons simple, filled, single-color. Buttons solid color rectangles with white text, minimal border-radius (4px). Focus entirely on content hierarchy and readability.' },
+          { id: 'retro', name: 'Retro', category: 'Artistic', desc: '70er/80er-Vibes mit warmen Farben, Pixel-Fonts und nostalgischer Aesthetik.', tags: ['vintage', 'warm', 'nostalgic'], palette: ['#F4A261','#E76F51','#2A9D8F','#264653','#E9C46A'], open: false, prompt: 'Design a retro-themed interface evoking 70s-80s nostalgia. Warm, cream background (#FAF3E0). Color palette earthy: burnt orange (#F4A261), terracotta (#E76F51), teal (#2A9D8F), golden yellow (#E9C46A). Typography mix retro display font with clean body font. Add subtle CRT/VHS scan-line effects. Borders dashed or dotted. Decorative elements: starbursts, zigzag dividers, halftone dot patterns.' },
+          { id: 'luxury', name: 'Luxury', category: 'Classic', desc: 'High-End-Aesthetik mit Goldakzenten, Serifen und atemloser Eleganz.', tags: ['premium', 'gold', 'serif', 'elegant'], palette: ['#0A0A0A','#C9A96E','#F5F0EB','#1A1A2E','#8B7355'], open: false, prompt: 'Design a luxury interface exuding high-end sophistication. Deep black (#0A0A0A) or dark navy (#1A1A2E) background. Gold (#C9A96E) as primary accent — use sparingly for borders, icons, key text. Typography refined serif (e.g., Playfair Display, Cormorant Garamond) for headings, thin sans-serif for body. Letter-spacing generous (0.1-0.2em), especially uppercase. Fine hairline borders. Whitespace essential — everything curated, restrained, expensive.' },
+          { id: 'material-design', name: 'Material Design', category: 'Corporate', desc: 'Googles Design-System mit Elevations, Animationen und systematischem Theming.', tags: ['google', 'elevation', 'systematic'], palette: ['#6750A4','#EADDFF','#1C1B1F','#FFFBFE','#E8DEF8'], open: false, prompt: 'Design a Material Design 3 interface. Light surface (#FFFBFE) with primary purple (#6750A4). Apply elevation system: Level 0-5 with increasing shadow. Cards rounded corners (12px) with tonal fill. Type scale: Display, Headline, Title, Body, Label. Components: FABs, chips, segmented buttons, navigation rails. Color containers use tonal variants (primaryContainer: #EADDFF). Motion: emphasized easing with 300-500ms. Ripple effects on interactive elements.' },
+          { id: 'swiss-minimalist', name: 'Swiss Minimalist', category: 'Minimal', desc: 'Internationale Typografie mit striktem Grid und mathematischer Praezision.', tags: ['grid', 'typography', 'precision'], palette: ['#000000','#FF0000','#FFFFFF','#333333','#CCCCCC'], open: false, prompt: 'Design a Swiss/International Typographic Style interface. Strict grid system as foundation. Pure white background. Typography is king: Helvetica Neue or similar grotesque sans-serif. Size contrast dramatic — 72px+ headlines next to 14px body. Black for text, red (#FF0000) as sole accent. Layout asymmetric but precisely balanced. Generous whitespace and strong rules. No decorative elements — content IS the design. Alignment flush-left, ragged-right.' },
+          { id: 'playful-geometric', name: 'Playful Geometric', category: 'Artistic', desc: 'Verspielte Formen, lebhafte Farben und geometrische Muster.', tags: ['fun', 'shapes', 'colorful'], palette: ['#FF6B9D','#C06FDB','#51CF66','#FFD93D','#2B9EB3'], open: false, prompt: 'Design a playful geometric interface bursting with energy. White background with bold geometric shapes: circles, triangles, squares in pink (#FF6B9D), purple (#C06FDB), green (#51CF66), yellow (#FFD93D), teal (#2B9EB3). Typography rounded and friendly (Poppins, Nunito). Cards generous border-radius (16-24px). Floating geometric shapes with CSS animation. Buttons pill-shaped with gradient fills. Layout can break grid with overlapping and rotated elements.' },
+          { id: 'monochrome', name: 'Monochrome', category: 'Minimal', desc: 'Rein schwarz-weiss mit maximaler Dramatik durch Kontrast.', tags: ['b&w', 'contrast', 'dramatic'], palette: ['#000000','#1A1A1A','#666666','#CCCCCC','#FFFFFF'], open: false, prompt: 'Design a monochrome interface using ONLY black, white, and grays. No color whatsoever. Create drama through contrast: large black text blocks against white space. Typography strong with varied weight — ultra-bold headlines, ultra-light supporting text. Photos high-contrast B&W. Borders very thin (1px #CCC) or very thick (4px+ #000). Hover states invert colors. The constraint forces every element to earn its place through size, weight, position, contrast.' },
+          { id: 'industrial', name: 'Industrial', category: 'Bold', desc: 'Rau, technisch. Stahlgrau, Warnschilder-Gelb und utilitaere Typografie.', tags: ['raw', 'utilitarian', 'steel'], palette: ['#2D2D2D','#FFB800','#E8E8E8','#FF3B30','#1A1A1A'], open: false, prompt: 'Design an industrial-style interface with factory-floor aesthetic. Dark steel gray (#2D2D2D) or concrete-textured light gray. Warning yellow (#FFB800) and safety red (#FF3B30) as accents. Typography condensed, utilitarian sans-serif in all-caps headers. Add metal/concrete textures or diagonal hazard stripes. Borders solid and functional. Components should look like physical controls — chunky toggles, stamped buttons, gauge-like progress.' },
+          { id: 'academia', name: 'Academia', category: 'Classic', desc: 'Universitaere Aesthetik mit Serifen, Papier-Texturen und Bibliotheks-Flair.', tags: ['scholarly', 'serif', 'paper'], palette: ['#2C1810','#8B4513','#F5F0E8','#4A3728','#C4A882'], open: false, prompt: 'Design an academia-themed interface evoking old university libraries. Warm parchment background (#F5F0E8) with subtle paper texture. Classic serif typography (Crimson Text, EB Garamond). Colors bookish: deep brown (#2C1810), saddle brown (#8B4513), warm tan (#C4A882). Thin horizontal rules and small caps for dividers. Layout like a typeset book page — narrow measure (60-75ch), comfortable line-height (1.6-1.8). Drop caps, footnote markers, ornamental dividers.' },
+          { id: 'terminal', name: 'Terminal', category: 'Futuristic', desc: 'CLI-Aesthetik mit Monospace-Fonts und gruenem Phosphor-Look.', tags: ['cli', 'monospace', 'hacker'], palette: ['#0A0A0A','#00FF41','#008F11','#0D0D0D','#003B00'], open: false, prompt: 'Design a terminal/CLI-inspired interface. Pure black background (#0A0A0A). All text monospace (JetBrains Mono, Fira Code). Primary text phosphor green (#00FF41). Add CRT curvature effect, scan-lines, and faint green glow (text-shadow: 0 0 10px rgba(0,255,65,0.3)). Elements bordered with ASCII characters or 1px green borders. Blinking cursor animation. Data in table format with fixed-width columns. Subtle flicker animation. No rounded corners. Commands with $ or > prompt prefix.' },
+          { id: 'kinetic', name: 'Kinetic', category: 'Bold', desc: 'Bewegung als Designprinzip. Dynamische Layouts und animierte Typografie.', tags: ['motion', 'dynamic', 'animated'], palette: ['#1A1A2E','#FF4757','#FFA502','#2ED573','#5352ED'], open: false, prompt: 'Design a kinetic interface where motion is the core design principle. Dark base (#1A1A2E) with vibrant accents: red (#FF4757), orange (#FFA502), green (#2ED573), purple (#5352ED). Typography bold and dynamic — variable font weights animating on hover. Staggered letter animations. Elements enter with dramatic transitions: slide-in, scale-up, rotate-in with spring cubic-bezier(0.68,-0.55,0.27,1.55). Diagonal dividers (clip-path polygon) and skewed sections. Background particles add ambient motion.' },
+          { id: 'newsprint', name: 'Newsprint', category: 'Classic', desc: 'Zeitungslayout mit Spalten, Serifen und editorialer Strenge.', tags: ['editorial', 'columns', 'serif'], palette: ['#1A1A1A','#333333','#F7F5F0','#C62828','#8B8B8B'], open: false, prompt: 'Design a newsprint/editorial interface inspired by broadsheet newspapers. Warm newsprint background (#F7F5F0). Multi-column layout. Typography: strong serif for headlines (Playfair Display), readable serif for body. Headlines very large spanning multiple columns. Thin black rules (1px) to separate sections. Pull quotes in larger italic text. Bylines in small caps. Accent red (#C62828) for highlights only. Dense but organized — narrow gutters, tight leading on headlines.' },
+          { id: 'professional', name: 'Professional', category: 'Corporate', desc: 'Business-tauglich und serioes. Navy-Blau, klare Struktur.', tags: ['business', 'trustworthy', 'navy'], palette: ['#1E3A5F','#2563EB','#F1F5F9','#0F172A','#64748B'], open: false, prompt: 'Design a professional business interface that inspires trust. Clean light gray background (#F1F5F9) with navy (#1E3A5F) and blue (#2563EB). Typography professional sans-serif (Source Sans Pro, IBM Plex Sans). Cards with subtle shadows and 8px border-radius. Clear 8px grid system. Well-structured tables with alternating row colors. Navigation straightforward. Icons outlined, consistent weight. Blue for actions, green for success, red for errors, gray for secondary.' },
+          { id: 'enterprise', name: 'Enterprise', category: 'Corporate', desc: 'Skalierbare Design-Systeme fuer komplexe Anwendungen mit dichten Layouts.', tags: ['dense', 'data-heavy', 'scalable'], palette: ['#0F172A','#3B82F6','#F8FAFC','#1E293B','#94A3B8'], open: false, prompt: 'Design an enterprise application optimized for data density. Compact layout, minimal whitespace. Light (#F8FAFC) content areas, dark sidebar (#0F172A). 4px grid system. Typography small but readable: 13-14px body, 12px labels. Primary blue (#3B82F6). Complex components: data tables with sortable columns, multi-level navigation, filter panels, split views, status badges. Subtle borders (1px #E2E8F0). Consistent icon system at 16px. Keyboard shortcuts via kbd elements.' },
+          { id: 'bold-typography', name: 'Bold Typography', category: 'Bold', desc: 'Typografie ALS Design. Uebergrosse Schrift und dramatische Kontraste.', tags: ['oversized', 'type-driven', 'dramatic'], palette: ['#000000','#FF2D55','#FFFFFF','#1A1A1A','#F5F5F5'], open: false, prompt: 'Design a typography-driven interface where words ARE the design. Extremely large type: 120px+ for hero headlines. Bold, characterful display face (Clash Display, Cabinet Grotesk, Bebas Neue). Mix weights dramatically: 900 headlines, 300 body. White or black background. Accent vivid red (#FF2D55) for key words only. Layout asymmetric with text running edge-to-edge. Negative letter-spacing on large text (-0.05em). Consider vertical text, rotated elements. Typography IS the interface.' },
+          { id: 'minimal-dark', name: 'Minimal Dark', category: 'Minimal', desc: 'Absolute Reduktion in Dunkel. Nur das Noetigste, in perfekter Balance.', tags: ['dark', 'reduced', 'essential'], palette: ['#111111','#1C1C1E','#8E8E93','#F5F5F7','#0A84FF'], open: false, prompt: 'Design a minimal dark interface stripped to essentials. Near-black (#111111) with barely lighter surfaces (#1C1C1E). Text hierarchy: primary (#F5F5F7), secondary (#8E8E93), single accent (#0A84FF). One sans-serif family, two weights max. Elements defined by subtle background shifts, not borders. Consistent 8px border-radius. Strict 8px grid. No decorative elements, no gradients, no textures. Interactions subtle: opacity changes, slight scale. Every element has earned its place.' },
+          { id: 'maximalism', name: 'Maximalism', category: 'Artistic', desc: 'Mehr ist mehr. Layered, texturiert, bunt — ein visuelles Feuerwerk.', tags: ['layers', 'textured', 'colorful'], palette: ['#FF006E','#8338EC','#FFBE0B','#3A86FF','#FB5607'], open: false, prompt: 'Design a maximalist interface: MORE IS MORE. Layer everything: overlapping cards, stacked images, collage-style. Rich palette: magenta (#FF006E), purple (#8338EC), yellow (#FFBE0B), blue (#3A86FF), orange (#FB5607). Mix fonts aggressively — serif with sans-serif with monospace. Add textures: grain, noise, halftone, gradient meshes. Mixed borders. Complex background: layered gradients, pattern overlays, mix-blend-mode experiments. Decorative elements everywhere. Extreme scale variation. Chaotic but intentional.' },
+          { id: 'web3', name: 'Web3', category: 'Futuristic', desc: 'Blockchain-Aesthetik mit Gradient-Meshes und futuristischen Glaseffekten.', tags: ['blockchain', 'gradients', 'glass'], palette: ['#0B0B1A','#7B61FF','#00D1FF','#FF6B6B','#1E1E3F'], open: false, prompt: 'Design a Web3/blockchain interface. Dark background (#0B0B1A) with vibrant gradients: purple (#7B61FF) to cyan (#00D1FF). Glassmorphism cards: rgba(255,255,255,0.05), backdrop-filter: blur(12px), border: 1px solid rgba(255,255,255,0.1). Animated gradient mesh backgrounds. Modern typography (Outfit, Sora, Satoshi). Gradient border buttons. Stats with animated counters. Glow effects generously. Network visualizations or hex grid patterns. Pulsing status indicators.' },
+          { id: 'vaporwave', name: 'Vaporwave', category: 'Artistic', desc: 'Retro-futuristische Pink/Cyan-Gradienten mit 90er-Nostalgie.', tags: ['retro-future', 'pink', 'aesthetic'], palette: ['#1A0030','#FF71CE','#01CDFE','#B967FF','#05FFA1'], open: false, prompt: 'Design a vaporwave interface with retro-futuristic nostalgia. Deep purple-black background (#1A0030). Neon pastels: hot pink (#FF71CE), cyan (#01CDFE), lavender (#B967FF), mint (#05FFA1). Mix clean sans-serif with retro/pixel font. Sunset gradient (pink to purple to dark blue) as hero. Grid lines in perspective like 80s grid floor. Chrome/metallic text with linear-gradient and background-clip:text. Decorative: palm trees, Greek columns, glitch art, VHS tracking lines. Dreamy, surreal collage aesthetic.' },
+          { id: 'botanical', name: 'Botanical', category: 'Artistic', desc: 'Naturinspiriert mit sanften Gruentoenen und organischen Formen.', tags: ['nature', 'green', 'organic'], palette: ['#2D5016','#4A7C28','#F0F4E8','#8B6914','#E8E0D0'], open: false, prompt: 'Design a botanical-themed interface inspired by nature. Warm earthy background (#F0F4E8) with natural greens: forest (#2D5016), leaf (#4A7C28), sage (#8FAE6C). Accent warm earth tones: amber (#8B6914), cream (#E8E0D0). Typography organic and refined — humanist serif or soft sans-serif. Soft, irregular border-radius (organic blob shapes). Subtle leaf/botanical line art as decoration. Soft, diffused shadows like natural light. Linen or watercolor paper textures.' },
+          { id: 'sketch', name: 'Sketch', category: 'Artistic', desc: 'Handgezeichnete Aesthetik mit Stift-Linien und charmanter Unperfektion.', tags: ['hand-drawn', 'pen', 'imperfect'], palette: ['#2C2C2C','#5B8C5A','#E8D5B7','#C0392B','#3498DB'], open: false, prompt: 'Design a sketch-style interface that looks hand-drawn. Warm paper background (#E8D5B7). Borders hand-drawn with wobbly line effect via SVG filters. Typography handwriting font for headings (Caveat, Patrick Hand) paired with readable body. Colors like pen and markers: pencil gray (#2C2C2C), green (#5B8C5A), red (#C0392B), blue (#3498DB). Crossed-out text, arrows, circled elements as annotations. Hatching lines instead of shadows. Scribble borders on buttons. Embrace charming imperfection.' },
+          { id: 'bauhaus', name: 'Bauhaus', category: 'Classic', desc: 'Form follows function. Primaerfarben, geometrische Grundformen.', tags: ['geometric', 'primary-colors', 'modernist'], palette: ['#000000','#DD1C1A','#FDCA40','#0D47A1','#FAFAFA'], open: false, prompt: 'Design a Bauhaus-inspired interface: form follows function. Only primary colors: red (#DD1C1A), yellow (#FDCA40), blue (#0D47A1) against black and white. Geometric shapes: circles, squares, triangles as functional and decorative elements. Typography geometric sans-serif (Futura, Jost) with strong weight contrast. Strict modular grid with asymmetric balance. Lines as design elements — thick and thin rules. Large geometric shapes as background. No gradients, no textures — flat and precise. Inspired by Kandinsky, Klee, Gropius.' },
+          { id: 'art-deco', name: 'Art Deco', category: 'Classic', desc: 'Glamouroese 1920er-Aesthetik mit Gold und geometrischen Mustern.', tags: ['1920s', 'gold', 'geometric'], palette: ['#0D0D0D','#D4AF37','#1A1A2E','#F0E6D3','#8B7D6B'], open: false, prompt: 'Design an Art Deco interface channeling 1920s glamour. Deep dark background (#0D0D0D or #1A1A2E) with gold (#D4AF37) as primary accent. Geometric patterns: fan/sunburst, chevrons, zigzags, stepped pyramids via CSS gradients or SVG. Typography Art Deco display font (Poiret One, Josefin Sans) with generous letter-spacing. Symmetrical layouts with strong center axes. Decorative borders: double lines, stepped frames, corner ornaments. Thin gold dividers. Opulent, geometric, impossibly elegant.' },
+          { id: 'organic', name: 'Organic', category: 'Artistic', desc: 'Fliessende Formen, sanfte Gradienten und natuerliche Kurven.', tags: ['flowing', 'curves', 'natural'], palette: ['#1A1A2E','#E07A5F','#81B29A','#F2CC8F','#3D405B'], open: false, prompt: 'Design an organic interface with flowing, natural forms. Palette: charcoal (#3D405B), terracotta (#E07A5F), sage (#81B29A), golden sand (#F2CC8F). No sharp corners — large border-radius (20-40px) and blob shapes (border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%). Soft flowing gradients and blob shapes. Humanist typeface with calligraphic qualities. Soft diffused shadows. Elements gently floating. Wavy SVG section dividers instead of straight lines. Colors flow with smooth gradient transitions. Everything alive, breathing, warm.' },
+        ],
+
+        get filteredDesignStyles() {
+          let result = this.designStyles;
+          if (this.designCategory) result = result.filter(s => s.category === this.designCategory);
+          if (this.designSearch.trim()) {
+            const q = this.designSearch.toLowerCase();
+            result = result.filter(s => s.name.toLowerCase().includes(q) || s.desc.toLowerCase().includes(q) || s.tags.some(t => t.includes(q)) || s.category.toLowerCase().includes(q) || s.prompt.toLowerCase().includes(q));
+          }
+          return result;
+        },
+
+        copyDesignPrompt(text) {
+          navigator.clipboard.writeText(text).then(() => this.notify('Prompt kopiert!'));
+        },
+
+        copyColor(hex) {
+          navigator.clipboard.writeText(hex).then(() => this.notify('Farbe kopiert: ' + hex));
+        },
+
+        tabs: [
+          { id: 'general', label: 'General', desc: 'Modell, Output-Stil und grundlegende Einstellungen', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>' },
+          { id: 'permissions', label: 'Permissions', desc: 'Welche Tools automatisch erlaubt, gefragt oder blockiert werden', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>' },
+          { id: 'plugins', label: 'Plugins', desc: 'Plugins aktivieren oder deaktivieren', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/></svg>' },
+          { id: 'hooks', label: 'Hooks', desc: 'Automatische Aktionen bei bestimmten Events', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>' },
+          { id: 'sandbox', label: 'Sandbox', desc: 'Dateisystem- und Netzwerkzugriffe einschränken', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>' },
+          { id: 'env', label: 'Environment', desc: 'Umgebungsvariablen für jede Session', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>' },
+          { id: 'display', label: 'Display & UI', desc: 'Spinner, Status Line und visuelle Einstellungen', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>' },
+          { id: 'attribution', label: 'Attribution', desc: 'Commit- und PR-Attribution konfigurieren', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>' },
+          { id: 'advanced', label: 'Advanced', desc: 'Auth, Performance und erweiterte Optionen', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>' },
+          { id: 'separator' },
+          { id: 'design-prompts', label: 'Design Prompts', desc: '30 kuratierte Design-Aesthetiken mit AI-ready Prompts', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>' },
+        ],
+
+        hookEvents: [
+          { id: 'SessionStart', desc: 'Beim Start einer Session' },
+          { id: 'UserPromptSubmit', desc: 'Bevor User-Prompt verarbeitet wird' },
+          { id: 'PreToolUse', desc: 'Vor der Ausführung eines Tools (kann blockieren)' },
+          { id: 'PostToolUse', desc: 'Nach erfolgreicher Tool-Ausführung' },
+          { id: 'PostToolUseFailure', desc: 'Nach fehlgeschlagener Tool-Ausführung' },
+          { id: 'PermissionRequest', desc: 'Vor dem Permission-Dialog' },
+          { id: 'Notification', desc: 'Wenn Claude Aufmerksamkeit braucht' },
+          { id: 'SubagentStart', desc: 'Bevor ein Subagent startet' },
+          { id: 'SubagentStop', desc: 'Nachdem ein Subagent stoppt' },
+          { id: 'Stop', desc: 'Bevor die Session endet' },
+          { id: 'PreCompact', desc: 'Vor Context-Komprimierung' },
+          { id: 'SessionEnd', desc: 'Wenn die Session endet' },
+        ],
+
+        pluginCategories: [
+          {
+            name: 'Workflow',
+            plugins: [
+              { id: 'commit-commands@claude-plugins-official', name: 'Commit Commands', desc: 'Git Commit, Push und PR Skills' },
+              { id: 'pr-review-toolkit@claude-plugins-official', name: 'PR Review Toolkit', desc: 'Umfassende Pull-Request-Reviews' },
+              { id: 'feature-dev@claude-plugins-official', name: 'Feature Dev', desc: 'Geführte Feature-Entwicklung mit Architektur-Fokus' },
+              { id: 'code-review@claude-plugins-official', name: 'Code Review', desc: 'Code-Review für Pull Requests' },
+              { id: 'code-simplifier@claude-plugins-official', name: 'Code Simplifier', desc: 'Vereinfacht Code für Klarheit und Wartbarkeit' },
+              { id: 'claude-md-management@claude-plugins-official', name: 'CLAUDE.md Management', desc: 'CLAUDE.md Dateien verwalten und verbessern' },
+              { id: 'skill-creator@claude-plugins-official', name: 'Skill Creator', desc: 'Neue Skills erstellen und testen' },
+              { id: 'claude-code-setup@claude-plugins-official', name: 'Claude Code Setup', desc: 'Automatisierungs-Empfehlungen für Projekte' },
+              { id: 'plugin-dev@claude-plugins-official', name: 'Plugin Dev', desc: 'Claude Code Plugins entwickeln' },
+            ]
+          },
+          {
+            name: 'Integrations',
+            plugins: [
+              { id: 'firebase@claude-plugins-official', name: 'Firebase', desc: 'Firebase Projekt-Management und Firestore' },
+              { id: 'stripe@claude-plugins-official', name: 'Stripe', desc: 'Stripe Payment-Integration und Best Practices' },
+              { id: 'vercel@claude-plugins-official', name: 'Vercel', desc: 'Vercel Deployment und Logs' },
+              { id: 'supabase@claude-plugins-official', name: 'Supabase', desc: 'Supabase Datenbank-Integration' },
+              { id: 'github@claude-plugins-official', name: 'GitHub', desc: 'GitHub Integration' },
+              { id: 'gitlab@claude-plugins-official', name: 'GitLab', desc: 'GitLab Integration' },
+              { id: 'Notion@claude-plugins-official', name: 'Notion', desc: 'Notion Workspace-Integration' },
+              { id: 'coderabbit@claude-plugins-official', name: 'CodeRabbit', desc: 'AI-basierte Code-Reviews mit CodeRabbit' },
+              { id: 'sonatype-guide@claude-plugins-official', name: 'Sonatype Guide', desc: 'Dependency-Analyse und Sicherheitsprüfung' },
+              { id: 'firecrawl@claude-plugins-official', name: 'Firecrawl', desc: 'Web-Crawling und Scraping' },
+              { id: 'semgrep@claude-plugins-official', name: 'Semgrep', desc: 'Statische Code-Analyse' },
+              { id: 'huggingface-skills@claude-plugins-official', name: 'HuggingFace Skills', desc: 'HuggingFace ML-Modelle und Datasets' },
+            ]
+          },
+          {
+            name: 'Language Servers',
+            plugins: [
+              { id: 'typescript-lsp@claude-plugins-official', name: 'TypeScript LSP', desc: 'TypeScript/JavaScript Language Server' },
+              { id: 'pyright-lsp@claude-plugins-official', name: 'Pyright LSP', desc: 'Python Type-Checking und Analyse' },
+              { id: 'rust-analyzer-lsp@claude-plugins-official', name: 'Rust Analyzer', desc: 'Rust Language Server' },
+              { id: 'gopls-lsp@claude-plugins-official', name: 'gopls LSP', desc: 'Go Language Server' },
+              { id: 'csharp-lsp@claude-plugins-official', name: 'C# LSP', desc: 'C# / .NET Language Server' },
+              { id: 'swift-lsp@claude-plugins-official', name: 'Swift LSP', desc: 'Swift Language Server' },
+              { id: 'clangd-lsp@claude-plugins-official', name: 'Clangd LSP', desc: 'C/C++ Language Server' },
+              { id: 'kotlin-lsp@claude-plugins-official', name: 'Kotlin LSP', desc: 'Kotlin Language Server' },
+              { id: 'lua-lsp@claude-plugins-official', name: 'Lua LSP', desc: 'Lua Language Server' },
+              { id: 'php-lsp@claude-plugins-official', name: 'PHP LSP', desc: 'PHP Language Server' },
+            ]
+          },
+          {
+            name: 'Output Styles',
+            plugins: [
+              { id: 'explanatory-output-style@claude-plugins-official', name: 'Explanatory', desc: 'Erklärender Output mit Insights und Kontext' },
+              { id: 'learning-output-style@claude-plugins-official', name: 'Learning', desc: 'Lernorientierter Output mit didaktischen Erklärungen' },
+            ]
+          },
+          {
+            name: 'Creative',
+            plugins: [
+              { id: 'frontend-design@claude-plugins-official', name: 'Frontend Design', desc: 'Distinctive, production-grade Frontend-Interfaces' },
+              { id: 'playground@claude-plugins-official', name: 'Playground', desc: 'Interaktive HTML-Playgrounds erstellen' },
+              { id: 'frontend-slides@community', name: 'Frontend Slides', desc: 'Animierte HTML-Präsentationen aus Text oder PowerPoint erstellen', community: true, install: 'GitHub: zarazhangrui/frontend-slides → SKILL.md nach ~/.claude/skills/frontend-slides/' },
+              { id: 'ui-design-system@community', name: 'UI Design System', desc: 'Design-Token-Generierung, Component-Dokumentation und responsive Berechnungen', community: true, install: 'npx claude-code-templates@latest --skill creative-design/ui-design-system' },
+              { id: 'frontend-design-community@community', name: 'Frontend Design (Community)', desc: 'Production-grade Interfaces mit hoher Design-Qualität — Community-Version mit 6.5k+ Downloads', community: true, install: 'npx claude-code-templates@latest --skill creative-design/frontend-design' },
+            ]
+          },
+          {
+            name: 'AI & Research',
+            plugins: [
+              { id: 'agent-tool-builder@community', name: 'Agent Tool Builder', desc: 'AI-Agent-Tools und MCP-Tool-Schemas effektiv designen', community: true, install: 'npx claude-code-templates@latest --skill ai-research/agent-tool-builder' },
+              { id: 'context7-auto-research@community', name: 'Context7 Auto Research', desc: 'Aktuelle Framework-Doku automatisch via Context7 API abrufen', community: true, install: 'npx claude-code-templates@latest --skill ai-research/context7-auto-research' },
+            ]
+          },
+          {
+            name: 'Security',
+            plugins: [
+              { id: 'security-guidance@claude-plugins-official', name: 'Security Guidance', desc: 'Sicherheitsrichtlinien und Best Practices' },
+            ]
+          },
+          {
+            name: 'Local / Custom',
+            plugins: [
+              { id: 'superpowers@local-desktop-app-uploads', name: 'Superpowers', desc: 'Erweiterte Workflows: Brainstorming, TDD, Debugging, Planung' },
+            ]
+          }
+        ],
+
+        settings: {
+          model: '', effortLevel: '', outputStyle: '', language: '',
+          alwaysThinkingEnabled: false, autoUpdatesChannel: 'latest',
+          permissions: { allow: [], ask: [], deny: [], additionalDirectories: [], defaultMode: 'allowPrompt', disableBypassPermissionsMode: '' },
+          enabledPlugins: {},
+          hooks: {},
+          sandbox: { enabled: false, filesystem: { allowWrite: [], denyWrite: [], denyRead: [] }, network: { allowedDomains: [], allowLocalBinding: false, allowAllUnixSockets: false } },
+          env: {},
+          spinnerVerbs: { mode: 'append', verbs: [] },
+          spinnerTipsEnabled: true, showTurnDuration: true, prefersReducedMotion: false,
+          statusLine: { type: '', command: '', url: '', refresh: 5000, disabled: false },
+          attribution: { commit: '', pr: '' },
+          cleanupPeriodDays: 30, fastModePerSessionOptIn: false, enableAllProjectMcpServers: false,
+          respectGitignore: true, teamateMode: 'auto', forceLoginMethod: ''
+        },
+
+        markUnsaved() { this.unsaved = true; },
+
+        notify(message, type = 'success') {
+          this.notification = { show: true, message, type };
+          setTimeout(() => this.notification.show = false, 3000);
+        },
+
+        async openFile() {
+          try {
+            if (!window.showOpenFilePicker) {
+              const input = document.createElement('input');
+              input.type = 'file'; input.accept = '.json';
+              input.onchange = async (e) => { const file = e.target.files[0]; if (!file) return; this.loadJson(await file.text()); this.fileName = file.name; };
+              input.click(); return;
+            }
+            const [handle] = await window.showOpenFilePicker({ types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
+            this.fileHandle = handle;
+            const file = await handle.getFile();
+            this.loadJson(await file.text());
+            this.fileName = file.name;
+            this.notify('Datei geladen: ' + file.name);
+          } catch (e) { if (e.name !== 'AbortError') this.notify('Fehler beim Öffnen: ' + e.message, 'error'); }
+        },
+
+        async saveFile() {
+          try {
+            const json = this.cleanJson();
+            if (this.fileHandle) {
+              const w = await this.fileHandle.createWritable(); await w.write(json); await w.close();
+              this.unsaved = false; this.notify('Gespeichert!');
+            } else { await this.saveAs(json); }
+          } catch (e) { if (e.name !== 'AbortError') this.notify('Fehler: ' + e.message, 'error'); }
+        },
+
+        async saveAs(json) {
+          try {
+            if (!window.showSaveFilePicker) { this.downloadJson(json); return; }
+            const handle = await window.showSaveFilePicker({ suggestedName: 'settings.json', types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
+            this.fileHandle = handle; this.fileName = handle.name;
+            const w = await handle.createWritable(); await w.write(json); await w.close();
+            this.unsaved = false; this.notify('Gespeichert als: ' + handle.name);
+          } catch (e) { if (e.name !== 'AbortError') this.notify('Fehler: ' + e.message, 'error'); }
+        },
+
+        exportJson() {
+          const json = this.cleanJson();
+          navigator.clipboard.writeText(json).then(() => this.notify('JSON in Zwischenablage kopiert!'), () => this.downloadJson(json));
+        },
+
+        downloadJson(json) {
+          const blob = new Blob([json], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href = url; a.download = 'settings.json'; a.click();
+          URL.revokeObjectURL(url); this.notify('JSON heruntergeladen!');
+        },
+
+        resetSettings() {
+          if (!confirm('Alle Einstellungen zurücksetzen?')) return;
+          this.settings = {
+            model: '', effortLevel: '', outputStyle: '', language: '',
+            alwaysThinkingEnabled: false, autoUpdatesChannel: 'latest',
+            permissions: { allow: [], ask: [], deny: [], additionalDirectories: [], defaultMode: 'allowPrompt', disableBypassPermissionsMode: '' },
+            enabledPlugins: {}, hooks: {},
+            sandbox: { enabled: false, filesystem: { allowWrite: [], denyWrite: [], denyRead: [] }, network: { allowedDomains: [], allowLocalBinding: false, allowAllUnixSockets: false } },
+            env: {}, spinnerVerbs: { mode: 'append', verbs: [] },
+            spinnerTipsEnabled: true, showTurnDuration: true, prefersReducedMotion: false,
+            statusLine: { type: '', command: '', url: '', refresh: 5000, disabled: false },
+            attribution: { commit: '', pr: '' },
+            cleanupPeriodDays: 30, fastModePerSessionOptIn: false, enableAllProjectMcpServers: false,
+            respectGitignore: true, teamateMode: 'auto', forceLoginMethod: ''
+          };
+          this.unsaved = true; this.notify('Zurückgesetzt!', 'info');
+        },
+
+        applyTemplate(id) {
+          if (!confirm('Template laden? Überschreibt alle aktuellen Einstellungen.')) return;
+          this.resetSettingsSilent();
+          const s = this.settings;
+          const plugins = (ids) => ids.forEach(p => s.enabledPlugins[p] = true);
+
+          if (id === 'beginner') {
+            s.permissions.defaultMode = 'allowPrompt';
+            s.permissions.allow = ['Read', 'Glob', 'Grep'];
+            s.showTurnDuration = true;
+            s.spinnerTipsEnabled = true;
+            plugins(['explanatory-output-style@claude-plugins-official']);
+          } else if (id === 'developer') {
+            s.permissions.defaultMode = 'allowPrompt';
+            s.permissions.allow = ['Bash(npm run *)', 'Bash(npx *)', 'Bash(git *)', 'Bash(node *)', 'Bash(ls *)', 'Read', 'Edit', 'Glob', 'Grep', 'WebSearch'];
+            s.permissions.deny = ['Bash(rm -rf *)'];
+            s.respectGitignore = true;
+            plugins([
+              'commit-commands@claude-plugins-official', 'feature-dev@claude-plugins-official',
+              'code-simplifier@claude-plugins-official', 'frontend-design@claude-plugins-official',
+              'claude-md-management@claude-plugins-official'
+            ]);
+          } else if (id === 'poweruser') {
+            s.permissions.defaultMode = 'acceptEdits';
+            s.permissions.allow = ['Bash(npm *)', 'Bash(npx *)', 'Bash(git *)', 'Bash(node *)', 'Bash(bun *)', 'Bash(ls *)', 'Bash(cat *)', 'Bash(mkdir *)', 'Bash(cp *)', 'Read', 'Edit', 'Write', 'Glob', 'Grep', 'WebSearch', 'WebFetch'];
+            s.permissions.deny = ['Bash(rm -rf /)'];
+            s.alwaysThinkingEnabled = true;
+            s.enableAllProjectMcpServers = true;
+            s.respectGitignore = true;
+            plugins([
+              'commit-commands@claude-plugins-official', 'pr-review-toolkit@claude-plugins-official',
+              'feature-dev@claude-plugins-official', 'code-review@claude-plugins-official',
+              'code-simplifier@claude-plugins-official', 'frontend-design@claude-plugins-official',
+              'claude-md-management@claude-plugins-official', 'claude-code-setup@claude-plugins-official',
+              'skill-creator@claude-plugins-official', 'playground@claude-plugins-official',
+              'explanatory-output-style@claude-plugins-official'
+            ]);
+            s.attribution.commit = 'Co-Authored-By: Claude <noreply@anthropic.com>';
+          } else if (id === 'safetyfirst') {
+            s.permissions.defaultMode = 'acceptEdits';
+            s.permissions.allow = [
+              // Dev tools
+              'Bash(npm *)', 'Bash(npx *)', 'Bash(node *)', 'Bash(bun *)',
+              // Git (read/write)
+              'Bash(git *)',
+              // File exploration
+              'Bash(ls *)', 'Bash(cat *)', 'Bash(head *)', 'Bash(tail *)', 'Bash(wc *)',
+              'Bash(echo *)', 'Bash(printf *)',
+              // File management
+              'Bash(mkdir *)', 'Bash(cp *)', 'Bash(mv *)', 'Bash(touch *)',
+              // Search & info
+              'Bash(which *)', 'Bash(where *)', 'Bash(type *)', 'Bash(env)', 'Bash(pwd)',
+              // Built-in tools
+              'Read', 'Edit', 'Write', 'Glob', 'Grep', 'WebSearch', 'WebFetch', 'NotebookEdit'
+            ];
+            s.permissions.ask = [
+              // Confirm before external effects
+              'Bash(git push *)', 'Bash(git push --force *)',
+              'Bash(firebase deploy *)', 'Bash(npm publish *)',
+              'Bash(gh pr *)', 'Bash(gh issue *)',
+              'Bash(docker *)',
+              'Bash(rm *)'
+            ];
+            s.permissions.deny = [
+              // Destructive file ops
+              'Bash(rm -rf *)', 'Bash(rm -rf /)', 'Bash(rmdir *)',
+              // System destructors
+              'Bash(sudo *)', 'Bash(shutdown *)', 'Bash(reboot *)', 'Bash(halt *)', 'Bash(poweroff *)',
+              // Disk destruction
+              'Bash(dd *)', 'Bash(mkfs *)', 'Bash(shred *)', 'Bash(fdisk *)',
+              // Permission/ownership changes
+              'Bash(chmod *)', 'Bash(chown *)', 'Bash(chgrp *)',
+              // Dangerous execution
+              'Bash(eval *)', 'Bash(exec *)',
+              // Remote code execution via pipe
+              'Bash(curl * | bash)', 'Bash(curl * | sh)',
+              'Bash(wget * | bash)', 'Bash(wget * | sh)',
+              // Network tools
+              'Bash(nc *)', 'Bash(socat *)', 'Bash(nmap *)',
+              // Sensitive file access
+              'Read(./.env)', 'Read(./.env.*)',
+              'Read(~/.ssh/*)', 'Read(~/.aws/*)', 'Read(~/.gnupg/*)'
+            ];
+            s.alwaysThinkingEnabled = true;
+            s.respectGitignore = true;
+            s.enableAllProjectMcpServers = true;
+            plugins([
+              'commit-commands@claude-plugins-official', 'pr-review-toolkit@claude-plugins-official',
+              'feature-dev@claude-plugins-official', 'code-review@claude-plugins-official',
+              'code-simplifier@claude-plugins-official', 'frontend-design@claude-plugins-official',
+              'claude-md-management@claude-plugins-official', 'claude-code-setup@claude-plugins-official',
+              'skill-creator@claude-plugins-official', 'playground@claude-plugins-official'
+            ]);
+            s.attribution.commit = 'Co-Authored-By: Claude <noreply@anthropic.com>';
+          } else if (id === 'team') {
+            s.permissions.defaultMode = 'allowPrompt';
+            s.permissions.allow = ['Read', 'Glob', 'Grep'];
+            s.permissions.deny = ['Bash(rm -rf *)', 'Bash(sudo *)', 'Bash(chmod *)', 'Bash(curl * | bash)'];
+            s.permissions.disableBypassPermissionsMode = 'disable';
+            s.sandbox.enabled = true;
+            s.sandbox.filesystem.denyRead = ['~/.ssh', '~/.aws', '~/.env', './.env'];
+            s.sandbox.filesystem.denyWrite = ['~/.ssh', '~/.aws'];
+            s.respectGitignore = true;
+            plugins([
+              'commit-commands@claude-plugins-official', 'code-review@claude-plugins-official',
+              'pr-review-toolkit@claude-plugins-official', 'security-guidance@claude-plugins-official'
+            ]);
+            s.attribution.commit = 'Co-Authored-By: Claude <noreply@anthropic.com>';
+          }
+          // 'minimal' = just the reset defaults, nothing extra
+
+          // Check custom templates
+          const custom = this.customTemplates.find(t => t.id === id);
+          if (custom) {
+            this.resetSettingsSilent();
+            this.loadJson(JSON.stringify(custom.settings));
+            this.unsaved = true;
+            this.notify('Template geladen: ' + custom.name);
+            return;
+          }
+
+          const tpl = this.templates.find(t => t.id === id);
+          this.unsaved = true;
+          this.notify('Template geladen: ' + (tpl ? tpl.name : id));
+        },
+
+        resetSettingsSilent() {
+          this.settings = {
+            model: '', effortLevel: '', outputStyle: '', language: '',
+            alwaysThinkingEnabled: false, autoUpdatesChannel: 'latest',
+            permissions: { allow: [], ask: [], deny: [], additionalDirectories: [], defaultMode: 'allowPrompt', disableBypassPermissionsMode: '' },
+            enabledPlugins: {}, hooks: {},
+            sandbox: { enabled: false, filesystem: { allowWrite: [], denyWrite: [], denyRead: [] }, network: { allowedDomains: [], allowLocalBinding: false, allowAllUnixSockets: false } },
+            env: {}, spinnerVerbs: { mode: 'append', verbs: [] },
+            spinnerTipsEnabled: true, showTurnDuration: true, prefersReducedMotion: false,
+            statusLine: { type: '', command: '', url: '', refresh: 5000, disabled: false },
+            attribution: { commit: '', pr: '' },
+            cleanupPeriodDays: 30, fastModePerSessionOptIn: false, enableAllProjectMcpServers: false,
+            respectGitignore: true, teamateMode: 'auto', forceLoginMethod: ''
+          };
+        },
+
+        saveAsTemplate() {
+          const name = this.newTplName.trim();
+          if (!name) return;
+          const tpl = {
+            id: 'custom-' + Date.now(),
+            name: name,
+            desc: 'Gespeichert am ' + new Date().toLocaleDateString('de-DE'),
+            color: 'bg-amber-400',
+            settings: JSON.parse(this.cleanJson())
+          };
+          this.customTemplates.push(tpl);
+          this.persistCustomTemplates();
+          this.newTplName = '';
+          this.showSaveTplDialog = false;
+          this.notify('Template gespeichert: ' + name);
+        },
+
+        deleteCustomTemplate(id) {
+          const tpl = this.customTemplates.find(t => t.id === id);
+          if (!tpl || !confirm('Template "' + tpl.name + '" löschen?')) return;
+          this.customTemplates = this.customTemplates.filter(t => t.id !== id);
+          this.persistCustomTemplates();
+          this.notify('Template gelöscht', 'info');
+        },
+
+        persistCustomTemplates() {
+          localStorage.setItem('claude-settings-custom-templates', JSON.stringify(this.customTemplates));
+        },
+
+        loadJson(text) {
+          try {
+            const data = JSON.parse(text);
+            const s = this.settings;
+            if (data.model) s.model = data.model;
+            if (data.effortLevel) s.effortLevel = data.effortLevel;
+            if (data.outputStyle) s.outputStyle = data.outputStyle;
+            if (data.language) s.language = data.language;
+            if (data.alwaysThinkingEnabled !== undefined) s.alwaysThinkingEnabled = data.alwaysThinkingEnabled;
+            if (data.autoUpdatesChannel) s.autoUpdatesChannel = data.autoUpdatesChannel;
+            if (data.permissions) {
+              s.permissions.allow = data.permissions.allow || [];
+              s.permissions.ask = data.permissions.ask || [];
+              s.permissions.deny = data.permissions.deny || [];
+              s.permissions.additionalDirectories = data.permissions.additionalDirectories || [];
+              if (data.permissions.defaultMode) s.permissions.defaultMode = data.permissions.defaultMode;
+              if (data.permissions.disableBypassPermissionsMode) s.permissions.disableBypassPermissionsMode = data.permissions.disableBypassPermissionsMode;
+            }
+            if (data.enabledPlugins) s.enabledPlugins = { ...data.enabledPlugins };
+            if (data.hooks) s.hooks = JSON.parse(JSON.stringify(data.hooks));
+            if (data.sandbox) {
+              s.sandbox.enabled = data.sandbox.enabled || false;
+              if (data.sandbox.filesystem) {
+                s.sandbox.filesystem.allowWrite = data.sandbox.filesystem.allowWrite || [];
+                s.sandbox.filesystem.denyWrite = data.sandbox.filesystem.denyWrite || [];
+                s.sandbox.filesystem.denyRead = data.sandbox.filesystem.denyRead || [];
+              }
+              if (data.sandbox.network) {
+                s.sandbox.network.allowedDomains = data.sandbox.network.allowedDomains || [];
+                s.sandbox.network.allowLocalBinding = data.sandbox.network.allowLocalBinding || false;
+                s.sandbox.network.allowAllUnixSockets = data.sandbox.network.allowAllUnixSockets || false;
+              }
+            }
+            if (data.env) s.env = { ...data.env };
+            if (data.spinnerVerbs) s.spinnerVerbs = { mode: data.spinnerVerbs.mode || 'append', verbs: data.spinnerVerbs.verbs || [] };
+            if (data.spinnerTipsEnabled !== undefined) s.spinnerTipsEnabled = data.spinnerTipsEnabled;
+            if (data.showTurnDuration !== undefined) s.showTurnDuration = data.showTurnDuration;
+            if (data.prefersReducedMotion !== undefined) s.prefersReducedMotion = data.prefersReducedMotion;
+            if (data.statusLine) s.statusLine = { ...s.statusLine, ...data.statusLine };
+            if (data.attribution) s.attribution = { ...s.attribution, ...data.attribution };
+            if (data.cleanupPeriodDays !== undefined) s.cleanupPeriodDays = data.cleanupPeriodDays;
+            if (data.fastModePerSessionOptIn !== undefined) s.fastModePerSessionOptIn = data.fastModePerSessionOptIn;
+            if (data.enableAllProjectMcpServers !== undefined) s.enableAllProjectMcpServers = data.enableAllProjectMcpServers;
+            if (data.respectGitignore !== undefined) s.respectGitignore = data.respectGitignore;
+            if (data.teamateMode) s.teamateMode = data.teamateMode;
+            if (data.forceLoginMethod) s.forceLoginMethod = data.forceLoginMethod;
+            this.unsaved = false;
+          } catch (e) { this.notify('Ungültiges JSON: ' + e.message, 'error'); }
+        },
+
+        cleanJson() {
+          const s = this.settings; const out = {};
+          if (s.model) out.model = s.model;
+          if (s.effortLevel) out.effortLevel = s.effortLevel;
+          if (s.outputStyle) out.outputStyle = s.outputStyle;
+          if (s.language) out.language = s.language;
+          if (s.alwaysThinkingEnabled) out.alwaysThinkingEnabled = true;
+          if (s.autoUpdatesChannel && s.autoUpdatesChannel !== 'latest') out.autoUpdatesChannel = s.autoUpdatesChannel;
+          const perms = {};
+          if (s.permissions.allow.length) perms.allow = [...s.permissions.allow];
+          if (s.permissions.ask.length) perms.ask = [...s.permissions.ask];
+          if (s.permissions.deny.length) perms.deny = [...s.permissions.deny];
+          if (s.permissions.additionalDirectories.length) perms.additionalDirectories = [...s.permissions.additionalDirectories];
+          if (s.permissions.defaultMode && s.permissions.defaultMode !== 'allowPrompt') perms.defaultMode = s.permissions.defaultMode;
+          if (s.permissions.disableBypassPermissionsMode) perms.disableBypassPermissionsMode = s.permissions.disableBypassPermissionsMode;
+          if (Object.keys(perms).length) out.permissions = perms;
+          const plugins = {};
+          for (const [k, v] of Object.entries(s.enabledPlugins)) { if (v !== undefined) plugins[k] = v; }
+          if (Object.keys(plugins).length) out.enabledPlugins = plugins;
+          if (Object.keys(s.hooks).length) out.hooks = JSON.parse(JSON.stringify(s.hooks));
+          const sandbox = {};
+          if (s.sandbox.enabled) sandbox.enabled = true;
+          const fs = {};
+          if (s.sandbox.filesystem.allowWrite.length) fs.allowWrite = [...s.sandbox.filesystem.allowWrite];
+          if (s.sandbox.filesystem.denyWrite.length) fs.denyWrite = [...s.sandbox.filesystem.denyWrite];
+          if (s.sandbox.filesystem.denyRead.length) fs.denyRead = [...s.sandbox.filesystem.denyRead];
+          if (Object.keys(fs).length) sandbox.filesystem = fs;
+          const net = {};
+          if (s.sandbox.network.allowedDomains.length) net.allowedDomains = [...s.sandbox.network.allowedDomains];
+          if (s.sandbox.network.allowLocalBinding) net.allowLocalBinding = true;
+          if (s.sandbox.network.allowAllUnixSockets) net.allowAllUnixSockets = true;
+          if (Object.keys(net).length) sandbox.network = net;
+          if (Object.keys(sandbox).length) out.sandbox = sandbox;
+          if (Object.keys(s.env).length) out.env = { ...s.env };
+          if (!s.spinnerTipsEnabled) out.spinnerTipsEnabled = false;
+          if (!s.showTurnDuration) out.showTurnDuration = false;
+          if (s.prefersReducedMotion) out.prefersReducedMotion = true;
+          if (s.spinnerVerbs.verbs.length) out.spinnerVerbs = { mode: s.spinnerVerbs.mode, verbs: [...s.spinnerVerbs.verbs] };
+          if (s.statusLine.type) {
+            const sl = { type: s.statusLine.type };
+            if (s.statusLine.type === 'command' && s.statusLine.command) sl.command = s.statusLine.command;
+            if (s.statusLine.type === 'http' && s.statusLine.url) sl.url = s.statusLine.url;
+            if (s.statusLine.refresh && s.statusLine.refresh !== 5000) sl.refresh = s.statusLine.refresh;
+            out.statusLine = sl;
+          }
+          const attr = {};
+          if (s.attribution.commit) attr.commit = s.attribution.commit;
+          if (s.attribution.pr) attr.pr = s.attribution.pr;
+          if (Object.keys(attr).length) out.attribution = attr;
+          if (s.cleanupPeriodDays !== 30) out.cleanupPeriodDays = s.cleanupPeriodDays;
+          if (s.fastModePerSessionOptIn) out.fastModePerSessionOptIn = true;
+          if (s.enableAllProjectMcpServers) out.enableAllProjectMcpServers = true;
+          if (!s.respectGitignore) out.respectGitignore = false;
+          if (s.teamateMode && s.teamateMode !== 'auto') out.teamateMode = s.teamateMode;
+          if (s.forceLoginMethod) out.forceLoginMethod = s.forceLoginMethod;
+          return JSON.stringify(out, null, 2);
+        },
+
+        addPermRule(type) {
+          const tool = this.newPerm[type + 'Tool']; const pattern = this.newPerm[type + 'Pattern'];
+          let rule = tool || '';
+          if (pattern) rule += rule ? `(${pattern})` : pattern;
+          if (!rule) return;
+          if (!this.settings.permissions[type].includes(rule)) { this.settings.permissions[type].push(rule); this.markUnsaved(); }
+          this.newPerm[type + 'Tool'] = ''; this.newPerm[type + 'Pattern'] = '';
+        },
+
+        addPermSuggestion(type, suggestion) {
+          if (!this.settings.permissions[type].includes(suggestion)) { this.settings.permissions[type].push(suggestion); this.markUnsaved(); }
+        },
+
+        addAdditionalDir() {
+          if (this.newAdditionalDir && !this.settings.permissions.additionalDirectories.includes(this.newAdditionalDir)) {
+            this.settings.permissions.additionalDirectories.push(this.newAdditionalDir); this.newAdditionalDir = ''; this.markUnsaved();
+          }
+        },
+
+        applyPermPreset(id) {
+          if (!confirm('Permission-Preset laden? Überschreibt nur die Permission-Einstellungen, alles andere bleibt erhalten.')) return;
+          const p = this.settings.permissions;
+
+          if (id === 'pp-safety') {
+            p.defaultMode = 'acceptEdits';
+            p.allow = [
+              'Bash(npm *)', 'Bash(npx *)', 'Bash(node *)', 'Bash(bun *)',
+              'Bash(git *)',
+              'Bash(ls *)', 'Bash(cat *)', 'Bash(head *)', 'Bash(tail *)', 'Bash(wc *)',
+              'Bash(echo *)', 'Bash(printf *)',
+              'Bash(mkdir *)', 'Bash(cp *)', 'Bash(mv *)', 'Bash(touch *)',
+              'Bash(which *)', 'Bash(where *)', 'Bash(type *)', 'Bash(env)', 'Bash(pwd)',
+              'Read', 'Edit', 'Write', 'Glob', 'Grep', 'WebSearch', 'WebFetch', 'NotebookEdit'
+            ];
+            p.ask = [
+              'Bash(git push *)', 'Bash(git push --force *)',
+              'Bash(firebase deploy *)', 'Bash(npm publish *)',
+              'Bash(gh pr *)', 'Bash(gh issue *)',
+              'Bash(docker *)', 'Bash(rm *)'
+            ];
+            p.deny = [
+              'Bash(rm -rf *)', 'Bash(rm -rf /)', 'Bash(rmdir *)',
+              'Bash(sudo *)', 'Bash(shutdown *)', 'Bash(reboot *)', 'Bash(halt *)', 'Bash(poweroff *)',
+              'Bash(dd *)', 'Bash(mkfs *)', 'Bash(shred *)', 'Bash(fdisk *)',
+              'Bash(chmod *)', 'Bash(chown *)', 'Bash(chgrp *)',
+              'Bash(eval *)', 'Bash(exec *)',
+              'Bash(curl * | bash)', 'Bash(curl * | sh)',
+              'Bash(wget * | bash)', 'Bash(wget * | sh)',
+              'Bash(nc *)', 'Bash(socat *)', 'Bash(nmap *)',
+              'Read(./.env)', 'Read(./.env.*)',
+              'Read(~/.ssh/*)', 'Read(~/.aws/*)', 'Read(~/.gnupg/*)'
+            ];
+          } else if (id === 'pp-productive') {
+            p.defaultMode = 'acceptEdits';
+            p.allow = [
+              'Bash(npm *)', 'Bash(npx *)', 'Bash(node *)', 'Bash(bun *)',
+              'Bash(git *)',
+              'Bash(ls *)', 'Bash(cat *)', 'Bash(head *)', 'Bash(tail *)', 'Bash(wc *)',
+              'Bash(echo *)', 'Bash(mkdir *)', 'Bash(cp *)', 'Bash(mv *)', 'Bash(touch *)',
+              'Bash(curl *)', 'Bash(wget *)',
+              'Read', 'Edit', 'Write', 'Glob', 'Grep', 'WebSearch', 'WebFetch', 'NotebookEdit'
+            ];
+            p.ask = ['Bash(rm *)'];
+            p.deny = ['Bash(rm -rf *)', 'Bash(sudo *)', 'Bash(dd *)', 'Bash(mkfs *)'];
+          } else if (id === 'pp-readonly') {
+            p.defaultMode = 'plan';
+            p.allow = ['Read', 'Glob', 'Grep', 'WebSearch'];
+            p.ask = [];
+            p.deny = ['Bash', 'Edit', 'Write', 'NotebookEdit'];
+          } else if (id === 'pp-lockdown') {
+            p.defaultMode = 'allowPrompt';
+            p.allow = ['Read', 'Glob', 'Grep'];
+            p.ask = ['Edit', 'Write', 'Bash(npm run *)', 'Bash(git status)', 'Bash(git log *)', 'Bash(git diff *)'];
+            p.deny = [
+              'Bash(rm *)', 'Bash(sudo *)', 'Bash(chmod *)', 'Bash(chown *)',
+              'Bash(dd *)', 'Bash(mkfs *)', 'Bash(shred *)',
+              'Bash(shutdown *)', 'Bash(reboot *)', 'Bash(halt *)', 'Bash(poweroff *)',
+              'Bash(eval *)', 'Bash(exec *)',
+              'Bash(curl * | bash)', 'Bash(curl * | sh)', 'Bash(wget * | bash)', 'Bash(wget * | sh)',
+              'Bash(nc *)', 'Bash(socat *)', 'Bash(nmap *)',
+              'Bash(git push *)', 'Bash(git push --force *)',
+              'Bash(npm publish *)', 'Bash(docker *)', 'Bash(firebase deploy *)',
+              'Read(./.env)', 'Read(./.env.*)',
+              'Read(~/.ssh/*)', 'Read(~/.aws/*)', 'Read(~/.gnupg/*)',
+              'WebFetch', 'NotebookEdit'
+            ];
+            p.disableBypassPermissionsMode = 'disable';
+          }
+
+          this.markUnsaved();
+          const preset = this.permPresets.find(pp => pp.id === id);
+          this.notify('Permission-Preset geladen: ' + (preset ? preset.name : id));
+        },
+
+        addEnvVar() {
+          if (this.newEnvKey) { this.settings.env[this.newEnvKey] = this.newEnvValue; this.newEnvKey = ''; this.newEnvValue = ''; this.markUnsaved(); }
+        },
+
+        addSandboxPath(key) {
+          if (this.newSandboxPath[key] && !this.settings.sandbox.filesystem[key].includes(this.newSandboxPath[key])) {
+            this.settings.sandbox.filesystem[key].push(this.newSandboxPath[key]); this.newSandboxPath[key] = ''; this.markUnsaved();
+          }
+        },
+
+        addDomain() {
+          if (this.newDomain && !this.settings.sandbox.network.allowedDomains.includes(this.newDomain)) {
+            this.settings.sandbox.network.allowedDomains.push(this.newDomain); this.newDomain = ''; this.markUnsaved();
+          }
+        },
+
+        addHookEvent() {
+          if (this.newHookEvent && !this.settings.hooks[this.newHookEvent]) {
+            this.settings.hooks[this.newHookEvent] = [{ matcher: '', hooks: [{ type: 'command', command: '', timeout: 30000, async: false }] }];
+            this.newHookEvent = ''; this.markUnsaved();
+          }
+        },
+
+        addSpinnerVerb() {
+          if (this.newSpinnerVerb && !this.settings.spinnerVerbs.verbs.includes(this.newSpinnerVerb)) {
+            this.settings.spinnerVerbs.verbs.push(this.newSpinnerVerb); this.newSpinnerVerb = ''; this.markUnsaved();
+          }
+        },
+
+        applySpinnerPack(verbs, mode) {
+          if (mode === 'replace') {
+            this.settings.spinnerVerbs.verbs = [...verbs];
+          } else {
+            verbs.forEach(v => { if (!this.settings.spinnerVerbs.verbs.includes(v)) this.settings.spinnerVerbs.verbs.push(v); });
+          }
+          this.activeSpinnerPack = null;
+          this.markUnsaved();
+          this.notify(mode === 'replace' ? 'Verbs ersetzt! ' + verbs.length + ' Verbs' : 'Verbs hinzugefügt! ' + this.settings.spinnerVerbs.verbs.length + ' Verbs');
+        },
+
+        saveSpinnerPack() {
+          const name = this.newSpinnerPackName.trim();
+          if (!name || !this.settings.spinnerVerbs.verbs.length) return;
+          this.customSpinnerPacks.push({
+            id: 'sp-' + Date.now(),
+            name: name,
+            icon: this.newSpinnerPackIcon,
+            verbs: [...this.settings.spinnerVerbs.verbs]
+          });
+          this.persistSpinnerPacks();
+          this.newSpinnerPackName = '';
+          this.newSpinnerPackIcon = '📦';
+          this.showSaveSpinnerPackDialog = false;
+          this.notify('Pack gespeichert: ' + name);
+        },
+
+        deleteSpinnerPack(id) {
+          const pack = this.customSpinnerPacks.find(p => p.id === id);
+          if (!pack || !confirm('Pack "' + pack.name + '" löschen?')) return;
+          this.customSpinnerPacks = this.customSpinnerPacks.filter(p => p.id !== id);
+          this.persistSpinnerPacks();
+          this.notify('Pack gelöscht', 'info');
+        },
+
+        persistSpinnerPacks() {
+          localStorage.setItem('claude-spinner-custom-packs', JSON.stringify(this.customSpinnerPacks));
+        },
+
+        syntaxHighlight(json) {
+          return json
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match) => {
+              let cls = 'number';
+              if (/^"/.test(match)) { cls = /:$/.test(match) ? 'key' : 'string'; }
+              else if (/true|false/.test(match)) { cls = 'boolean'; }
+              else if (/null/.test(match)) { cls = 'null'; }
+              return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+      };
+    }
+  </script>
+</body>
+</html>
