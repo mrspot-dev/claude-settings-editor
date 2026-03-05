@@ -2654,10 +2654,12 @@
           if (!s.showTurnDuration) out.showTurnDuration = false;
           if (s.prefersReducedMotion) out.prefersReducedMotion = true;
           if (s.spinnerVerbs.verbs.length) out.spinnerVerbs = { mode: s.spinnerVerbs.mode, verbs: [...s.spinnerVerbs.verbs] };
-          if (s.statusLine.type) {
-            const sl = { type: s.statusLine.type };
-            if (s.statusLine.type === 'command' && s.statusLine.command) sl.command = s.statusLine.command;
-            if (s.statusLine.type === 'http' && s.statusLine.url) sl.url = s.statusLine.url;
+          if (s.statusLine.type === 'command' && s.statusLine.command) {
+            const sl = { type: 'command', command: s.statusLine.command };
+            if (s.statusLine.refresh && s.statusLine.refresh !== 5000) sl.refresh = s.statusLine.refresh;
+            out.statusLine = sl;
+          } else if (s.statusLine.type === 'http' && s.statusLine.url) {
+            const sl = { type: 'http', url: s.statusLine.url };
             if (s.statusLine.refresh && s.statusLine.refresh !== 5000) sl.refresh = s.statusLine.refresh;
             out.statusLine = sl;
           }
