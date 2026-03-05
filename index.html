@@ -248,13 +248,16 @@
     <main class="flex-1 flex flex-col overflow-visible">
 
       <!-- Header Bar -->
-      <header class="flex items-center flex-wrap gap-y-2 justify-between px-6 py-3.5 border-b border-[rgba(255,255,255,0.08)] flex-shrink-0 overflow-visible" style="background: #12121A; position: relative; z-index: 40;">
-        <div class="flex-shrink-0 min-w-0">
-          <h2 class="font-display font-bold text-lg text-white tracking-tight flex items-center gap-2 truncate" x-text="tabs.find(t => t.id === activeTab)?.label"></h2>
-          <p class="text-xs text-fg-muted mt-0.5 truncate" x-text="tabs.find(t => t.id === activeTab)?.desc"></p>
+      <header class="flex-shrink-0 overflow-visible" style="background: #12121A; position: relative; z-index: 40;">
+        <!-- Row 1: Tab Info -->
+        <div class="px-6 pt-3.5 pb-2.5">
+          <h2 class="font-display font-bold text-lg text-white tracking-tight" x-text="tabs.find(t => t.id === activeTab)?.label"></h2>
+          <p class="text-xs text-fg-muted mt-0.5" x-text="tabs.find(t => t.id === activeTab)?.desc"></p>
         </div>
+        <!-- Row 2: Toolbar -->
+        <div class="flex items-center flex-wrap gap-2 px-6 pb-3 border-b border-[rgba(255,255,255,0.08)]">
         <!-- Global Search -->
-        <div x-show="!['design-prompts','terminal-prompts'].includes(activeTab)" class="flex-1 min-w-[180px] max-w-sm mx-4 relative order-last sm:order-none w-full sm:w-auto" x-data="{ searchFocused: false }">
+        <div x-show="!['design-prompts','terminal-prompts'].includes(activeTab)" class="flex-1 min-w-[180px] max-w-sm relative" x-data="{ searchFocused: false }">
           <div class="relative">
             <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             <input x-model="searchQuery"
@@ -266,7 +269,7 @@
                    @keydown.enter.prevent="selectSearchResult()"
                    x-ref="globalSearch"
                    type="text" placeholder="Einstellung suchen…"
-                   class="w-full pl-9 pr-8 py-2 rounded-xl text-sm text-fg placeholder-fg-dim focus:outline-none transition-all border border-[rgba(255,255,255,0.08)] focus:border-accent/40 bg-[rgba(255,255,255,0.04)]" />
+                   class="w-full pl-9 pr-8 py-1.5 rounded-xl text-sm text-fg placeholder-fg-dim focus:outline-none transition-all border border-[rgba(255,255,255,0.08)] focus:border-accent/40 bg-[rgba(255,255,255,0.04)]" />
             <kbd x-show="!searchFocused && !searchQuery" class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-fg-dim border border-[rgba(255,255,255,0.1)] rounded px-1 py-0.5">/</kbd>
             <button x-show="searchQuery" @click="searchQuery = ''; searchResults = []; searchFocused = false" class="absolute right-3 top-1/2 -translate-y-1/2 text-fg-dim hover:text-fg text-xs">&times;</button>
           </div>
@@ -296,20 +299,20 @@
           </div>
         </div>
 
-        <!-- Design Prompts: Search centered in header -->
-        <div x-show="activeTab === 'design-prompts'" class="flex-1 min-w-[180px] max-w-md mx-4 order-last sm:order-none w-full sm:w-auto">
+        <!-- Design Prompts: Search in toolbar -->
+        <div x-show="activeTab === 'design-prompts'" class="flex-1 min-w-[180px] max-w-md">
           <div class="relative">
             <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             <input x-model="designSearch" type="text" placeholder="Style suchen…"
-                   class="w-full pl-9 pr-4 py-2 rounded-xl text-sm font-body text-fg placeholder-fg-dim focus:outline-none transition-all border border-[rgba(255,255,255,0.08)] focus:border-accent/40 bg-[rgba(255,255,255,0.04)]" />
+                   class="w-full pl-9 pr-4 py-1.5 rounded-xl text-sm font-body text-fg placeholder-fg-dim focus:outline-none transition-all border border-[rgba(255,255,255,0.08)] focus:border-accent/40 bg-[rgba(255,255,255,0.04)]" />
           </div>
         </div>
-        <!-- Terminal Prompts: Search centered in header -->
-        <div x-show="activeTab === 'terminal-prompts'" class="flex-1 min-w-[180px] max-w-md mx-4 order-last sm:order-none w-full sm:w-auto">
+        <!-- Terminal Prompts: Search in toolbar -->
+        <div x-show="activeTab === 'terminal-prompts'" class="flex-1 min-w-[180px] max-w-md">
           <div class="relative">
             <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             <input x-model="terminalPromptsSearch" type="text" placeholder="Prompt suchen…"
-                   class="w-full pl-9 pr-4 py-2 rounded-xl text-sm font-body text-fg placeholder-fg-dim focus:outline-none transition-all border border-[rgba(255,255,255,0.08)] focus:border-accent/40 bg-[rgba(255,255,255,0.04)]" />
+                   class="w-full pl-9 pr-4 py-1.5 rounded-xl text-sm font-body text-fg placeholder-fg-dim focus:outline-none transition-all border border-[rgba(255,255,255,0.08)] focus:border-accent/40 bg-[rgba(255,255,255,0.04)]" />
           </div>
         </div>
         <div class="flex items-center gap-2 flex-shrink-0 flex-wrap" x-show="!['design-prompts','terminal-prompts'].includes(activeTab)">
@@ -426,6 +429,7 @@
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
             <span class="hidden md:inline">Reset</span>
           </button>
+        </div>
         </div>
       </header>
 
