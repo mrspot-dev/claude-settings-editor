@@ -1114,6 +1114,11 @@
                   <label class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0">URL</label>
                   <input type="text" x-model="settings.statusLine.url" @input="markUnsaved()" placeholder="http://localhost:3000/status" class="setting-input flex-1 font-mono !text-sm">
                 </div>
+                <div x-show="(settings.statusLine.type === 'command' && !settings.statusLine.command) || (settings.statusLine.type === 'http' && !settings.statusLine.url)"
+                     class="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                  <span class="text-amber-400 text-sm">⚠</span>
+                  <span class="text-xs text-amber-400" x-text="settings.statusLine.type === 'command' ? 'Command ist Pflichtfeld — ohne wird statusLine nicht exportiert.' : 'URL ist Pflichtfeld — ohne wird statusLine nicht exportiert.'"></span>
+                </div>
                 <div x-show="settings.statusLine.type" class="flex items-center gap-2">
                   <label class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0">Refresh</label>
                   <input type="number" x-model.number="settings.statusLine.refresh" @input="markUnsaved()" placeholder="5000" class="setting-input !w-32 !text-sm">
