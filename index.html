@@ -140,9 +140,42 @@
     .btn-danger { transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
     .btn-danger:hover { background: rgba(239,68,68,0.12); box-shadow: 0 0 20px rgba(239,68,68,0.2); transform: translateY(-1px); }
     .btn-danger:active { transform: translateY(0) scale(0.97); }
+
+    /* Search highlight animation */
+    .search-highlight { animation: settingHighlight 2s cubic-bezier(0.22, 1, 0.36, 1); }
+    @keyframes settingHighlight {
+      0% { box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.6), 0 0 30px rgba(245, 158, 11, 0.2); }
+      100% { box-shadow: none; }
+    }
+    .search-dropdown { max-height: 420px; overflow-y: auto; scrollbar-width: thin; }
+
+    /* Diff view */
+    .diff-added { background: rgba(16, 185, 129, 0.08); border-left: 3px solid #10B981; }
+    .diff-removed { background: rgba(239, 68, 68, 0.08); border-left: 3px solid #EF4444; }
+    .diff-changed { background: rgba(245, 158, 11, 0.08); border-left: 3px solid #F59E0B; }
+
+    /* Permission conflict warnings */
+    .conflict-badge { animation: conflictPulse 2s ease-in-out infinite; }
+    @keyframes conflictPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+    /* Setup Wizard */
+    .wizard-dot { width: 8px; height: 8px; border-radius: 9999px; background: rgba(255,255,255,0.15); transition: all 0.3s; }
+    .wizard-dot.active { width: 24px; background: #F59E0B; }
+    .wizard-dot.done { background: #10B981; }
+
+    /* Keyboard shortcut badge */
+    .kbd { font-size: 10px; padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); font-family: 'JetBrains Mono', monospace; color: rgba(255,255,255,0.4); }
+
+    /* Undo/Redo flash */
+    .undo-flash { animation: undoFlash 0.4s ease-out; }
+    @keyframes undoFlash { 0% { opacity: 0.5; } 100% { opacity: 1; } }
+
+    /* Share URL pulse */
+    .share-copied { animation: sharePulse 0.6s ease-out; }
+    @keyframes sharePulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
   </style>
 </head>
-<body class="min-h-screen relative overflow-hidden" x-data="settingsEditor()">
+<body class="min-h-screen relative overflow-hidden" x-data="settingsEditor()" @keydown.window="handleKeyboard($event)">
 
   <!-- Ambient Orbs -->
   <div class="ambient-orb" style="width:600px;height:600px;top:-200px;right:-100px;"></div>
@@ -192,13 +225,22 @@
       </nav>
 
       <!-- File Info -->
-      <div class="px-3 py-3 border-t border-[rgba(255,255,255,0.08)] text-xs text-fg-dim">
+      <div class="px-3 py-3 border-t border-[rgba(255,255,255,0.08)] text-xs text-fg-dim space-y-2">
         <div x-show="fileName" class="flex items-center gap-1.5 truncate">
           <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           <span x-text="fileName" class="truncate font-mono"></span>
           <span x-show="unsaved" class="text-accent ml-auto">*</span>
         </div>
+        <div x-show="fileName" class="flex items-center gap-1.5">
+          <span class="px-1.5 py-0.5 rounded text-[9px] font-mono border"
+                :class="fileScope === 'project' ? 'bg-violet-500/10 text-violet-400 border-violet-500/20' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'"
+                x-text="fileScope === 'project' ? 'Project' : 'Global'"></span>
+        </div>
         <div x-show="!fileName" class="text-fg-dim/50 italic">Keine Datei geladen</div>
+        <!-- Keyboard shortcut hint -->
+        <div class="pt-1 border-t border-[rgba(255,255,255,0.05)] text-[10px] text-fg-dim/40">
+          <span class="kbd">?</span> Tastenkürzel
+        </div>
       </div>
     </aside>
 
@@ -211,6 +253,49 @@
           <h2 class="font-display font-bold text-lg text-white tracking-tight flex items-center gap-2" x-text="tabs.find(t => t.id === activeTab)?.label"></h2>
           <p class="text-xs text-fg-muted mt-0.5" x-text="tabs.find(t => t.id === activeTab)?.desc"></p>
         </div>
+        <!-- Global Search -->
+        <div x-show="!['design-prompts','terminal-prompts'].includes(activeTab)" class="flex-1 max-w-sm mx-6 relative" x-data="{ searchFocused: false }">
+          <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input x-model="searchQuery"
+                   @input.debounce.150ms="updateSearchResults()"
+                   @focus="searchFocused = true; updateSearchResults()"
+                   @keydown.escape="searchQuery = ''; searchFocused = false; searchResults = []; $el.blur()"
+                   @keydown.arrow-down.prevent="navigateSearch(1)"
+                   @keydown.arrow-up.prevent="navigateSearch(-1)"
+                   @keydown.enter.prevent="selectSearchResult()"
+                   x-ref="globalSearch"
+                   type="text" placeholder="Einstellung suchen…"
+                   class="w-full pl-9 pr-8 py-2 rounded-xl text-sm text-fg placeholder-fg-dim focus:outline-none transition-all border border-[rgba(255,255,255,0.08)] focus:border-accent/40 bg-[rgba(255,255,255,0.04)]" />
+            <kbd x-show="!searchFocused && !searchQuery" class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-fg-dim border border-[rgba(255,255,255,0.1)] rounded px-1 py-0.5">/</kbd>
+            <button x-show="searchQuery" @click="searchQuery = ''; searchResults = []; searchFocused = false" class="absolute right-3 top-1/2 -translate-y-1/2 text-fg-dim hover:text-fg text-xs">&times;</button>
+          </div>
+          <!-- Search Results Dropdown -->
+          <div x-show="searchFocused && searchResults.length > 0"
+               @click.outside="searchFocused = false"
+               x-transition
+               class="search-dropdown absolute left-0 right-0 top-full mt-2 rounded-2xl overflow-hidden z-50 bg-[#12121A] py-1"
+               style="border: 1px solid #2A2A36; box-shadow: 0 20px 60px #000;">
+            <template x-for="(group, gi) in groupedSearchResults" :key="group.tab">
+              <div>
+                <div class="px-3 py-1.5 text-[10px] font-mono font-semibold text-fg-dim uppercase tracking-wider bg-[#16161F]" x-text="group.label"></div>
+                <template x-for="(result, ri) in group.items" :key="result.id">
+                  <button @click="jumpToSetting(result.tab, result.id); searchFocused = false; searchQuery = ''; searchResults = []"
+                          @mouseenter="searchActiveIndex = result._index"
+                          class="w-full text-left px-4 py-2 flex items-center gap-3 transition-colors"
+                          :class="searchActiveIndex === result._index ? 'bg-accent/10 text-accent' : 'text-fg-muted hover:bg-[rgba(255,255,255,0.04)]'">
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm font-medium truncate" x-text="result.label"></div>
+                      <div class="text-[11px] text-fg-dim truncate" x-text="result.desc"></div>
+                    </div>
+                    <svg class="w-3 h-3 flex-shrink-0 text-fg-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                  </button>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+
         <!-- Design Prompts: Search centered in header -->
         <div x-show="activeTab === 'design-prompts'" class="flex-1 max-w-md mx-6">
           <div class="relative">
@@ -219,7 +304,15 @@
                    class="w-full pl-9 pr-4 py-2 rounded-xl text-sm font-body text-fg placeholder-fg-dim focus:outline-none transition-all border border-[rgba(255,255,255,0.08)] focus:border-accent/40 bg-[rgba(255,255,255,0.04)]" />
           </div>
         </div>
-        <div class="flex items-center gap-2" x-show="activeTab !== 'design-prompts'">
+        <!-- Terminal Prompts: Search centered in header -->
+        <div x-show="activeTab === 'terminal-prompts'" class="flex-1 max-w-md mx-6">
+          <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input x-model="terminalPromptsSearch" type="text" placeholder="Prompt suchen…"
+                   class="w-full pl-9 pr-4 py-2 rounded-xl text-sm font-body text-fg placeholder-fg-dim focus:outline-none transition-all border border-[rgba(255,255,255,0.08)] focus:border-accent/40 bg-[rgba(255,255,255,0.04)]" />
+          </div>
+        </div>
+        <div class="flex items-center gap-2" x-show="!['design-prompts','terminal-prompts'].includes(activeTab)">
           <!-- Template Picker -->
           <div class="relative" x-data="{ tplOpen: false }">
             <button @click="tplOpen = !tplOpen" class="btn-secondary px-4 py-1.5 text-xs font-mono font-medium rounded-full border border-accent/30 text-accent hover:bg-accent/10 flex items-center gap-1.5">
@@ -298,6 +391,25 @@
             </div>
           </div>
           <div class="w-px h-5 bg-[rgba(255,255,255,0.08)]"></div>
+          <button @click="showDiffModal = true; computeDiff()" class="btn-secondary px-3 py-1.5 text-xs font-mono font-medium rounded-full border border-[rgba(255,255,255,0.15)] text-fg flex items-center gap-1.5" title="Diff anzeigen">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Diff
+          </button>
+          <!-- Undo/Redo -->
+          <div class="flex items-center gap-0.5">
+            <button @click="undo()" :disabled="historyIndex <= 0" class="p-1.5 rounded-lg text-fg-dim hover:text-fg hover:bg-[rgba(255,255,255,0.05)] transition-all disabled:opacity-20 disabled:cursor-not-allowed" title="Rückgängig (Ctrl+Z)">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a5 5 0 015 5v2M3 10l4-4m-4 4l4 4"/></svg>
+            </button>
+            <button @click="redo()" :disabled="historyIndex >= settingsHistory.length - 1" class="p-1.5 rounded-lg text-fg-dim hover:text-fg hover:bg-[rgba(255,255,255,0.05)] transition-all disabled:opacity-20 disabled:cursor-not-allowed" title="Wiederherstellen (Ctrl+Y)">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10H11a5 5 0 00-5 5v2m15-7l-4-4m4 4l-4 4"/></svg>
+            </button>
+          </div>
+          <div class="w-px h-5 bg-[rgba(255,255,255,0.08)]"></div>
+          <!-- Share -->
+          <button @click="shareViaUrl()" class="btn-secondary px-3 py-1.5 text-xs font-mono font-medium rounded-full border border-[rgba(255,255,255,0.15)] text-fg flex items-center gap-1.5" title="Settings als URL teilen">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+            Share
+          </button>
           <button @click="openFile()" class="btn-secondary px-4 py-1.5 text-xs font-mono font-medium rounded-full border border-[rgba(255,255,255,0.15)] text-fg">
             Open
           </button>
@@ -319,7 +431,7 @@
 
           <!-- ═══ TAB: General ═══ -->
           <div x-show="activeTab === 'general'" class="tab-content space-y-6">
-            <div class="settings-group">
+            <div id="setting-model" class="settings-group">
               <label class="setting-label">Model</label>
               <p class="setting-desc">Das Standard-Modell für Claude Code. Aliases zeigen immer auf die neueste Version — wenn Anthropic ein neues Modell released, wechselt der Alias automatisch. Leer = Opus (das stärkste Modell, Standard bei Max-Abo).</p>
               <select x-model="settings.model" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.model }">
@@ -331,7 +443,7 @@
               </select>
             </div>
 
-            <div class="settings-group">
+            <div id="setting-effort" class="settings-group">
               <label class="setting-label">Effort Level</label>
               <p class="setting-desc">Wie viel Denkaufwand Claude in Antworten steckt. Bei "low" antwortet Claude knapp und schnell — gut für einfache Fragen. "high" aktiviert tieferes Reasoning mit mehr Kontext-Analyse — ideal für Code-Reviews, Architektur-Entscheidungen und Debugging.</p>
               <select x-model="settings.effortLevel" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.effortLevel }">
@@ -342,7 +454,7 @@
               </select>
             </div>
 
-            <div class="settings-group">
+            <div id="setting-output-style" class="settings-group">
               <label class="setting-label">Output Style</label>
               <p class="setting-desc">Steuert den Stil der Antworten. Plugins wie "Explanatory Output Style" oder "Learning Output Style" registrieren eigene Styles, die man hier per Name aktiviert. Der Style beeinflusst Ausführlichkeit, Struktur und Tonalität — nicht die Fähigkeiten.</p>
               <div x-data="{ custom: false }" class="flex gap-2">
@@ -364,7 +476,7 @@
               </div>
             </div>
 
-            <div class="settings-group">
+            <div id="setting-language" class="settings-group">
               <label class="setting-label">Language</label>
               <p class="setting-desc">Die Sprache, in der Claude antwortet. Leer = Englisch.</p>
               <div x-data="{ custom: false }" class="flex gap-2">
@@ -389,7 +501,7 @@
               </div>
             </div>
 
-            <div class="settings-group flex items-start justify-between">
+            <div id="setting-thinking" class="settings-group flex items-start justify-between">
               <div class="flex-1">
                 <label class="setting-label">Always Thinking Enabled</label>
                 <p class="setting-desc">Aktiviert den "Thinking"-Modus permanent. Claude zeigt dann seinen internen Denkprozess vor jeder Antwort — hilfreich um nachzuvollziehen, wie Entscheidungen getroffen werden. Verbraucht mehr Tokens, gibt aber maximale Transparenz.</p>
@@ -397,7 +509,7 @@
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.alwaysThinkingEnabled }" @click="settings.alwaysThinkingEnabled = !settings.alwaysThinkingEnabled; markUnsaved()"></div>
             </div>
 
-            <div class="settings-group">
+            <div id="setting-auto-updates" class="settings-group">
               <label class="setting-label">Auto-Updates Channel</label>
               <p class="setting-desc">Welchen Release-Kanal Claude Code für automatische Updates verwendet.</p>
               <select x-model="settings.autoUpdatesChannel" @change="markUnsaved()" class="setting-input has-value">
@@ -433,8 +545,37 @@
               </div>
             </div>
 
+            <!-- Permission Conflict Warnings -->
+            <template x-if="permConflicts.length > 0">
+              <div class="settings-group !bg-[rgba(239,68,68,0.04)] !border-red-500/20" x-data="{ conflictsOpen: true }">
+                <button @click="conflictsOpen = !conflictsOpen" class="w-full flex items-center justify-between text-left">
+                  <div class="flex items-center gap-2.5">
+                    <svg class="w-4 h-4 text-red-400 conflict-badge" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.997L13.732 4.832c-.77-1.333-2.694-1.333-3.464 0L3.34 16.003c-.77 1.333.192 2.997 1.732 2.997z"/></svg>
+                    <span class="setting-label !mb-0 text-red-400/90" x-text="permConflicts.length + ' Konflikt' + (permConflicts.length !== 1 ? 'e' : '') + ' erkannt'"></span>
+                  </div>
+                  <svg class="w-4 h-4 text-fg-dim transition-transform" :class="{ 'rotate-180': conflictsOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="conflictsOpen" x-collapse class="mt-3 space-y-2">
+                  <template x-for="(conflict, ci) in permConflicts" :key="'conflict-'+ci">
+                    <div class="flex items-start gap-2.5 px-3 py-2.5 rounded-xl text-sm"
+                         :class="conflict.severity === 'high' ? 'bg-red-500/10 border border-red-500/20' : 'bg-amber-500/10 border border-amber-500/20'">
+                      <span class="text-xs mt-0.5 flex-shrink-0" :class="conflict.severity === 'high' ? 'text-red-400' : 'text-amber-400'" x-text="conflict.severity === 'high' ? '⚠' : 'ℹ'"></span>
+                      <div>
+                        <div class="text-xs font-medium" :class="conflict.severity === 'high' ? 'text-red-300' : 'text-amber-300'" x-text="conflict.message"></div>
+                        <div class="text-[11px] font-mono text-fg-dim mt-1 flex gap-2 flex-wrap">
+                          <span x-show="conflict.allowRule" class="text-emerald-400" x-text="'Allow: ' + conflict.allowRule"></span>
+                          <span x-show="conflict.askRule" class="text-amber-400" x-text="'Ask: ' + conflict.askRule"></span>
+                          <span class="text-red-400" x-text="'Deny: ' + conflict.denyRule"></span>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+
             <!-- Permission Presets -->
-            <div class="settings-group">
+            <div id="setting-perm-presets" class="settings-group">
               <label class="setting-label flex items-center gap-2">
                 <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
                 Permission Presets
@@ -455,7 +596,7 @@
               </div>
             </div>
 
-            <div class="settings-group">
+            <div id="setting-perm-default-mode" class="settings-group">
               <label class="setting-label">Default Permission Mode</label>
               <p class="setting-desc">Fallback, wenn keine Allow/Ask/Deny-Regel greift. <strong>allowPrompt</strong> = fragt immer (sicher, langsam). <strong>acceptEdits</strong> = Read/Edit/Write auto-erlaubt, Bash fragt (beste Balance). <strong>acceptAll</strong> = nichts fragt (gefährlich). <strong>plan</strong> = nur lesen, kein Schreiben.</p>
               <select x-model="settings.permissions.defaultMode" @change="markUnsaved()" class="setting-input has-value">
@@ -466,7 +607,7 @@
               </select>
             </div>
 
-            <div class="settings-group flex items-start justify-between">
+            <div id="setting-perm-bypass" class="settings-group flex items-start justify-between">
               <div class="flex-1">
                 <label class="setting-label">Bypass-Modus deaktivieren</label>
                 <p class="setting-desc">Der Bypass-Modus erlaubt es normalerweise, alle Permissions temporär zu überspringen. Wenn deaktiviert, kann niemand diesen Modus nutzen — sinnvoll für Teams oder Shared-Configs, wo strikte Kontrolle gewünscht ist.</p>
@@ -477,7 +618,7 @@
             </div>
 
             <!-- Allow Rules -->
-            <div class="settings-group">
+            <div id="setting-perm-allow" class="settings-group">
               <label class="setting-label flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span> Allow Rules
                 <span class="text-xs font-normal text-fg-dim font-sans">— automatisch erlaubt, keine Rückfrage</span>
@@ -487,6 +628,7 @@
                 <template x-for="(rule, i) in settings.permissions.allow" :key="'allow-'+i">
                   <div class="flex items-center gap-2 group">
                     <code class="flex-1 font-mono text-sm text-emerald-300 px-3 py-2 rounded-xl glass border-emerald-500/20 shadow-[inset_0_0_12px_rgba(16,185,129,0.04)]" x-text="rule"></code>
+                    <span x-show="isRuleConflicting('allow', rule)" class="w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-full bg-red-500/15 text-red-400 text-[10px] font-bold conflict-badge" title="Konflikt mit Deny-Rule">!</span>
                     <button @click="settings.permissions.allow.splice(i, 1); markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
                   </div>
                 </template>
@@ -507,7 +649,7 @@
             </div>
 
             <!-- Ask Rules -->
-            <div class="settings-group">
+            <div id="setting-perm-ask" class="settings-group">
               <label class="setting-label flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"></span> Ask Rules
                 <span class="text-xs font-normal text-fg-dim font-sans">— erfordert Bestätigung vor Ausführung</span>
@@ -517,6 +659,7 @@
                 <template x-for="(rule, i) in settings.permissions.ask" :key="'ask-'+i">
                   <div class="flex items-center gap-2 group">
                     <code class="flex-1 font-mono text-sm text-amber-300 px-3 py-2 rounded-xl glass border-amber-500/20 shadow-[inset_0_0_12px_rgba(245,158,11,0.04)]" x-text="rule"></code>
+                    <span x-show="isRuleConflicting('ask', rule)" class="w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-full bg-red-500/15 text-red-400 text-[10px] font-bold conflict-badge" title="Konflikt mit Deny-Rule">!</span>
                     <button @click="settings.permissions.ask.splice(i, 1); markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
                   </div>
                 </template>
@@ -537,7 +680,7 @@
             </div>
 
             <!-- Deny Rules -->
-            <div class="settings-group">
+            <div id="setting-perm-deny" class="settings-group">
               <label class="setting-label flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]"></span> Deny Rules
                 <span class="text-xs font-normal text-fg-dim font-sans">— immer blockiert, höchste Priorität</span>
@@ -567,7 +710,7 @@
             </div>
 
             <!-- Additional Directories -->
-            <div class="settings-group">
+            <div id="setting-perm-dirs" class="settings-group">
               <label class="setting-label">Additional Directories</label>
               <p class="setting-desc">Zusätzliche Verzeichnisse, auf die Claude zugreifen darf. Standardmäßig sieht Claude nur den aktuellen Projektordner. Hier kannst du z.B. Shared Libraries, Dokumentation oder andere Repos freigeben. Relative Pfade (../docs/) und Home-Pfade (~/shared/) funktionieren.</p>
               <div class="space-y-2 mt-3">
@@ -585,10 +728,10 @@
             </div>
           </div>
 
-          <!-- ═══ TAB: Plugins ═══ -->
+          <!-- ═══ TAB: Skills & Plugins ═══ -->
           <div x-show="activeTab === 'plugins'" class="tab-content space-y-4">
             <div class="relative">
-              <input type="text" x-model="pluginSearch" placeholder="Plugins durchsuchen..." class="setting-input pl-9">
+              <input type="text" x-model="pluginSearch" placeholder="Skills & Plugins durchsuchen..." class="setting-input pl-9">
               <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
 
@@ -608,6 +751,12 @@
                           <span x-show="p.community" class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-violet-500/15 text-violet-400 border border-violet-500/20">Community</span>
                         </div>
                         <div class="text-xs text-fg-muted mt-0.5" x-text="p.desc"></div>
+                        <div x-show="p.skills && p.skills.length" class="flex flex-wrap gap-1 mt-1.5">
+                          <template x-for="sk in (p.skills || [])" :key="sk">
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-accent/10 text-accent/80 border border-accent/15" x-text="sk"></span>
+                          </template>
+                        </div>
+                        <div x-show="p.provides" class="text-[10px] text-fg-dim/70 mt-1 italic" x-text="p.provides"></div>
                         <code class="text-[10px] font-mono text-fg-dim/50 mt-1 block" x-text="p.id"></code>
                         <div x-show="p.install" class="mt-1.5 flex items-center gap-1.5">
                           <span class="text-[10px] text-fg-dim font-mono">Install:</span>
@@ -623,7 +772,7 @@
 
           <!-- ═══ TAB: Hooks ═══ -->
           <div x-show="activeTab === 'hooks'" class="tab-content space-y-6">
-            <div class="p-5 rounded-2xl glass border-amber-500/10 text-sm text-fg-muted space-y-2">
+            <div id="setting-hooks" class="p-5 rounded-2xl glass border-amber-500/10 text-sm text-fg-muted space-y-2">
               <span class="text-accent font-display font-semibold block">Hooks — Automatisierung per Event</span>
               <p>Hooks führen automatisch Shell-Befehle oder Webhooks aus, wenn bestimmte Events eintreten. Typische Anwendungen:</p>
               <ul class="list-none space-y-1 text-xs text-fg-dim">
@@ -638,7 +787,7 @@
               <div class="rounded-2xl glass overflow-hidden">
                 <div class="flex items-center justify-between px-4 py-2.5" style="background: rgba(26, 26, 36, 0.8);">
                   <span class="font-mono text-sm font-semibold text-accent" x-text="event"></span>
-                  <button @click="delete settings.hooks[event]; markUnsaved()" class="text-fg-dim hover:text-red-400 text-xs font-mono transition-colors">Remove</button>
+                  <button @click="const tmp = {...settings.hooks}; delete tmp[event]; settings.hooks = tmp; markUnsaved()" class="text-fg-dim hover:text-red-400 text-xs font-mono transition-colors">Remove</button>
                 </div>
                 <template x-for="(group, gi) in eventHooks" :key="event+'-'+gi">
                   <div class="p-4 border-t border-[rgba(255,255,255,0.06)] space-y-3">
@@ -696,6 +845,125 @@
             </div>
           </div>
 
+          <!-- ═══ TAB: MCP Servers ═══ -->
+          <div x-show="activeTab === 'mcp'" class="tab-content space-y-6">
+            <div id="setting-mcp" class="p-5 rounded-2xl glass border-purple-500/10 text-sm text-fg-muted space-y-2">
+              <span class="text-purple-400 font-display font-semibold block">MCP Servers — Externe Tools per Protokoll</span>
+              <p>MCP (Model Context Protocol) erlaubt Claude, externe Tools zu nutzen — z.B. Datenbanken, Browser, APIs. Jeder Server wird als eigener Prozess (stdio) oder via HTTP/SSE-Endpoint angebunden.</p>
+              <p class="text-xs text-fg-dim">
+                <span class="text-accent">stdio:</span> Lokaler Prozess via command + args &nbsp;|&nbsp;
+                <span class="text-accent">http/sse:</span> Remote-Server via URL + optional Headers/OAuth
+              </p>
+            </div>
+
+            <template x-for="(server, name) in settings.mcpServers" :key="'mcp-'+name">
+              <div class="rounded-2xl glass overflow-hidden" x-data="{ hk: '', hv: '', ek: '', ev: '' }">
+                <div class="flex items-center justify-between px-4 py-2.5" style="background: rgba(26, 26, 36, 0.8);">
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono text-sm font-semibold text-purple-400" x-text="name"></span>
+                    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-bg-muted text-fg-dim border border-[rgba(255,255,255,0.06)]" x-text="server.type || 'stdio'"></span>
+                  </div>
+                  <button @click="const tmp = {...settings.mcpServers}; delete tmp[name]; settings.mcpServers = tmp; markUnsaved()" class="text-fg-dim hover:text-red-400 text-xs font-mono transition-colors">Remove</button>
+                </div>
+                <div class="p-4 space-y-3">
+                  <div class="flex items-center gap-2">
+                    <label class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0">Type</label>
+                    <select x-model="server.type" @change="markUnsaved()" class="setting-input flex-1 !text-sm has-value">
+                      <option value="stdio">stdio — Lokaler Prozess</option>
+                      <option value="http">http — HTTP-Server</option>
+                      <option value="sse">sse — Server-Sent Events</option>
+                    </select>
+                  </div>
+
+                  <!-- stdio fields -->
+                  <template x-if="!server.type || server.type === 'stdio'">
+                    <div class="space-y-3">
+                      <div class="flex items-center gap-2">
+                        <label class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0">Command</label>
+                        <input type="text" x-model="server.command" @input="markUnsaved()" placeholder="npx, node, python..." class="setting-input flex-1 !text-sm font-mono">
+                      </div>
+                      <div>
+                        <label class="text-xs text-fg-dim font-mono tracking-wide block mb-1.5">Args</label>
+                        <template x-for="(arg, ai) in (server.args || [])" :key="'arg-'+ai">
+                          <div class="flex items-center gap-2 mb-1.5 group">
+                            <input type="text" x-model="server.args[ai]" @input="markUnsaved()" class="setting-input flex-1 !text-sm font-mono">
+                            <button @click="server.args.splice(ai, 1); markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                          </div>
+                        </template>
+                        <button @click="if(!server.args) server.args = []; server.args.push(''); markUnsaved()" class="text-xs font-mono text-purple-400 hover:text-purple-300 transition-colors">+ Argument</button>
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- http/sse fields -->
+                  <template x-if="server.type === 'http' || server.type === 'sse'">
+                    <div class="space-y-3">
+                      <div class="flex items-center gap-2">
+                        <label class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0">URL</label>
+                        <input type="text" x-model="server.url" @input="markUnsaved()" placeholder="https://mcp.example.com" class="setting-input flex-1 !text-sm font-mono">
+                      </div>
+                      <div>
+                        <label class="text-xs text-fg-dim font-mono tracking-wide block mb-1.5">Headers</label>
+                        <template x-for="(val, key) in (server.headers || {})" :key="'hdr-'+key">
+                          <div class="flex items-center gap-2 mb-1.5 group">
+                            <span class="text-xs font-mono text-fg-dim w-32 truncate" x-text="key"></span>
+                            <input type="text" x-model="server.headers[key]" @input="markUnsaved()" class="setting-input flex-1 !text-sm font-mono">
+                            <button @click="const h = {...server.headers}; delete h[key]; server.headers = h; markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                          </div>
+                        </template>
+                        <div class="flex items-center gap-2">
+                          <input type="text" x-model="hk" placeholder="Header-Name" class="setting-input !text-sm font-mono !w-32">
+                          <input type="text" x-model="hv" placeholder="Wert (${ENV_VAR} erlaubt)" class="setting-input flex-1 !text-sm font-mono">
+                          <button @click="if(hk) { if(!server.headers) server.headers = {}; server.headers[hk] = hv; hk = ''; hv = ''; markUnsaved(); }" class="px-3 py-2 rounded-xl text-xs font-mono bg-purple-500/15 text-purple-400 hover:bg-purple-500/25 transition-colors">+</button>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- env (for all types) -->
+                  <div>
+                    <label class="text-xs text-fg-dim font-mono tracking-wide block mb-1.5">Env</label>
+                    <template x-for="(val, key) in (server.env || {})" :key="'mcpenv-'+key">
+                      <div class="flex items-center gap-2 mb-1.5 group">
+                        <span class="text-xs font-mono text-fg-dim w-32 truncate" x-text="key"></span>
+                        <input type="text" x-model="server.env[key]" @input="markUnsaved()" class="setting-input flex-1 !text-sm font-mono">
+                        <button @click="const e = {...server.env}; delete e[key]; server.env = e; markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                      </div>
+                    </template>
+                    <div class="flex items-center gap-2">
+                      <input type="text" x-model="ek" placeholder="VAR_NAME" class="setting-input !text-sm font-mono !w-32">
+                      <input type="text" x-model="ev" placeholder="Wert" class="setting-input flex-1 !text-sm font-mono">
+                      <button @click="if(ek) { if(!server.env) server.env = {}; server.env[ek] = ev; ek = ''; ev = ''; markUnsaved(); }" class="px-3 py-2 rounded-xl text-xs font-mono bg-purple-500/15 text-purple-400 hover:bg-purple-500/25 transition-colors">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- Add new MCP server -->
+            <div class="border border-dashed border-[rgba(255,255,255,0.1)] rounded-2xl p-4 hover:border-purple-400/20 transition-colors space-y-3">
+              <div class="flex items-center gap-2">
+                <input type="text" x-model="newMcpName" @keydown.enter="addMcpServer()" placeholder="Server-Name (z.B. filesystem, github)" class="setting-input flex-1 !text-sm font-mono">
+                <select x-model="newMcpType" class="setting-input !w-32 !text-sm has-value">
+                  <option value="stdio">stdio</option>
+                  <option value="http">http</option>
+                  <option value="sse">sse</option>
+                </select>
+                <button @click="addMcpServer()" :disabled="!newMcpName" class="btn-primary px-4 py-2 text-xs font-mono font-medium rounded-xl bg-purple-500 text-white disabled:opacity-30 disabled:cursor-not-allowed">+ Server</button>
+              </div>
+
+              <!-- Quick-add presets -->
+              <div>
+                <span class="text-xs text-fg-dim block mb-2">Schnell hinzufügen:</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <template x-for="preset in mcpPresets" :key="preset.name">
+                    <button @click="addMcpPreset(preset)" class="text-[11px] font-mono px-2 py-1 rounded-lg border border-[rgba(255,255,255,0.06)] hover:border-purple-400/30 hover:text-purple-400 text-fg-dim transition-colors" x-text="preset.name"></button>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- ═══ TAB: Sandbox ═══ -->
           <div x-show="activeTab === 'sandbox'" class="tab-content space-y-6">
             <div class="p-5 rounded-2xl glass border-blue-500/10 text-sm text-fg-muted space-y-2">
@@ -704,7 +972,7 @@
               <p class="text-xs text-fg-dim">Pfad-Prefixes: <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">//</code> = absoluter Pfad, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">~/</code> = Home-Verzeichnis, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">./</code> = relativ zum Projekt. Sinnvoll wenn Claude in sensiblen Umgebungen läuft oder du verhindern willst, dass z.B. ~/.ssh oder ~/.aws gelesen werden.</p>
             </div>
 
-            <div class="settings-group flex items-start justify-between">
+            <div id="setting-sandbox-enable" class="settings-group flex items-start justify-between">
               <div class="flex-1">
                 <label class="setting-label">Sandbox aktivieren</label>
                 <p class="setting-desc">Alle Bash-Befehle und Dateizugriffe werden in einer Sandbox ausgeführt.</p>
@@ -732,7 +1000,7 @@
               </div>
             </template>
 
-            <div class="settings-group">
+            <div id="setting-sandbox-domains" class="settings-group">
               <label class="setting-label">Network — Allowed Domains</label>
               <p class="setting-desc">Domains, auf die Claude zugreifen darf. Wildcards möglich (z.B. *.npmjs.org).</p>
               <div class="space-y-2 mt-3">
@@ -749,7 +1017,7 @@
               </div>
             </div>
 
-            <div class="settings-group flex items-start justify-between">
+            <div id="setting-sandbox-local-binding" class="settings-group flex items-start justify-between">
               <div class="flex-1">
                 <label class="setting-label">Allow Local Binding</label>
                 <p class="setting-desc">Erlaubt Prozessen innerhalb der Sandbox, auf lokale Ports zu binden (z.B. Dev-Server).</p>
@@ -760,7 +1028,7 @@
 
           <!-- ═══ TAB: Environment ═══ -->
           <div x-show="activeTab === 'env'" class="tab-content space-y-6">
-            <div class="p-5 rounded-2xl glass border-violet-500/10 text-sm text-fg-muted space-y-2">
+            <div id="setting-env" class="p-5 rounded-2xl glass border-violet-500/10 text-sm text-fg-muted space-y-2">
               <span class="text-violet-400 font-display font-semibold block">Umgebungsvariablen — Session-Konfiguration</span>
               <p>Variablen die in jeder Claude Code Session gesetzt werden und von allen Bash-Befehlen gelesen werden können. Bestehende System-Variablen mit <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">$VAR_NAME</code> referenzieren.</p>
               <p class="text-xs text-fg-dim">Nützlich um z.B. das Subagent-Modell zu steuern (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">CLAUDE_CODE_SUBAGENT_MODEL</code>), Node-Umgebungen zu setzen (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">NODE_ENV</code>), oder Prompt-Caching zu konfigurieren.</p>
@@ -771,7 +1039,7 @@
                 <div class="flex items-center gap-2 group">
                   <code class="font-mono text-sm font-semibold text-violet-400 w-48 flex-shrink-0 truncate" x-text="key"></code>
                   <code class="flex-1 font-mono text-sm text-fg-muted px-3 py-2 rounded-xl glass truncate" x-text="val"></code>
-                  <button @click="delete settings.env[key]; markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                  <button @click="const tmp = {...settings.env}; delete tmp[key]; settings.env = tmp; markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
                 </div>
               </template>
             </div>
@@ -794,7 +1062,7 @@
 
           <!-- ═══ TAB: Display & UI ═══ -->
           <div x-show="activeTab === 'display'" class="tab-content space-y-6">
-            <div class="settings-group flex items-start justify-between">
+            <div id="setting-spinner-tips" class="settings-group flex items-start justify-between">
               <div class="flex-1">
                 <label class="setting-label">Spinner Tips anzeigen</label>
                 <p class="setting-desc">Zeigt hilfreiche Tipps im Spinner während Claude arbeitet.</p>
@@ -802,7 +1070,7 @@
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.spinnerTipsEnabled }" @click="settings.spinnerTipsEnabled = !settings.spinnerTipsEnabled; markUnsaved()"></div>
             </div>
 
-            <div class="settings-group flex items-start justify-between">
+            <div id="setting-turn-duration" class="settings-group flex items-start justify-between">
               <div class="flex-1">
                 <label class="setting-label">Turn-Dauer anzeigen</label>
                 <p class="setting-desc">Zeigt nach jeder Antwort an, wie lange Claude gebraucht hat.</p>
@@ -810,7 +1078,7 @@
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.showTurnDuration }" @click="settings.showTurnDuration = !settings.showTurnDuration; markUnsaved()"></div>
             </div>
 
-            <div class="settings-group flex items-start justify-between">
+            <div id="setting-reduced-motion" class="settings-group flex items-start justify-between">
               <div class="flex-1">
                 <label class="setting-label">Reduced Motion</label>
                 <p class="setting-desc">Reduziert Animationen in der UI — hilfreich bei Motion Sensitivity.</p>
@@ -818,7 +1086,7 @@
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.prefersReducedMotion }" @click="settings.prefersReducedMotion = !settings.prefersReducedMotion; markUnsaved()"></div>
             </div>
 
-            <div class="settings-group">
+            <div id="setting-status-line" class="settings-group">
               <label class="setting-label">Status Line</label>
               <p class="setting-desc">Eine permanente Statuszeile am unteren Rand des Terminals. Wird durch ein Shell-Script oder einen HTTP-Endpoint befüllt — kann z.B. Token-Verbrauch, aktives Modell, Kosten pro Session oder Git-Branch anzeigen. Das Script wird periodisch aufgerufen (Refresh-Intervall konfigurierbar).</p>
               <div class="space-y-3 mt-3">
@@ -846,7 +1114,7 @@
               </div>
             </div>
 
-            <div class="settings-group">
+            <div id="setting-spinner-verbs" class="settings-group">
               <label class="setting-label">Spinner Verbs</label>
               <p class="setting-desc">Der Spinner zeigt Aktionswörter während Claude arbeitet (z.B. "Thinking", "Reading"). Hier eigene Wörter hinzufügen — im "Append"-Modus werden sie zu den Standard-Wörtern ergänzt, im "Replace"-Modus ersetzen sie diese komplett. Gut für Spaß oder Team-Branding.</p>
               <div class="flex items-center gap-2 mt-3">
@@ -1017,13 +1285,13 @@
 
           <!-- ═══ TAB: Attribution ═══ -->
           <div x-show="activeTab === 'attribution'" class="tab-content space-y-6">
-            <div class="settings-group">
+            <div id="setting-attr-commit" class="settings-group">
               <label class="setting-label">Commit Attribution</label>
               <p class="setting-desc">Text der automatisch an Git-Commit-Messages angehängt wird (z.B. als Co-Author). Wird beim /commit Skill verwendet. Leer = keine Attribution. Viele Teams nutzen das für Transparenz, welche Commits mit AI-Hilfe entstanden sind.</p>
               <input type="text" x-model="settings.attribution.commit" @input="markUnsaved()" placeholder="Co-Authored-By: Claude <noreply@anthropic.com>" class="setting-input font-mono">
             </div>
 
-            <div class="settings-group">
+            <div id="setting-attr-pr" class="settings-group">
               <label class="setting-label">PR Attribution</label>
               <p class="setting-desc">Text der in Pull-Request-Beschreibungen eingefügt wird.</p>
               <input type="text" x-model="settings.attribution.pr" @input="markUnsaved()" placeholder="Generated with Claude Code" class="setting-input font-mono">
@@ -1032,13 +1300,13 @@
 
           <!-- ═══ TAB: Advanced ═══ -->
           <div x-show="activeTab === 'advanced'" class="tab-content space-y-6">
-            <div class="settings-group">
+            <div id="setting-cleanup" class="settings-group">
               <label class="setting-label">Cleanup Period (Tage)</label>
               <p class="setting-desc">Claude Code speichert Session-Transkripte lokal für Kontext-Wiederherstellung und Auto-Memory. Alte Sessions werden nach dieser Zeitspanne automatisch gelöscht. Standard ist 30 Tage — reduzieren spart Speicher, erhöhen behält mehr Kontext.</p>
               <input type="number" x-model.number="settings.cleanupPeriodDays" @input="markUnsaved()" placeholder="30" class="setting-input !w-32">
             </div>
 
-            <div class="settings-group flex items-start justify-between">
+            <div id="setting-fast-mode" class="settings-group flex items-start justify-between">
               <div class="flex-1">
                 <label class="setting-label">Fast Mode Per-Session Opt-In</label>
                 <p class="setting-desc">Fast Mode nutzt dasselbe Modell mit schnellerem Output — ideal für einfache Tasks. Mit dieser Option muss man Fast Mode in jeder neuen Session explizit mit /fast aktivieren, statt dass er dauerhaft an bleibt.</p>
@@ -1046,7 +1314,7 @@
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.fastModePerSessionOptIn }" @click="settings.fastModePerSessionOptIn = !settings.fastModePerSessionOptIn; markUnsaved()"></div>
             </div>
 
-            <div class="settings-group flex items-start justify-between">
+            <div id="setting-all-mcp" class="settings-group flex items-start justify-between">
               <div class="flex-1">
                 <label class="setting-label">Alle Projekt-MCP-Server aktivieren</label>
                 <p class="setting-desc">MCP-Server (Model Context Protocol) erweitern Claude mit externen Tools — z.B. Datenbank-Zugriff, Browser-Automation oder API-Integrationen. Normalerweise fragt Claude bei jedem neuen MCP-Server um Erlaubnis. Diese Option genehmigt alle Server aus der Projekt-Config (.mcp.json) automatisch.</p>
@@ -1054,7 +1322,7 @@
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.enableAllProjectMcpServers }" @click="settings.enableAllProjectMcpServers = !settings.enableAllProjectMcpServers; markUnsaved()"></div>
             </div>
 
-            <div class="settings-group flex items-start justify-between">
+            <div id="setting-gitignore" class="settings-group flex items-start justify-between">
               <div class="flex-1">
                 <label class="setting-label">.gitignore respektieren</label>
                 <p class="setting-desc">Dateien die in .gitignore stehen werden bei Vorschlägen und Suche ignoriert.</p>
@@ -1062,7 +1330,7 @@
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.respectGitignore }" @click="settings.respectGitignore = !settings.respectGitignore; markUnsaved()"></div>
             </div>
 
-            <div class="settings-group">
+            <div id="setting-teammate" class="settings-group">
               <label class="setting-label">Teammate Mode</label>
               <p class="setting-desc">Steuert, wie Claude Code mehrere parallele Agenten orchestriert. "Auto" lässt Claude entscheiden, "In-Process" läuft alles im selben Prozess (schneller, weniger Overhead), "Tmux" startet Agenten in separaten Terminal-Panes (besser für lange Tasks, eigene Logs pro Agent).</p>
               <select x-model="settings.teamateMode" @change="markUnsaved()" class="setting-input has-value">
@@ -1072,7 +1340,7 @@
               </select>
             </div>
 
-            <div class="settings-group">
+            <div id="setting-login" class="settings-group">
               <label class="setting-label">Login-Methode erzwingen</label>
               <p class="setting-desc">Erzwingt eine bestimmte Anmeldemethode für Claude Code.</p>
               <select x-model="settings.forceLoginMethod" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.forceLoginMethod }">
@@ -1080,6 +1348,49 @@
                 <option value="claudeai">Claude AI — claude.ai Account</option>
                 <option value="console">Console — Anthropic Console API Key</option>
               </select>
+            </div>
+
+            <div id="setting-api-key" class="settings-group">
+              <label class="setting-label">API Key Helper</label>
+              <p class="setting-desc">Pfad zu einem Skript, das einen API-Key ausgibt. Claude nutzt den Output als X-Api-Key und Bearer-Token. Nützlich für rotierende Keys oder Vault-Integration (z.B. <code class="font-mono text-xs bg-bg-muted px-1 py-0.5 rounded">~/.claude/get-api-key.sh</code>).</p>
+              <input type="text" x-model="settings.apiKeyHelper" @input="markUnsaved()" placeholder="~/.claude/get-api-key.sh" class="setting-input font-mono">
+            </div>
+
+            <div id="setting-plans-dir" class="settings-group">
+              <label class="setting-label">Plans Directory</label>
+              <p class="setting-desc">Verzeichnis, in dem Claude Pläne speichert. Standard: <code class="font-mono text-xs bg-bg-muted px-1 py-0.5 rounded">~/.claude/plans</code></p>
+              <input type="text" x-model="settings.plansDirectory" @input="markUnsaved()" placeholder="~/.claude/plans" class="setting-input font-mono">
+            </div>
+
+            <div id="setting-progress-bar" class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label class="setting-label">Terminal-Fortschrittsbalken</label>
+                <p class="setting-desc">Zeigt einen Fortschrittsbalken im Terminal während Claude arbeitet.</p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.terminalProgressBarEnabled }" @click="settings.terminalProgressBarEnabled = !settings.terminalProgressBarEnabled; markUnsaved()"></div>
+            </div>
+
+            <div id="setting-disable-hooks" class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label class="setting-label">Alle Hooks deaktivieren</label>
+                <p class="setting-desc">Deaktiviert alle Hooks und Custom-Status-Lines. Nützlich zum Debugging, wenn ein Hook Probleme verursacht.</p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.disableAllHooks }" @click="settings.disableAllHooks = !settings.disableAllHooks; markUnsaved()"></div>
+            </div>
+
+            <div id="setting-available-models" class="settings-group">
+              <label class="setting-label">Verfügbare Modelle einschränken</label>
+              <p class="setting-desc">Liste von Modell-IDs, die dem User zur Auswahl stehen. Leer = alle verfügbaren Modelle. Nur für Managed/Enterprise-Setups relevant.</p>
+              <template x-for="(m, i) in settings.availableModels" :key="'amod-'+i">
+                <div class="flex items-center gap-2 mb-1.5 group">
+                  <span class="font-mono text-sm text-fg px-3 py-2 rounded-xl flex-1" style="background:rgba(18,18,26,0.7);border:1px solid rgba(255,255,255,0.07)" x-text="m"></span>
+                  <button @click="settings.availableModels.splice(i, 1); markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                </div>
+              </template>
+              <div class="flex items-center gap-2">
+                <input type="text" x-model="newAvailableModel" @keydown.enter="addAvailableModel()" placeholder="z.B. claude-sonnet-4-5-20250514" class="setting-input flex-1 !text-sm font-mono">
+                <button @click="addAvailableModel()" :disabled="!newAvailableModel" class="px-3 py-2 rounded-xl text-xs font-mono bg-accent/15 text-accent hover:bg-accent/25 transition-colors disabled:opacity-30">+</button>
+              </div>
             </div>
           </div>
 
@@ -1165,21 +1476,359 @@
             </div>
           </div>
 
+        <!-- ═══════════════ TERMINAL PROMPTS TAB ═══════════════ -->
+          <div x-show="activeTab === 'terminal-prompts'" class="tab-content">
+            <!-- Sub-Navigation: Catalog | Builder -->
+            <div class="flex items-center gap-1 p-1 rounded-xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] mb-5 w-fit">
+              <button @click="terminalPromptsView = 'catalog'"
+                      class="px-4 py-1.5 rounded-lg text-xs font-display font-medium transition-all"
+                      :class="terminalPromptsView === 'catalog' ? 'bg-accent/15 text-accent' : 'text-fg-dim hover:text-fg'">
+                Prompt-Katalog
+              </button>
+              <button @click="terminalPromptsView = 'builder'"
+                      class="px-4 py-1.5 rounded-lg text-xs font-display font-medium transition-all"
+                      :class="terminalPromptsView === 'builder' ? 'bg-emerald-500/15 text-emerald-400' : 'text-fg-dim hover:text-fg'">
+                CLAUDE.md Builder
+              </button>
+            </div>
+
+            <!-- ═══ BUILDER VIEW ═══ -->
+            <div x-show="terminalPromptsView === 'builder'" class="space-y-4">
+              <!-- Builder Header -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <button @click="openClaudeMd()" class="btn-secondary px-3 py-1.5 text-xs font-mono rounded-lg border border-[rgba(255,255,255,0.12)] text-fg flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>
+                    Öffnen
+                  </button>
+                  <button @click="saveClaudeMd()" class="btn-secondary px-3 py-1.5 text-xs font-mono rounded-lg border border-[rgba(255,255,255,0.12)] text-fg flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                    Speichern
+                  </button>
+                  <button @click="navigator.clipboard.writeText(claudeMdContent).then(() => notify('CLAUDE.md kopiert!'))" class="btn-secondary px-3 py-1.5 text-xs font-mono rounded-lg border border-[rgba(255,255,255,0.12)] text-fg flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    Kopieren
+                  </button>
+                </div>
+                <span class="text-[11px] font-mono text-fg-dim" x-text="claudeMdContent.length + ' Zeichen · ' + (claudeMdContent.split('\\n').length) + ' Zeilen'"></span>
+              </div>
+
+              <!-- Editor + Quick Insert Split -->
+              <div class="flex gap-4" style="min-height: 400px;">
+                <!-- Editor Area -->
+                <div class="flex-1 flex flex-col">
+                  <textarea x-model="claudeMdContent"
+                            x-ref="claudeMdEditor"
+                            class="flex-1 w-full p-4 rounded-xl font-mono text-xs leading-relaxed text-fg placeholder-fg-dim/40 resize-none focus:outline-none focus:ring-1 focus:ring-emerald-500/30"
+                            style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06);"
+                            placeholder="# Projekt Name&#10;&#10;## Sprache&#10;- Kommunikation auf Deutsch&#10;- Code auf Englisch&#10;&#10;## Konventionen&#10;...&#10;&#10;Tipp: Klicke rechts auf Snippets um sie einzufügen →"></textarea>
+                </div>
+
+                <!-- Quick Insert Sidebar -->
+                <div class="w-56 flex-shrink-0 space-y-2 overflow-y-auto" style="max-height: 500px;">
+                  <p class="text-[10px] font-semibold text-fg-dim uppercase tracking-wider mb-2">Schnell einfügen</p>
+
+                  <!-- Section Templates -->
+                  <p class="text-[9px] font-mono text-emerald-400/60 uppercase tracking-wider mt-3 mb-1">Sektionen</p>
+                  <template x-for="sec in claudeMdSections" :key="sec.id">
+                    <button @click="insertClaudeMdSection(sec.content)"
+                            class="w-full text-left px-2.5 py-2 rounded-lg text-xs border border-[rgba(255,255,255,0.06)] hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all group">
+                      <div class="font-medium text-fg group-hover:text-emerald-400 transition-colors" x-text="sec.name"></div>
+                      <div class="text-[10px] text-fg-dim mt-0.5" x-text="sec.desc"></div>
+                    </button>
+                  </template>
+
+                  <!-- CLAUDE.md Snippet Prompts -->
+                  <p class="text-[9px] font-mono text-emerald-400/60 uppercase tracking-wider mt-4 mb-1">Aus Katalog</p>
+                  <template x-for="tp in terminalPrompts.filter(p => p.category === 'CLAUDE.md')" :key="'qi-'+tp.id">
+                    <button @click="insertClaudeMdSection(tp.prompt)"
+                            class="w-full text-left px-2.5 py-2 rounded-lg text-xs border border-[rgba(255,255,255,0.06)] hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all group">
+                      <div class="font-medium text-fg group-hover:text-emerald-400 transition-colors" x-text="tp.name"></div>
+                      <div class="text-[10px] text-fg-dim mt-0.5" x-text="tp.desc"></div>
+                    </button>
+                  </template>
+                </div>
+              </div>
+            </div>
+
+            <!-- ═══ CATALOG VIEW ═══ -->
+            <div x-show="terminalPromptsView === 'catalog'">
+            <!-- Category Filter Pills -->
+            <div class="flex flex-wrap gap-1.5 items-center mb-5">
+              <button @click="terminalPromptsCategory = ''"
+                      class="px-3 py-1.5 rounded-full text-xs font-mono border transition-all"
+                      :class="terminalPromptsCategory === '' ? 'border-accent/40 bg-accent/15 text-accent' : 'border-[rgba(255,255,255,0.08)] text-fg-dim hover:text-fg-muted hover:border-[rgba(255,255,255,0.15)]'">
+                Alle
+              </button>
+              <template x-for="cat in terminalPromptsCategories" :key="'tpc-'+cat">
+                <button @click="terminalPromptsCategory = terminalPromptsCategory === cat ? '' : cat"
+                        class="px-3 py-1.5 rounded-full text-xs font-mono border transition-all"
+                        :class="terminalPromptsCategory === cat ? 'border-accent/40 bg-accent/15 text-accent' : 'border-[rgba(255,255,255,0.08)] text-fg-dim hover:text-fg-muted hover:border-[rgba(255,255,255,0.15)]'"
+                        x-text="cat">
+                </button>
+              </template>
+              <span class="text-[11px] font-mono text-fg-dim ml-2" x-text="filteredTerminalPrompts.length + ' Prompts'"></span>
+            </div>
+
+            <!-- Prompt Cards -->
+            <div class="space-y-3">
+              <template x-for="tp in filteredTerminalPrompts" :key="tp.id">
+                <div class="rounded-xl border border-[rgba(255,255,255,0.07)] overflow-hidden bg-bg-alt hover:border-[rgba(255,255,255,0.12)] transition-all duration-200">
+                  <div class="p-4">
+                    <div class="flex items-start justify-between gap-3 mb-1.5">
+                      <div>
+                        <h3 class="font-display font-bold text-base text-white leading-tight" x-text="tp.name"></h3>
+                        <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-mono border"
+                              :class="tp.category === 'CLAUDE.md' ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' : 'text-fg-dim border-[rgba(255,255,255,0.06)]'"
+                              x-text="tp.category"></span>
+                      </div>
+                      <div class="flex gap-1 flex-shrink-0">
+                        <template x-for="tag in tp.tags.slice(0, 3)" :key="tag">
+                          <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-[rgba(255,255,255,0.03)] text-fg-dim border border-[rgba(255,255,255,0.04)]" x-text="tag"></span>
+                        </template>
+                      </div>
+                    </div>
+                    <p class="text-sm text-fg-muted leading-relaxed mb-3" x-text="tp.desc"></p>
+
+                    <!-- Expand/Collapse -->
+                    <button @click="tp.open = !tp.open"
+                            class="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-[rgba(255,255,255,0.06)] text-xs font-mono text-fg-dim hover:text-accent hover:border-accent/30 transition-colors bg-[rgba(255,255,255,0.02)]">
+                      <span x-text="tp.open ? 'Prompt verbergen' : 'Prompt anzeigen'"></span>
+                      <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="{ 'rotate-180': tp.open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+
+                    <!-- Prompt Content -->
+                    <div x-show="tp.open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="mt-3">
+                      <div class="font-mono text-[11px] leading-relaxed text-fg-dim bg-[rgba(0,0,0,0.3)] border border-[rgba(255,255,255,0.04)] rounded-lg p-3 whitespace-pre-wrap break-words" x-text="tp.prompt"></div>
+                      <button @click="navigator.clipboard.writeText(tp.prompt).then(() => notify('Prompt kopiert!'))"
+                              class="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-accent/20 text-xs font-mono text-accent hover:bg-accent/10 transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Prompt kopieren
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <!-- Empty State -->
+            <div x-show="filteredTerminalPrompts.length === 0" class="text-center py-16">
+              <p class="font-display text-xl text-fg-dim">Kein Prompt gefunden</p>
+              <p class="text-xs font-mono text-fg-dim mt-2">Versuch einen anderen Suchbegriff</p>
+            </div>
+            </div><!-- /catalog view -->
+          </div>
+
         </div>
       </div>
 
       <!-- ═══ JSON Preview Panel ═══ -->
-      <div x-show="activeTab !== 'design-prompts'" class="border-t border-[rgba(255,255,255,0.08)] flex-shrink-0">
+      <div x-show="!['design-prompts','terminal-prompts'].includes(activeTab)" class="border-t border-[rgba(255,255,255,0.08)] flex-shrink-0">
         <button @click="jsonPreviewOpen = !jsonPreviewOpen" class="w-full flex items-center justify-between px-6 py-2.5 text-xs font-mono font-medium text-fg-dim hover:text-fg-muted transition-colors" style="background: rgba(18, 18, 26, 0.6);">
           <span>JSON Preview</span>
           <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': jsonPreviewOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 15l7-7 7 7"/></svg>
         </button>
         <div x-show="jsonPreviewOpen" x-transition class="max-h-72 overflow-auto px-6 py-4" style="background: linear-gradient(180deg, #06060B 0%, #08080D 100%); border-top: 1px solid rgba(245,158,11,0.08);">
-          <pre class="json-preview" x-html="syntaxHighlight(cleanJson())"></pre>
+          <pre class="json-preview" x-html="jsonPreviewOpen ? syntaxHighlight(cleanJson()) : ''"></pre>
         </div>
       </div>
 
     </main>
+  </div>
+
+  <!-- Diff Modal -->
+  <div x-show="showDiffModal" x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center p-6" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);">
+    <div @click.outside="showDiffModal = false" x-transition
+         class="w-full max-w-2xl max-h-[80vh] rounded-3xl overflow-hidden flex flex-col"
+         style="background:#12121A;border:1px solid #2A2A36;box-shadow:0 30px 80px #000;">
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-[rgba(255,255,255,0.08)]">
+        <div>
+          <h3 class="font-display font-bold text-lg text-white">Settings Diff</h3>
+          <p class="text-xs text-fg-muted mt-0.5">Vergleich: aktuell vs. <span x-text="diffBaselineLabel"></span></p>
+        </div>
+        <div class="flex items-center gap-2">
+          <select x-model="diffBaseline" @change="computeDiff()" class="setting-input !w-48 !text-xs !py-1.5 has-value">
+            <option value="default">vs. Default</option>
+            <template x-for="tpl in customTemplates" :key="'diff-c-'+tpl.id">
+              <option :value="tpl.id" x-text="'vs. ' + tpl.name"></option>
+            </template>
+          </select>
+          <button @click="showDiffModal = false" class="text-fg-dim hover:text-fg text-xl leading-none">&times;</button>
+        </div>
+      </div>
+      <!-- Diff Content -->
+      <div class="flex-1 overflow-y-auto px-6 py-4 space-y-2">
+        <template x-if="diffEntries.length === 0">
+          <div class="text-center py-12">
+            <p class="font-display text-lg text-fg-dim">Keine Unterschiede</p>
+            <p class="text-xs text-fg-dim mt-1">Einstellungen entsprechen der Baseline.</p>
+          </div>
+        </template>
+        <template x-for="entry in diffEntries" :key="entry.path">
+          <div class="px-4 py-3 rounded-xl text-sm"
+               :class="entry.type === 'added' ? 'diff-added' : entry.type === 'removed' ? 'diff-removed' : 'diff-changed'">
+            <div class="flex items-center justify-between mb-1">
+              <code class="font-mono text-xs font-semibold"
+                    :class="entry.type === 'added' ? 'text-emerald-400' : entry.type === 'removed' ? 'text-red-400' : 'text-amber-400'"
+                    x-text="entry.path"></code>
+              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                    :class="entry.type === 'added' ? 'bg-emerald-500/15 text-emerald-400' : entry.type === 'removed' ? 'bg-red-500/15 text-red-400' : 'bg-amber-500/15 text-amber-400'"
+                    x-text="entry.type === 'added' ? 'NEU' : entry.type === 'removed' ? 'ENTFERNT' : 'GEÄNDERT'"></span>
+            </div>
+            <div class="text-xs text-fg-dim font-mono">
+              <template x-if="entry.type === 'changed'">
+                <div class="flex gap-2 flex-wrap">
+                  <span class="text-red-300 line-through" x-text="JSON.stringify(entry.oldVal)"></span>
+                  <span class="text-fg-dim">&rarr;</span>
+                  <span class="text-emerald-300" x-text="JSON.stringify(entry.newVal)"></span>
+                </div>
+              </template>
+              <template x-if="entry.type === 'added'">
+                <span class="text-emerald-300" x-text="JSON.stringify(entry.newVal)"></span>
+              </template>
+              <template x-if="entry.type === 'removed'">
+                <span class="text-red-300" x-text="JSON.stringify(entry.oldVal)"></span>
+              </template>
+            </div>
+          </div>
+        </template>
+      </div>
+      <!-- Footer -->
+      <div class="px-6 py-3 border-t border-[rgba(255,255,255,0.08)] flex items-center justify-between text-xs text-fg-dim">
+        <span x-text="diffEntries.length + ' Unterschied' + (diffEntries.length !== 1 ? 'e' : '')"></span>
+        <span>
+          <span class="text-emerald-400" x-text="diffEntries.filter(e => e.type === 'added').length + ' neu'"></span> ·
+          <span class="text-amber-400" x-text="diffEntries.filter(e => e.type === 'changed').length + ' geändert'"></span> ·
+          <span class="text-red-400" x-text="diffEntries.filter(e => e.type === 'removed').length + ' entfernt'"></span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Setup Wizard Modal -->
+  <div x-show="showSetupWizard" x-transition.opacity class="fixed inset-0 z-[60] flex items-center justify-center p-6" style="background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);">
+    <div x-transition class="w-full max-w-lg rounded-3xl overflow-hidden flex flex-col"
+         style="background:#12121A;border:1px solid #2A2A36;box-shadow:0 30px 80px #000;">
+      <!-- Header -->
+      <div class="px-8 pt-8 pb-4">
+        <div class="flex items-center gap-2 mb-6">
+          <template x-for="i in 5" :key="'wdot-'+i">
+            <div class="wizard-dot" :class="{ 'active': wizardStep === i-1, 'done': wizardStep > i-1 }"></div>
+          </template>
+        </div>
+
+        <!-- Step 0: Welcome -->
+        <div x-show="wizardStep === 0">
+          <h3 class="font-display font-bold text-2xl text-white">Willkommen beim Setup</h3>
+          <p class="text-sm text-fg-muted mt-2">In 5 Schritten konfigurierst du Claude Code nach deinen Wünschen. Du kannst jederzeit abbrechen und manuell anpassen.</p>
+        </div>
+
+        <!-- Step 1: Model -->
+        <div x-show="wizardStep === 1">
+          <h3 class="font-display font-bold text-xl text-white">Modell wählen</h3>
+          <p class="text-sm text-fg-muted mt-2">Welches Claude-Modell soll verwendet werden?</p>
+          <div class="mt-4 space-y-2">
+            <template x-for="m in [{id:'opus',label:'Opus',desc:'Stärkstes Modell, beste Qualität'},{id:'sonnet',label:'Sonnet',desc:'Schnell und ausgewogen'},{id:'haiku',label:'Haiku',desc:'Schnellstes Modell, niedrigste Kosten'}]" :key="m.id">
+              <button @click="settings.model = m.id; markUnsaved()"
+                      class="w-full text-left p-3 rounded-xl border transition-all"
+                      :class="settings.model === m.id ? 'border-accent/40 bg-accent/5' : 'border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.15)]'">
+                <div class="font-display font-medium text-sm" :class="settings.model === m.id ? 'text-accent' : 'text-fg'" x-text="m.label"></div>
+                <div class="text-xs text-fg-muted mt-0.5" x-text="m.desc"></div>
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <!-- Step 2: Permission Mode -->
+        <div x-show="wizardStep === 2">
+          <h3 class="font-display font-bold text-xl text-white">Permission-Modus</h3>
+          <p class="text-sm text-fg-muted mt-2">Wie viel Freiheit soll Claude haben?</p>
+          <div class="mt-4 space-y-2">
+            <template x-for="pm in [{id:'plan',label:'Nur Lesen',desc:'Claude liest nur, fragt vor jeder Änderung'},{id:'allowPrompt',label:'Fragen vor Änderungen',desc:'Automatisch lesen, fragt vor Edits & Bash'},{id:'acceptEdits',label:'Produktiv',desc:'Edits automatisch, fragt vor Bash-Befehlen'},{id:'fullAutoMode',label:'Voller Autopilot',desc:'Alles automatisch — nur für Erfahrene'}]" :key="pm.id">
+              <button @click="settings.permissions.defaultMode = pm.id; markUnsaved()"
+                      class="w-full text-left p-3 rounded-xl border transition-all"
+                      :class="settings.permissions.defaultMode === pm.id ? 'border-accent/40 bg-accent/5' : 'border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.15)]'">
+                <div class="font-display font-medium text-sm" :class="settings.permissions.defaultMode === pm.id ? 'text-accent' : 'text-fg'" x-text="pm.label"></div>
+                <div class="text-xs text-fg-muted mt-0.5" x-text="pm.desc"></div>
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <!-- Step 3: Quick Plugins -->
+        <div x-show="wizardStep === 3">
+          <h3 class="font-display font-bold text-xl text-white">Wichtigste Skills & Plugins</h3>
+          <p class="text-sm text-fg-muted mt-2">Aktiviere die Skills und Plugins, die du brauchst.</p>
+          <div class="mt-4 space-y-1.5 max-h-52 overflow-y-auto">
+            <template x-for="wp in [{id:'commit-commands@claude-plugins-official',name:'Commit Commands',desc:'Git Commit & PR Skills'},{id:'feature-dev@claude-plugins-official',name:'Feature Dev',desc:'Geführte Feature-Entwicklung'},{id:'code-simplifier@claude-plugins-official',name:'Code Simplifier',desc:'Code vereinfachen'},{id:'frontend-design@claude-plugins-official',name:'Frontend Design',desc:'UI-Interfaces bauen'},{id:'firebase@claude-plugins-official',name:'Firebase',desc:'Firebase Integration'},{id:'typescript-lsp@claude-plugins-official',name:'TypeScript LSP',desc:'TypeScript Language Server'},{id:'claude-md-management@claude-plugins-official',name:'CLAUDE.md Management',desc:'Projekt-Anweisungen verwalten'}]" :key="wp.id">
+              <div class="flex items-center gap-3 p-2.5 rounded-xl border border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] transition-all">
+                <div class="toggle bg-bg-elevated flex-shrink-0" style="width:36px;height:20px"
+                     :class="{ 'active': settings.enabledPlugins[wp.id] }"
+                     @click="settings.enabledPlugins[wp.id] = !settings.enabledPlugins[wp.id]; markUnsaved()"></div>
+                <div class="min-w-0">
+                  <div class="font-display text-sm font-medium text-fg" x-text="wp.name"></div>
+                  <div class="text-[11px] text-fg-muted" x-text="wp.desc"></div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Step 4: Spinner -->
+        <div x-show="wizardStep === 4">
+          <h3 class="font-display font-bold text-xl text-white">Fertig!</h3>
+          <p class="text-sm text-fg-muted mt-2">Deine Grundkonfiguration ist fertig. Du kannst jetzt alle Settings im Detail anpassen.</p>
+          <div class="mt-4 p-4 rounded-xl bg-accent/5 border border-accent/20">
+            <div class="text-xs font-mono text-fg-dim space-y-1">
+              <div>Model: <span class="text-accent" x-text="settings.model || 'default'"></span></div>
+              <div>Mode: <span class="text-accent" x-text="settings.permissions.defaultMode"></span></div>
+              <div>Skills & Plugins: <span class="text-accent" x-text="Object.values(settings.enabledPlugins).filter(Boolean).length + ' aktiv'"></span></div>
+            </div>
+          </div>
+          <p class="text-xs text-fg-dim mt-3">Tipp: Drücke <span class="kbd">/</span> um Settings schnell zu finden, oder <span class="kbd">Ctrl+S</span> zum Speichern.</p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-8 pb-8 pt-2 flex items-center justify-between">
+        <button @click="showSetupWizard = false; localStorage.setItem('claude-settings-wizard-done', '1')" class="text-xs text-fg-dim hover:text-fg transition-colors">
+          Überspringen
+        </button>
+        <div class="flex gap-2">
+          <button x-show="wizardStep > 0" @click="wizardStep--" class="btn-secondary px-4 py-2 text-xs font-medium rounded-xl border border-[rgba(255,255,255,0.1)] text-fg">
+            Zurück
+          </button>
+          <button x-show="wizardStep < 4" @click="wizardStep++" class="px-5 py-2 text-xs font-display font-semibold rounded-xl bg-accent text-bg hover:bg-accent-hover transition-colors">
+            <span x-text="wizardStep === 0 ? 'Los geht\'s' : 'Weiter'"></span>
+          </button>
+          <button x-show="wizardStep === 4" @click="showSetupWizard = false; localStorage.setItem('claude-settings-wizard-done', '1')" class="px-5 py-2 text-xs font-display font-semibold rounded-xl bg-accent text-bg hover:bg-accent-hover transition-colors">
+            Fertig
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keyboard Shortcuts Info (toggle with ?) -->
+  <div x-show="showShortcuts" x-transition.opacity @click.self="showShortcuts = false"
+       class="fixed inset-0 z-50 flex items-center justify-center p-6" style="background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);">
+    <div x-transition class="w-full max-w-sm rounded-2xl p-6"
+         style="background:#12121A;border:1px solid #2A2A36;box-shadow:0 30px 80px #000;">
+      <h3 class="font-display font-bold text-lg text-white mb-4">Tastenkürzel</h3>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between"><span class="text-fg-muted">Einstellung suchen</span><span class="kbd">/</span></div>
+        <div class="flex justify-between"><span class="text-fg-muted">Speichern</span><span class="kbd">Ctrl+S</span></div>
+        <div class="flex justify-between"><span class="text-fg-muted">JSON Preview</span><span class="kbd">Ctrl+Shift+P</span></div>
+        <div class="flex justify-between"><span class="text-fg-muted">Rückgängig</span><span class="kbd">Ctrl+Z</span></div>
+        <div class="flex justify-between"><span class="text-fg-muted">Wiederherstellen</span><span class="kbd">Ctrl+Y</span></div>
+        <div class="flex justify-between"><span class="text-fg-muted">Tab 1-9</span><span class="kbd">Ctrl+1-9</span></div>
+        <div class="flex justify-between"><span class="text-fg-muted">Design Prompts</span><span class="kbd">Ctrl+0</span></div>
+        <div class="flex justify-between"><span class="text-fg-muted">Shortcuts</span><span class="kbd">?</span></div>
+        <div class="flex justify-between"><span class="text-fg-muted">Modals schließen</span><span class="kbd">Esc</span></div>
+      </div>
+      <button @click="showShortcuts = false" class="mt-5 w-full py-2 text-xs font-medium rounded-xl bg-accent/10 text-accent hover:bg-accent/20 transition-colors">Schließen</button>
+    </div>
   </div>
 
   <!-- ═══════════════ COMPONENT STYLES ═══════════════ -->
@@ -1212,12 +1861,31 @@
 
   <!-- ═══════════════ ALPINE COMPONENT ═══════════════ -->
   <script>
+    function defaultSettings() {
+      return {
+        model: '', effortLevel: '', outputStyle: '', language: '',
+        alwaysThinkingEnabled: false, autoUpdatesChannel: 'latest',
+        permissions: { allow: [], ask: [], deny: [], additionalDirectories: [], defaultMode: 'allowPrompt', disableBypassPermissionsMode: '' },
+        enabledPlugins: {}, hooks: {}, mcpServers: {},
+        sandbox: { enabled: false, filesystem: { allowWrite: [], denyWrite: [], denyRead: [] }, network: { allowedDomains: [], allowLocalBinding: false, allowAllUnixSockets: false } },
+        env: {}, spinnerVerbs: { mode: 'append', verbs: [] },
+        spinnerTipsEnabled: true, showTurnDuration: true, prefersReducedMotion: false,
+        statusLine: { type: '', command: '', url: '', refresh: 5000, disabled: false },
+        attribution: { commit: '', pr: '' },
+        cleanupPeriodDays: 30, fastModePerSessionOptIn: false, enableAllProjectMcpServers: false,
+        respectGitignore: true, teamateMode: 'auto', forceLoginMethod: '',
+        apiKeyHelper: '', plansDirectory: '', terminalProgressBarEnabled: true,
+        disableAllHooks: false, availableModels: []
+      };
+    }
+
     function settingsEditor() {
       return {
         activeTab: 'general',
         jsonPreviewOpen: false,
         fileHandle: null,
         fileName: '',
+        fileScope: 'global', // 'global' or 'project'
         unsaved: false,
         pluginSearch: '',
         notification: { show: false, message: '', type: 'success' },
@@ -1230,6 +1898,138 @@
         newDomain: '',
         newHookEvent: '',
         newSpinnerVerb: '',
+        newMcpName: '',
+        newMcpType: 'stdio',
+        newAvailableModel: '',
+
+        // === Global Search ===
+        searchQuery: '',
+        searchResults: [],
+        searchActiveIndex: -1,
+        settingsRegistry: [
+          { tab: 'general', label: 'Model', desc: 'Claude Modell (Opus, Sonnet, Haiku)', keywords: ['model', 'opus', 'sonnet', 'haiku', 'modell'], id: 'setting-model' },
+          { tab: 'general', label: 'Effort Level', desc: 'Denktiefe und Reasoning-Aufwand', keywords: ['effort', 'high', 'medium', 'low', 'denktiefe'], id: 'setting-effort' },
+          { tab: 'general', label: 'Output Style', desc: 'Stil der Antworten', keywords: ['output', 'style', 'explanatory', 'learning', 'concise'], id: 'setting-output-style' },
+          { tab: 'general', label: 'Language', desc: 'Sprache der Antworten', keywords: ['language', 'sprache', 'deutsch', 'english'], id: 'setting-language' },
+          { tab: 'general', label: 'Always Thinking', desc: 'Thinking-Modus permanent aktivieren', keywords: ['thinking', 'denken', 'reasoning'], id: 'setting-thinking' },
+          { tab: 'general', label: 'Auto-Updates Channel', desc: 'Release-Kanal für Updates', keywords: ['updates', 'channel', 'latest', 'stable'], id: 'setting-auto-updates' },
+          { tab: 'permissions', label: 'Permission Presets', desc: 'Schnellstart-Vorlagen für Permissions', keywords: ['presets', 'vorlagen', 'safety', 'produktiv'], id: 'setting-perm-presets' },
+          { tab: 'permissions', label: 'Default Mode', desc: 'Fallback wenn keine Regel greift', keywords: ['default', 'mode', 'allowPrompt', 'acceptEdits'], id: 'setting-perm-default-mode' },
+          { tab: 'permissions', label: 'Bypass-Modus', desc: 'Bypass-Modus deaktivieren', keywords: ['bypass', 'deaktivieren'], id: 'setting-perm-bypass' },
+          { tab: 'permissions', label: 'Allow Rules', desc: 'Automatisch erlaubte Tools', keywords: ['allow', 'erlaubt', 'permit', 'bash', 'read'], id: 'setting-perm-allow' },
+          { tab: 'permissions', label: 'Ask Rules', desc: 'Bestätigung erforderlich', keywords: ['ask', 'fragen', 'bestätigung'], id: 'setting-perm-ask' },
+          { tab: 'permissions', label: 'Deny Rules', desc: 'Immer blockiert', keywords: ['deny', 'blockiert', 'verboten'], id: 'setting-perm-deny' },
+          { tab: 'permissions', label: 'Additional Directories', desc: 'Zusätzliche Verzeichnisse', keywords: ['directories', 'verzeichnisse', 'pfad'], id: 'setting-perm-dirs' },
+          { tab: 'hooks', label: 'Hooks', desc: 'Automatische Aktionen bei Events', keywords: ['hooks', 'event', 'session', 'tool'], id: 'setting-hooks' },
+          { tab: 'mcp', label: 'MCP Servers', desc: 'Model Context Protocol Server', keywords: ['mcp', 'server', 'stdio', 'http', 'sse'], id: 'setting-mcp' },
+          { tab: 'sandbox', label: 'Sandbox aktivieren', desc: 'Dateisystem und Netzwerk isolieren', keywords: ['sandbox', 'isolieren', 'sicherheit'], id: 'setting-sandbox-enable' },
+          { tab: 'sandbox', label: 'Network Domains', desc: 'Erlaubte Domains für Netzwerkzugriff', keywords: ['network', 'domains', 'netzwerk'], id: 'setting-sandbox-domains' },
+          { tab: 'sandbox', label: 'Local Binding', desc: 'Lokale Port-Bindung erlauben', keywords: ['local', 'binding', 'port'], id: 'setting-sandbox-local-binding' },
+          { tab: 'env', label: 'Environment Variables', desc: 'Umgebungsvariablen für Sessions', keywords: ['env', 'environment', 'variablen', 'NODE_ENV'], id: 'setting-env' },
+          { tab: 'display', label: 'Spinner Tips', desc: 'Tipps im Spinner anzeigen', keywords: ['spinner', 'tips', 'tipps'], id: 'setting-spinner-tips' },
+          { tab: 'display', label: 'Turn-Dauer', desc: 'Dauer nach jeder Antwort anzeigen', keywords: ['turn', 'dauer', 'duration'], id: 'setting-turn-duration' },
+          { tab: 'display', label: 'Reduced Motion', desc: 'Animationen reduzieren', keywords: ['motion', 'animation', 'reduziert'], id: 'setting-reduced-motion' },
+          { tab: 'display', label: 'Status Line', desc: 'Statuszeile im Terminal', keywords: ['status', 'statusline', 'terminal'], id: 'setting-status-line' },
+          { tab: 'display', label: 'Spinner Verbs', desc: 'Eigene Aktionswörter für den Spinner', keywords: ['spinner', 'verbs', 'wörter'], id: 'setting-spinner-verbs' },
+          { tab: 'attribution', label: 'Commit Attribution', desc: 'Co-Author Text für Git Commits', keywords: ['commit', 'attribution', 'co-author', 'git'], id: 'setting-attr-commit' },
+          { tab: 'attribution', label: 'PR Attribution', desc: 'Text für Pull Requests', keywords: ['pr', 'pull-request', 'attribution'], id: 'setting-attr-pr' },
+          { tab: 'advanced', label: 'Cleanup Period', desc: 'Session-Transkripte Aufbewahrungsdauer', keywords: ['cleanup', 'tage', 'aufbewahrung'], id: 'setting-cleanup' },
+          { tab: 'advanced', label: 'Fast Mode', desc: 'Fast Mode per Session Opt-In', keywords: ['fast', 'mode', 'schnell'], id: 'setting-fast-mode' },
+          { tab: 'advanced', label: 'Alle Projekt-MCP-Server', desc: 'MCP-Server automatisch aktivieren', keywords: ['mcp', 'projekt', 'server'], id: 'setting-all-mcp' },
+          { tab: 'advanced', label: '.gitignore respektieren', desc: 'Gitignore bei Suche beachten', keywords: ['gitignore', 'ignore'], id: 'setting-gitignore' },
+          { tab: 'advanced', label: 'Teammate Mode', desc: 'Parallele Agenten orchestrieren', keywords: ['teammate', 'agent', 'tmux'], id: 'setting-teammate' },
+          { tab: 'advanced', label: 'Login-Methode', desc: 'Anmeldemethode erzwingen', keywords: ['login', 'auth', 'anmeldung'], id: 'setting-login' },
+          { tab: 'advanced', label: 'API Key Helper', desc: 'Skript für API-Key-Rotation', keywords: ['api', 'key', 'helper', 'vault'], id: 'setting-api-key' },
+          { tab: 'advanced', label: 'Plans Directory', desc: 'Verzeichnis für Pläne', keywords: ['plans', 'directory', 'pläne'], id: 'setting-plans-dir' },
+          { tab: 'advanced', label: 'Fortschrittsbalken', desc: 'Terminal-Fortschrittsbalken', keywords: ['progress', 'bar', 'fortschritt'], id: 'setting-progress-bar' },
+          { tab: 'advanced', label: 'Alle Hooks deaktivieren', desc: 'Hooks und Status-Lines deaktivieren', keywords: ['hooks', 'deaktivieren', 'disable'], id: 'setting-disable-hooks' },
+          { tab: 'advanced', label: 'Verfügbare Modelle', desc: 'Modelle einschränken', keywords: ['modelle', 'models', 'available'], id: 'setting-available-models' },
+        ],
+
+        // === Settings Diff ===
+        showDiffModal: false,
+        diffBaseline: 'default',
+        diffBaselineLabel: 'Default',
+        diffEntries: [],
+
+        // === Permission Conflicts ===
+        permConflicts: [],
+
+        // === Undo/Redo ===
+        settingsHistory: [],
+        historyIndex: -1,
+
+        // === Setup Wizard ===
+        showSetupWizard: false,
+        wizardStep: 0,
+
+        // === Keyboard Shortcuts ===
+        showShortcuts: false,
+
+        // === Terminal Prompts ===
+        terminalPromptsSearch: '',
+        terminalPromptsCategory: '',
+        terminalPromptsView: 'catalog', // 'catalog' or 'builder'
+        terminalPromptsCategories: ['Debugging', 'Refactoring', 'Git & Workflow', 'Projekt-Setup', 'Testing', 'Performance', 'Security', 'Erklärung', 'CLAUDE.md'],
+
+        // === CLAUDE.md Builder ===
+        claudeMdContent: '',
+        claudeMdFileHandle: null,
+        claudeMdSections: [
+          { id: 'sec-header', name: 'Projekt-Header', desc: 'Name und Beschreibung', content: '# Projektname\n\nKurze Beschreibung des Projekts.\n' },
+          { id: 'sec-stack', name: 'Tech Stack', desc: 'Frameworks und Tools', content: '## Tech Stack\n- Framework: \n- Styling: \n- Backend: \n- Database: \n' },
+          { id: 'sec-structure', name: 'Ordnerstruktur', desc: 'Wichtige Verzeichnisse', content: '## Ordnerstruktur\n```\nsrc/\n  components/    # UI-Komponenten\n  services/      # Business-Logik\n  utils/         # Hilfsfunktionen\n  types/         # TypeScript-Typen\n```\n' },
+          { id: 'sec-commands', name: 'Befehle', desc: 'Build, Test, Deploy', content: '## Befehle\n```bash\nnpm install       # Dependencies installieren\nnpm run dev       # Development Server\nnpm run build     # Production Build\nnpm test          # Tests ausführen\n```\n' },
+          { id: 'sec-rules', name: 'Regeln', desc: 'Dos und Don\'ts', content: '## Regeln\n- NIE ohne Rückfrage committen\n- NIE .env Dateien committen\n- Immer existierenden Code lesen vor Änderungen\n- Bei Unsicherheit: fragen statt raten\n' },
+          { id: 'sec-patterns', name: 'Patterns', desc: 'Architektur-Muster', content: '## Patterns\n- Feature-basierte Ordnerstruktur\n- Composition over Inheritance\n- Explicit > Implicit\n- Fail fast, fail loud\n' },
+        ],
+        terminalPrompts: [
+          // === Debugging ===
+          { id: 'tp-debug-bug', name: 'Systematisches Debugging', category: 'Debugging', desc: 'Bug mit strukturierter Analyse finden und fixen.', tags: ['bug', 'fix', 'analyse'], open: false, prompt: 'Ich habe einen Bug: [BESCHREIBUNG]. Bitte debugge systematisch:\n1. Reproduziere das Problem und identifiziere die Symptome\n2. Trace den Datenfluss von Input bis zum fehlerhaften Output\n3. Identifiziere die Root Cause (nicht nur das Symptom)\n4. Implementiere den Fix mit minimaler Änderung\n5. Erkläre warum der Bug aufgetreten ist und wie der Fix funktioniert' },
+          { id: 'tp-debug-error', name: 'Error Trace analysieren', category: 'Debugging', desc: 'Stack Trace oder Fehlermeldung interpretieren.', tags: ['error', 'stacktrace', 'exception'], open: false, prompt: 'Analysiere diesen Error:\n\n```\n[ERROR/STACK TRACE HIER EINFÜGEN]\n```\n\nBitte:\n1. Erkläre was der Fehler bedeutet (auf Deutsch)\n2. Identifiziere die wahrscheinliche Ursache\n3. Zeige den relevanten Code der den Fehler auslöst\n4. Schlage einen konkreten Fix vor' },
+          { id: 'tp-debug-test', name: 'Test-Failure debuggen', category: 'Debugging', desc: 'Fehlgeschlagenen Test analysieren und fixen.', tags: ['test', 'failure', 'assertion'], open: false, prompt: 'Dieser Test schlägt fehl: [TEST-NAME/DATEI]. Bitte:\n1. Lies den Test und verstehe was er erwartet\n2. Lies die getestete Implementierung\n3. Finde die Diskrepanz zwischen Erwartung und Realität\n4. Entscheide: Ist der Test falsch oder die Implementierung?\n5. Fixe das Richtige mit Erklärung' },
+          // === Refactoring ===
+          { id: 'tp-refactor-simplify', name: 'Code vereinfachen', category: 'Refactoring', desc: 'Überkomplexen Code auf das Wesentliche reduzieren.', tags: ['simplify', 'clean', 'readable'], open: false, prompt: 'Vereinfache den Code in [DATEI/FUNKTION]. Regeln:\n- Reduziere Verschachtelung (early returns statt nested ifs)\n- Extrahiere benannte Variablen für komplexe Bedingungen\n- Nutze existierende Utility-Funktionen statt eigener Logik\n- Entferne toten Code und unnötige Kommentare\n- Behalte das exakt gleiche Verhalten bei\n- Zeige vorher/nachher' },
+          { id: 'tp-refactor-dry', name: 'DRY — Duplikate eliminieren', category: 'Refactoring', desc: 'Doppelten Code in shared Abstraktion extrahieren.', tags: ['dry', 'extract', 'shared'], open: false, prompt: 'Finde duplizierten oder fast-duplizierten Code in [DATEI/ORDNER] und:\n1. Identifiziere die gemeinsamen Patterns\n2. Extrahiere eine shared Funktion/Klasse/Component\n3. Ersetze alle Duplikate durch die neue Abstraktion\n4. Stelle sicher dass die Abstraktion nicht zu generisch ist (YAGNI)\n5. Zeige alle geänderten Stellen' },
+          { id: 'tp-refactor-types', name: 'TypeScript-Typen verbessern', category: 'Refactoring', desc: 'Schwache Typisierung durch starke Typen ersetzen.', tags: ['typescript', 'types', 'safety'], open: false, prompt: 'Verbessere die TypeScript-Typisierung in [DATEI]:\n- Ersetze `any` durch konkrete Typen\n- Nutze discriminated unions statt optionaler Felder wo sinnvoll\n- Füge Return-Types zu Funktionen hinzu\n- Erstelle Interface/Type für komplexe Objekte\n- Nutze `as const` für Literal-Typen\n- Keine unnötigen Generics oder Overloads' },
+          // === Git & Workflow ===
+          { id: 'tp-git-commit', name: 'Commit erstellen', category: 'Git & Workflow', desc: 'Semantischen Commit mit gutem Message erstellen.', tags: ['commit', 'git', 'message'], open: false, prompt: 'Erstelle einen Git-Commit für die aktuellen Änderungen. Bitte:\n1. Zeige mir erst `git diff` um die Änderungen zu verstehen\n2. Stage nur die zusammengehörigen Änderungen\n3. Schreibe eine Commit-Message im Format: type(scope): description\n   Types: feat, fix, refactor, docs, test, chore\n4. Body mit Kontext warum die Änderung nötig war\n5. Committe (mit Co-Authored-By)' },
+          { id: 'tp-git-pr', name: 'Pull Request erstellen', category: 'Git & Workflow', desc: 'PR mit strukturierter Beschreibung und Testplan.', tags: ['pr', 'review', 'github'], open: false, prompt: 'Erstelle einen Pull Request für den aktuellen Branch:\n1. Analysiere ALLE Commits seit dem Branch vom Main abzweigte\n2. Schreibe einen kurzen PR-Titel (<70 Zeichen)\n3. Beschreibung mit: Summary (Bullet Points), Motivation, Test Plan\n4. Pushe den Branch und erstelle den PR via `gh pr create`' },
+          { id: 'tp-git-review', name: 'Code Review durchführen', category: 'Git & Workflow', desc: 'Strukturiertes Review eines PRs oder Diffs.', tags: ['review', 'feedback', 'quality'], open: false, prompt: 'Reviewe die Änderungen in [PR-NUMMER / BRANCH / DIFF]. Prüfe:\n1. **Korrektheit**: Macht der Code was er soll? Edge Cases?\n2. **Sicherheit**: OWASP-relevante Issues? Input-Validierung?\n3. **Performance**: N+1 Queries? Unnötige Re-Renders? Memory Leaks?\n4. **Lesbarkeit**: Verständliche Variablennamen? Zu komplex?\n5. **Tests**: Ausreichend getestet? Fehlende Edge Cases?\nGib nur echte Issues aus, keine Style-Nitpicks.' },
+          // === Projekt-Setup ===
+          { id: 'tp-setup-new', name: 'Neues Projekt aufsetzen', category: 'Projekt-Setup', desc: 'Projekt von Grund auf mit Best Practices erstellen.', tags: ['new', 'init', 'scaffold'], open: false, prompt: 'Erstelle ein neues [FRAMEWORK]-Projekt mit:\n- Projekt-Name: [NAME]\n- Tech: [STACK, z.B. Angular 21 + Firebase + Tailwind 4]\n- Features: [FEATURES AUFLISTEN]\n\nBitte:\n1. Scaffold das Projekt mit dem offiziellen CLI\n2. Konfiguriere Linting, Formatting, Git\n3. Erstelle eine CLAUDE.md mit Projekt-Konventionen\n4. Lege die Ordnerstruktur an\n5. Erstelle einen initialen Commit' },
+          { id: 'tp-setup-analyze', name: 'Codebase verstehen', category: 'Projekt-Setup', desc: 'Existierendes Projekt analysieren und dokumentieren.', tags: ['analyze', 'understand', 'explore'], open: false, prompt: 'Analysiere diese Codebase und erkläre:\n1. **Architektur**: Welches Pattern? (MVC, Feature-basiert, Layered...)\n2. **Tech Stack**: Frameworks, Libraries, Build Tools\n3. **Datenfluss**: Wie fließen Daten durch die App?\n4. **Einstiegspunkte**: Main Entry, Routing, API Endpoints\n5. **Konventionen**: Naming, Ordnerstruktur, Test-Patterns\n6. **Abhängigkeiten**: Kritische externe Dependencies\nZeige die wichtigsten 5-10 Dateien die man kennen muss.' },
+          { id: 'tp-setup-claudemd', name: 'CLAUDE.md erstellen', category: 'Projekt-Setup', desc: 'Projekt-spezifische CLAUDE.md generieren.', tags: ['claude', 'config', 'instructions'], open: false, prompt: 'Erstelle eine CLAUDE.md für dieses Projekt. Analysiere zuerst die Codebase und generiere dann:\n1. Projektübersicht (1-2 Sätze)\n2. Tech Stack mit Versionen\n3. Projekt-Konventionen (Naming, Ordnerstruktur)\n4. Build & Run Befehle\n5. Testing-Anweisungen\n6. Wichtige Architektur-Entscheidungen\n7. Häufige Pitfalls und Workarounds' },
+          // === Testing ===
+          { id: 'tp-test-write', name: 'Tests schreiben', category: 'Testing', desc: 'Umfassende Tests für eine Funktion/Komponente.', tags: ['unit', 'integration', 'coverage'], open: false, prompt: 'Schreibe Tests für [DATEI/FUNKTION/COMPONENT]. Bitte:\n1. Lies den Code und identifiziere alle Pfade (happy path, edge cases, error cases)\n2. Nutze das bestehende Test-Framework und Muster im Projekt\n3. Teste: Normale Eingaben, Grenzwerte, Null/Undefined, Fehler\n4. Für UI-Components: Rendering, User-Interaktionen, State-Änderungen\n5. Benenne Tests beschreibend: \"should [erwartetes Verhalten] when [Bedingung]\"' },
+          { id: 'tp-test-edge', name: 'Edge Cases identifizieren', category: 'Testing', desc: 'Fehlende Grenzfälle in bestehendem Code finden.', tags: ['edge-cases', 'boundary', 'robust'], open: false, prompt: 'Analysiere [DATEI/FUNKTION] auf fehlende Edge Cases:\n1. Leere Inputs (null, undefined, \"\", [], {})\n2. Grenzwerte (0, -1, MAX_INT, sehr lange Strings)\n3. Concurrent/Race Conditions\n4. Netzwerk-Fehler / Timeout\n5. Ungültige Datentypen\n6. Unicode / Sonderzeichen\n\nFür jeden gefundenen Edge Case: beschreibe das Problem und schreibe einen Test.' },
+          // === Performance ===
+          { id: 'tp-perf-optimize', name: 'Performance optimieren', category: 'Performance', desc: 'Performance-Engpässe finden und beheben.', tags: ['speed', 'optimize', 'bottleneck'], open: false, prompt: 'Analysiere [DATEI/FEATURE] auf Performance-Probleme:\n1. Unnötige Re-Renders / Re-Computations\n2. N+1 Queries oder redundante API-Calls\n3. Fehlende Memoization / Caching\n4. Synchrone Operationen die async sein sollten\n5. Große Bundle-Imports die tree-shakeable wären\n6. DOM-Manipulation in Schleifen\n\nFür jedes Problem: erkläre den Impact und implementiere den Fix.' },
+          { id: 'tp-perf-bundle', name: 'Bundle Size analysieren', category: 'Performance', desc: 'JavaScript Bundle-Größe reduzieren.', tags: ['bundle', 'size', 'treeshake'], open: false, prompt: 'Analysiere die Bundle-Größe dieses Projekts:\n1. Finde die größten Dependencies (nutze Bundle-Analyzer falls verfügbar)\n2. Identifiziere ungenutzte Imports und Exports\n3. Prüfe ob leichtere Alternativen existieren (z.B. date-fns statt moment)\n4. Prüfe ob Dynamic Imports / Code Splitting möglich sind\n5. Schlage konkrete Maßnahmen mit geschätztem Impact vor' },
+          // === Security ===
+          { id: 'tp-sec-audit', name: 'Security Audit', category: 'Security', desc: 'Code auf Sicherheitslücken prüfen.', tags: ['security', 'vulnerability', 'owasp'], open: false, prompt: 'Führe ein Security-Audit für [DATEI/FEATURE] durch. Prüfe auf:\n1. **Injection**: SQL, XSS, Command Injection, Template Injection\n2. **Auth**: Fehlende Autorisierung, Privilege Escalation\n3. **Data Exposure**: Sensitive Daten in Logs/Responses/URLs\n4. **Input Validation**: Fehlende Sanitierung an Systemgrenzen\n5. **Dependencies**: Bekannte Vulnerabilities (npm audit)\n6. **Secrets**: Hardcoded Credentials, API Keys im Code\n\nFür jede Schwachstelle: Severity, Erklärung, Fix.' },
+          { id: 'tp-sec-deps', name: 'Dependencies prüfen', category: 'Security', desc: 'Abhängigkeiten auf Sicherheit und Aktualität prüfen.', tags: ['dependencies', 'npm', 'audit'], open: false, prompt: 'Prüfe die Projekt-Dependencies:\n1. Führe `npm audit` / `pnpm audit` aus\n2. Identifiziere veraltete Packages mit bekannten CVEs\n3. Prüfe ob Packages noch maintained werden\n4. Finde unnötige Dependencies die entfernt werden können\n5. Schlage sichere Update-Pfade vor (semver-kompatibel)' },
+          // === Erklärung ===
+          { id: 'tp-explain-code', name: 'Code erklären', category: 'Erklärung', desc: 'Code verständlich auf Deutsch erklären.', tags: ['explain', 'understand', 'docs'], open: false, prompt: 'Erkläre den Code in [DATEI/FUNKTION] auf Deutsch:\n1. Was macht der Code? (High-Level Zusammenfassung)\n2. Wie funktioniert er? (Schritt-für-Schritt Durchgang)\n3. Warum ist er so gebaut? (Design-Entscheidungen)\n4. Welche Patterns/Konzepte werden genutzt?\n5. Wo sind potenzielle Verbesserungsmöglichkeiten?' },
+          { id: 'tp-explain-arch', name: 'Architektur dokumentieren', category: 'Erklärung', desc: 'Architektur-Überblick eines Features erstellen.', tags: ['architecture', 'diagram', 'flow'], open: false, prompt: 'Dokumentiere die Architektur von [FEATURE/MODUL]:\n1. High-Level Überblick: Welche Komponenten gibt es?\n2. Datenfluss: Wie fließen Daten durch das System?\n3. Abhängigkeiten: Was hängt wovon ab?\n4. Schnittstellen: Welche APIs/Interfaces werden exponiert?\n5. Erstelle ein ASCII-Diagramm der Architektur\n6. Liste die wichtigsten Dateien mit kurzer Beschreibung' },
+          // === CLAUDE.md Snippets ===
+          { id: 'tp-claude-lang', name: 'Sprach-Konfiguration', category: 'CLAUDE.md', desc: 'Sprache und Kommunikationsstil festlegen.', tags: ['language', 'style', 'tone'], open: false, prompt: '## Sprache\n- Kommunikation auf Deutsch\n- Code und Kommentare auf Englisch\n- Variablen- und Funktionsnamen auf Englisch\n- Commit Messages auf Englisch\n- Keine AI-Floskeln (\"Natürlich!\", \"Gerne!\", \"Selbstverständlich!\")\n- Direkt und knapp, technisch präzise' },
+          { id: 'tp-claude-permissions', name: 'Permission-Regeln', category: 'CLAUDE.md', desc: 'Klare Regeln was Claude darf und was nicht.', tags: ['permissions', 'safety', 'rules'], open: false, prompt: '## Regeln\n- NIE ohne Rückfrage committen oder pushen\n- NIE Dateien löschen ohne Bestätigung\n- NIE .env oder Credentials in Code/Commits aufnehmen\n- NIE force-push auf main/master\n- NIE Dependencies upgraden ohne Rückfrage\n- Immer existierenden Code lesen bevor Änderungen vorgeschlagen werden\n- Bei Unsicherheit: fragen statt raten' },
+          { id: 'tp-claude-hooks', name: 'Hook-Konfiguration', category: 'CLAUDE.md', desc: 'Nützliche Hook-Beispiele für Automatisierung.', tags: ['hooks', 'automation', 'events'], open: false, prompt: '# Nützliche Hooks\n\n## Lint nach jedem Edit\n```json\n\"hooks\": {\n  \"PostToolUse\": [{\n    \"matcher\": \"Edit\",\n    \"hooks\": [{ \"type\": \"command\", \"command\": \"npm run lint:fix\" }]\n  }]\n}\n```\n\n## Format nach Write\n```json\n\"PostToolUse\": [{\n  \"matcher\": \"Write\",\n  \"hooks\": [{ \"type\": \"command\", \"command\": \"npx prettier --write $CLAUDE_FILE_PATH\" }]\n}]\n```\n\n## Pre-Commit Check\n```json\n\"PreToolUse\": [{\n  \"matcher\": \"Bash(git commit *)\",\n  \"hooks\": [{ \"type\": \"command\", \"command\": \"npm test\", \"timeout\": 30000 }]\n}]\n```' },
+          { id: 'tp-claude-conventions', name: 'Projekt-Konventionen', category: 'CLAUDE.md', desc: 'Naming, Architektur und Code-Style Vorgaben.', tags: ['conventions', 'naming', 'architecture'], open: false, prompt: '## Konventionen\n\n### Naming\n- Components: PascalCase (UserProfile)\n- Files: kebab-case (user-profile.ts)\n- Variablen/Funktionen: camelCase\n- Konstanten: UPPER_SNAKE_CASE\n- CSS-Klassen: Tailwind-first, custom mit BEM falls nötig\n\n### Architektur\n- Feature-basierte Ordnerstruktur\n- Jedes Feature hat: component, service, types, tests\n- Shared Code unter /shared oder /core\n- Keine zirkulären Abhängigkeiten\n\n### Code Style\n- Prefer composition over inheritance\n- Explicit > implicit\n- Fail fast, fail loud\n- Max 1 Verantwortung pro Funktion' },
+          { id: 'tp-claude-commits', name: 'Commit-Regeln', category: 'CLAUDE.md', desc: 'Conventional Commits Format und Regeln.', tags: ['commits', 'git', 'conventional'], open: false, prompt: '## Git Commits\n\n### Format\n```\ntype(scope): kurze Beschreibung\n\nOptional: Warum diese Änderung nötig war.\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n```\n\n### Types\n- feat: Neues Feature\n- fix: Bug Fix\n- refactor: Code-Umbau ohne Verhaltensänderung\n- docs: Dokumentation\n- test: Tests hinzufügen/ändern\n- chore: Build, Dependencies, Config\n- style: Formatting, Whitespace\n\n### Regeln\n- Atomare Commits (ein logischer Change pro Commit)\n- Message im Imperativ (\"add\" nicht \"added\")\n- Erste Zeile max 72 Zeichen\n- Referenziere Issue-Nummern wenn vorhanden' },
+          { id: 'tp-claude-testing', name: 'Test-Vorgaben', category: 'CLAUDE.md', desc: 'Testing-Standards und Coverage-Ziele.', tags: ['testing', 'coverage', 'standards'], open: false, prompt: '## Testing\n\n### Standards\n- Jedes neue Feature braucht Tests\n- Bug Fixes brauchen einen Regression-Test\n- Test-Dateinamen: *.spec.ts oder *.test.ts\n- Arrange-Act-Assert Pattern\n\n### Was testen\n- Business Logic: Unit Tests (100% der Pfade)\n- API Endpoints: Integration Tests\n- UI Components: Rendering + Interaktionen\n- Nicht testen: Framework-Interna, triviale Getter/Setter\n\n### Befehle\n```bash\nnpm test              # Alle Tests\nnpm test -- --watch   # Watch Mode\nnpm run test:cov      # Coverage Report\n```' },
+        ],
+
+        mcpPresets: [
+          { name: 'filesystem', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-filesystem', '/path/to/dir'] },
+          { name: 'github', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-github'], env: { GITHUB_PERSONAL_ACCESS_TOKEN: '' } },
+          { name: 'postgres', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-postgres', 'postgresql://localhost/mydb'] },
+          { name: 'sqlite', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-sqlite', './data.db'] },
+          { name: 'puppeteer', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-puppeteer'] },
+          { name: 'brave-search', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-brave-search'], env: { BRAVE_API_KEY: '' } },
+          { name: 'memory', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-memory'] },
+        ],
         activeSpinnerPack: null,
         hoverSpinnerPack: null,
         showSaveSpinnerPackDialog: false,
@@ -1239,14 +2039,70 @@
         customSpinnerPacks: JSON.parse(localStorage.getItem('claude-spinner-custom-packs') || '[]'),
 
         spinnerPacks: [
-          { name: 'Star Wars', icon: '⚔️', verbs: ['Using the Force', 'There is no try', 'Sensing a disturbance', 'Consulting the Jedi Archives', 'Navigating hyperspace', 'Reaching the high ground', 'Training with Yoda', 'Letting the hate flow', 'Executing Order 66', 'Assembling the lightsaber', 'Mind-tricking the weak', 'Deflecting blasters', 'Trusting my feelings', 'Completing the training', 'Searching my feelings', 'Joining the dark side', 'This is the way'] },
-          { name: 'Star Trek', icon: '🖖', verbs: ['Engaging warp drive', 'Making it so', 'Resistance is futile', 'Assimilating knowledge', 'Scanning for lifeforms', 'Beaming up', 'Hailing frequencies open', 'Reversing the polarity', 'Raising shields', 'Setting phasers to stun', 'Entering the holodeck', 'Consulting the computer', 'Living long and prospering', 'Adapting — you will be assimilated', 'Boldly going', 'Rerouting through the deflector', 'It\'s life, Jim, but not as we know it'] },
-          { name: 'Breaking Bad', icon: '🧪', verbs: ['Cooking the batch', 'Saying my name', 'Applying chemistry', 'I am the one who knocks', 'Checking the purity — 99.1%', 'Staying out of my territory', 'Consulting Saul', 'Running the car wash', 'Calculating the yield', 'Tread lightly', 'Breaking bad', 'Yeah, science!', 'No half measures', 'Respecting the chemistry', 'Building an empire'] },
-          { name: 'Matrix', icon: '💊', verbs: ['Taking the red pill', 'Dodging bullets', 'Downloading kung fu', 'There is no spoon', 'Entering the Matrix', 'Following the white rabbit', 'Seeing the code', 'Freeing the mind', 'Choosing the path', 'Unplugging from the simulation', 'Glitching in the Matrix', 'What if I told you', 'Knowing kung fu', 'The Matrix has you', 'Whoa'] },
-          { name: 'Herr der Ringe', icon: '💍', verbs: ['Consulting Gandalf', 'You shall not pass', 'Crossing into Mordor', 'One does not simply', 'Lighting the beacons', 'Summoning the eagles', 'Gathering the fellowship', 'Speaking friend and entering', 'Second breakfasting', 'My precious', 'Wielding Andúril', 'Reading the scrolls', 'Destroying the ring', 'Po-ta-toes — boil em, mash em', 'And my axe!', 'A wizard is never late'] },
-          { name: 'Piraten', icon: '🏴‍☠️', verbs: ['Hoisting the sails', 'Walking the plank', 'Drinking rum', 'Why is the rum gone', 'Consulting the map', 'Searching for treasure', 'Raising the Jolly Roger', 'Loading the cannons', 'Navigating by stars', 'Plundering the code', 'Swabbing the deck', 'Parley!', 'That\'s got to be the best code I\'ve ever seen', 'Sailing to Tortuga'] },
-          { name: 'Büro-Alltag', icon: '☕', verbs: ['Kaffeemaschine bedienen', 'Meeting überleben', 'E-Mail löschen', 'Drucker reparieren', 'Ticket eskalieren', 'Stand-up überstehen', 'In der Warteschleife', 'Reply-All rückgängig machen', 'Deadline verschieben', 'WLAN suchen', 'Passwort vergessen', 'Browser-Tabs schließen'] },
-          { name: 'Philosophie', icon: '🤔', verbs: ['Cogito ergo sum', 'Contemplating existence', 'Questioning reality', 'Seeking the truth', 'Channeling Nietzsche', 'Pondering the void', 'Thinking therefore being', 'Debating free will', 'Embracing the absurd', 'Staring into the abyss', 'The abyss stares back', 'Achieving enlightenment'] },
+          { name: 'Star Wars', icon: '⚔️', verbs: [
+            'Using the Force', 'There is no try', 'Sensing a disturbance', 'Consulting the Jedi Archives', 'Navigating hyperspace',
+            'Reaching the high ground', 'Training with Yoda', 'Assembling the lightsaber', 'Deflecting blasters', 'Trusting my feelings',
+            'Completing the training', 'Searching my feelings', 'This is the way', 'Calculating jump coordinates', 'Closing the blast doors',
+            'Decoding the transmission', 'Patching the hyperdrive', 'Scanning for life forms', 'Powering up the shields', 'Locking S-foils in attack position',
+            'Channeling the living Force', 'Entering the Dagobah system', 'Trusting the Force', 'Making the Kessel Run', 'Stabilizing the deflector dish',
+            'Calibrating the targeting computer', 'Clearing the asteroid field', 'Awaiting further orders', 'Loading the cargo bay', 'Restoring balance to the Force'
+          ] },
+          { name: 'Star Trek', icon: '🖖', verbs: [
+            'Engaging warp drive', 'Making it so', 'Resistance is futile', 'Assimilating knowledge', 'Scanning for lifeforms',
+            'Beaming up', 'Hailing frequencies open', 'Reversing the polarity', 'Raising shields', 'Setting phasers to stun',
+            'Entering the holodeck', 'Consulting the computer', 'Living long and prospering', 'Boldly going', 'Rerouting through the deflector',
+            'Modulating the frequency', 'Initiating docking sequence', 'Calibrating the sensors', 'Diverting power to shields', 'Running a diagnostic',
+            'Compensating for interference', 'Establishing orbit', 'Opening a channel', 'Analyzing the anomaly', 'Reconfiguring the array',
+            'Plotting a course', 'Transferring to auxiliary power', 'Activating the tractor beam', 'Realigning the dilithium crystals', 'On screen'
+          ] },
+          { name: 'Breaking Bad', icon: '🧪', verbs: [
+            'Cooking the batch', 'Saying my name', 'Applying chemistry', 'I am the one who knocks', 'Checking the purity — 99.1%',
+            'Staying out of my territory', 'Consulting Saul', 'Running the car wash', 'Calculating the yield', 'Tread lightly',
+            'Breaking bad', 'Yeah, science!', 'No half measures', 'Respecting the chemistry', 'Building an empire',
+            'Measuring the catalyst', 'Adjusting the temperature', 'Wearing the hazmat suit', 'Checking the methylamine supply', 'Running the numbers',
+            'Cleaning the lab', 'Maintaining quality control', 'Reviewing the formula', 'Scaling the operation', 'Testing the product',
+            'Securing the perimeter', 'Watching the reaction', 'Optimizing the process', 'Handling the logistics', 'Staying under the radar'
+          ] },
+          { name: 'Matrix', icon: '💊', verbs: [
+            'Taking the red pill', 'Dodging bullets', 'Downloading kung fu', 'There is no spoon', 'Entering the Matrix',
+            'Following the white rabbit', 'Seeing the code', 'Freeing the mind', 'Choosing the path', 'Unplugging from the simulation',
+            'Glitching in the Matrix', 'What if I told you', 'Knowing kung fu', 'The Matrix has you', 'Whoa',
+            'Bending the rules', 'Tracing the signal', 'Loading the jump program', 'Decrypting the broadcast', 'Jacking in',
+            'Overriding the system', 'Recognizing the pattern', 'Rewriting the code', 'Breaking through the firewall', 'Finding the backdoor',
+            'Running from agents', 'Debugging reality', 'Compiling the construct', 'Upgrading the firmware', 'Waking up'
+          ] },
+          { name: 'Herr der Ringe', icon: '💍', verbs: [
+            'Consulting Gandalf', 'You shall not pass', 'Crossing into Mordor', 'One does not simply', 'Lighting the beacons',
+            'Summoning the eagles', 'Gathering the fellowship', 'Speaking friend and entering', 'Second breakfasting', 'My precious',
+            'Wielding Andúril', 'Reading the scrolls', 'Destroying the ring', 'Po-ta-toes — boil em, mash em', 'And my axe!',
+            'A wizard is never late', 'Consulting the palantír', 'Traversing the Mines of Moria', 'Riding to Rohan', 'Forging the blade anew',
+            'Deciphering the runes', 'Seeking the Ents', 'Defending Helm\'s Deep', 'Sailing to the Undying Lands', 'Raising the army of the dead',
+            'Walking the Paths of the Dead', 'Scouting the Shire', 'Brewing pipe-weed tea', 'Elevensies', 'What about second breakfast'
+          ] },
+          { name: 'Piraten', icon: '🏴‍☠️', verbs: [
+            'Hoisting the sails', 'Walking the plank', 'Drinking rum', 'Why is the rum gone', 'Consulting the map',
+            'Searching for treasure', 'Raising the Jolly Roger', 'Loading the cannons', 'Navigating by stars', 'Plundering the code',
+            'Swabbing the deck', 'Parley!', 'That\'s got to be the best code I\'ve ever seen', 'Sailing to Tortuga', 'Charting the course',
+            'Tying the rigging', 'Spotting land ho', 'Checking the compass', 'Braving the storm', 'Repairing the hull',
+            'Counting the doubloons', 'Burying the treasure', 'Reading the tide', 'Weighing the anchor', 'Dodging the kraken',
+            'Negotiating with merchants', 'Polishing the cutlass', 'Sending a message in a bottle', 'Climbing the crow\'s nest', 'Pillaging the pantry'
+          ] },
+          { name: 'Büro-Alltag', icon: '☕', verbs: [
+            'Kaffeemaschine bedienen', 'Meeting überleben', 'E-Mail löschen', 'Drucker reparieren', 'Ticket eskalieren',
+            'Stand-up überstehen', 'In der Warteschleife', 'Reply-All rückgängig machen', 'Deadline verschieben', 'WLAN suchen',
+            'Passwort vergessen', 'Browser-Tabs schließen', 'Slack-Nachricht tippen', 'VPN neu verbinden', 'Bildschirm teilen',
+            'Jira-Board sortieren', 'Confluence durchsuchen', 'Sprint planen', 'Retro moderieren', 'Kaffee nachfüllen',
+            'Teams-Call beitreten', 'Mikrofon stumm schalten', 'Kamera anlassen vergessen', 'Mittagspause planen', 'Parkplatz suchen',
+            'Excel-Tabelle retten', 'Backup erstellen', 'Git-Merge-Konflikt lösen', 'Code-Review abnicken', 'Feierabend herbeidenken'
+          ] },
+          { name: 'Philosophie', icon: '🤔', verbs: [
+            'Cogito ergo sum', 'Contemplating existence', 'Questioning reality', 'Seeking the truth', 'Channeling Nietzsche',
+            'Pondering the void', 'Thinking therefore being', 'Debating free will', 'Embracing the absurd', 'Achieving enlightenment',
+            'Deconstructing meaning', 'Applying Occam\'s razor', 'Considering the categorical imperative', 'Mapping the allegory of the cave', 'Suspending disbelief',
+            'Examining the trolley problem', 'Weighing the Übermensch', 'Consulting Socrates', 'Defining the good life', 'Questioning the question',
+            'Meditating on impermanence', 'Parsing the dialectic', 'Embracing radical doubt', 'Chasing the thing-in-itself', 'Seeking the golden mean',
+            'Grappling with Sisyphus', 'Transcending the ordinary', 'Unraveling the paradox', 'Pondering the ship of Theseus', 'Finding meaning anyway'
+          ] },
         ],
         get spinnerMixPack() {
           const all = [];
@@ -1334,6 +2190,16 @@
           return result;
         },
 
+        get filteredTerminalPrompts() {
+          let result = this.terminalPrompts;
+          if (this.terminalPromptsCategory) result = result.filter(p => p.category === this.terminalPromptsCategory);
+          if (this.terminalPromptsSearch.trim()) {
+            const q = this.terminalPromptsSearch.toLowerCase();
+            result = result.filter(p => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.tags.some(t => t.includes(q)) || p.category.toLowerCase().includes(q) || p.prompt.toLowerCase().includes(q));
+          }
+          return result;
+        },
+
         copyDesignPrompt(text) {
           navigator.clipboard.writeText(text).then(() => this.notify('Prompt kopiert!'));
         },
@@ -1345,8 +2211,9 @@
         tabs: [
           { id: 'general', label: 'General', desc: 'Modell, Output-Stil und grundlegende Einstellungen', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>' },
           { id: 'permissions', label: 'Permissions', desc: 'Welche Tools automatisch erlaubt, gefragt oder blockiert werden', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>' },
-          { id: 'plugins', label: 'Plugins', desc: 'Plugins aktivieren oder deaktivieren', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/></svg>' },
+          { id: 'plugins', label: 'Skills & Plugins', desc: 'Skills und Plugins aktivieren oder deaktivieren', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/></svg>' },
           { id: 'hooks', label: 'Hooks', desc: 'Automatische Aktionen bei bestimmten Events', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>' },
+          { id: 'mcp', label: 'MCP Servers', desc: 'Model Context Protocol — externe Tools und Integrationen', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>' },
           { id: 'sandbox', label: 'Sandbox', desc: 'Dateisystem- und Netzwerkzugriffe einschränken', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>' },
           { id: 'env', label: 'Environment', desc: 'Umgebungsvariablen für jede Session', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>' },
           { id: 'display', label: 'Display & UI', desc: 'Spinner, Status Line und visuelle Einstellungen', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>' },
@@ -1354,6 +2221,7 @@
           { id: 'advanced', label: 'Advanced', desc: 'Auth, Performance und erweiterte Optionen', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>' },
           { id: 'separator' },
           { id: 'design-prompts', label: 'Design Prompts', desc: '30 kuratierte Design-Aesthetiken mit AI-ready Prompts', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>' },
+          { id: 'terminal-prompts', label: 'Terminal Prompts', desc: 'Prompts für Claude Code CLI und CLAUDE.md Snippets', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>' },
         ],
 
         hookEvents: [
@@ -1375,23 +2243,23 @@
           {
             name: 'Workflow',
             plugins: [
-              { id: 'commit-commands@claude-plugins-official', name: 'Commit Commands', desc: 'Git Commit, Push und PR Skills' },
-              { id: 'pr-review-toolkit@claude-plugins-official', name: 'PR Review Toolkit', desc: 'Umfassende Pull-Request-Reviews' },
-              { id: 'feature-dev@claude-plugins-official', name: 'Feature Dev', desc: 'Geführte Feature-Entwicklung mit Architektur-Fokus' },
-              { id: 'code-review@claude-plugins-official', name: 'Code Review', desc: 'Code-Review für Pull Requests' },
-              { id: 'code-simplifier@claude-plugins-official', name: 'Code Simplifier', desc: 'Vereinfacht Code für Klarheit und Wartbarkeit' },
-              { id: 'claude-md-management@claude-plugins-official', name: 'CLAUDE.md Management', desc: 'CLAUDE.md Dateien verwalten und verbessern' },
-              { id: 'skill-creator@claude-plugins-official', name: 'Skill Creator', desc: 'Neue Skills erstellen und testen' },
-              { id: 'claude-code-setup@claude-plugins-official', name: 'Claude Code Setup', desc: 'Automatisierungs-Empfehlungen für Projekte' },
+              { id: 'commit-commands@claude-plugins-official', name: 'Commit Commands', desc: 'Git Commit, Push und PR Skills', skills: ['/commit', '/commit-push-pr', '/clean-gone'], provides: 'Automatische Commit-Messages, Push + PR in einem Schritt' },
+              { id: 'pr-review-toolkit@claude-plugins-official', name: 'PR Review Toolkit', desc: 'Umfassende Pull-Request-Reviews', skills: ['/review-pr'], provides: 'Multi-Agent Review: Code, Comments, Tests, Types, Silent Failures' },
+              { id: 'feature-dev@claude-plugins-official', name: 'Feature Dev', desc: 'Geführte Feature-Entwicklung mit Architektur-Fokus', skills: ['/feature-dev'], provides: 'Architektur-Analyse, Code Explorer, Code Reviewer Agents' },
+              { id: 'code-review@claude-plugins-official', name: 'Code Review', desc: 'Code-Review für Pull Requests', skills: ['/code-review'], provides: 'Strukturierte PR-Reviews mit Checkliste' },
+              { id: 'code-simplifier@claude-plugins-official', name: 'Code Simplifier', desc: 'Vereinfacht Code für Klarheit und Wartbarkeit', skills: ['/simplify'], provides: '3 parallele Agents: Reuse, Quality, Efficiency' },
+              { id: 'claude-md-management@claude-plugins-official', name: 'CLAUDE.md Management', desc: 'CLAUDE.md Dateien verwalten und verbessern', skills: ['/revise-claude-md', '/claude-md-improver'] },
+              { id: 'skill-creator@claude-plugins-official', name: 'Skill Creator', desc: 'Neue Skills erstellen und testen', skills: ['/skill-creator'], provides: 'Skill-Erstellung, Evals, Performance-Benchmarks' },
+              { id: 'claude-code-setup@claude-plugins-official', name: 'Claude Code Setup', desc: 'Automatisierungs-Empfehlungen für Projekte', provides: 'Analysiert Codebase und empfiehlt Hooks, Skills, Plugins, MCP' },
               { id: 'plugin-dev@claude-plugins-official', name: 'Plugin Dev', desc: 'Claude Code Plugins entwickeln' },
             ]
           },
           {
             name: 'Integrations',
             plugins: [
-              { id: 'firebase@claude-plugins-official', name: 'Firebase', desc: 'Firebase Projekt-Management und Firestore' },
-              { id: 'stripe@claude-plugins-official', name: 'Stripe', desc: 'Stripe Payment-Integration und Best Practices' },
-              { id: 'vercel@claude-plugins-official', name: 'Vercel', desc: 'Vercel Deployment und Logs' },
+              { id: 'firebase@claude-plugins-official', name: 'Firebase', desc: 'Firebase Projekt-Management und Firestore', provides: 'MCP-Server für Firestore CRUD, Auth, Hosting, Functions Logs' },
+              { id: 'stripe@claude-plugins-official', name: 'Stripe', desc: 'Stripe Payment-Integration und Best Practices', skills: ['/test-cards', '/explain-error', '/stripe-best-practices'] },
+              { id: 'vercel@claude-plugins-official', name: 'Vercel', desc: 'Vercel Deployment und Logs', skills: ['/deploy', '/logs', '/setup'] },
               { id: 'supabase@claude-plugins-official', name: 'Supabase', desc: 'Supabase Datenbank-Integration' },
               { id: 'github@claude-plugins-official', name: 'GitHub', desc: 'GitHub Integration' },
               { id: 'gitlab@claude-plugins-official', name: 'GitLab', desc: 'GitLab Integration' },
@@ -1421,15 +2289,15 @@
           {
             name: 'Output Styles',
             plugins: [
-              { id: 'explanatory-output-style@claude-plugins-official', name: 'Explanatory', desc: 'Erklärender Output mit Insights und Kontext' },
-              { id: 'learning-output-style@claude-plugins-official', name: 'Learning', desc: 'Lernorientierter Output mit didaktischen Erklärungen' },
+              { id: 'explanatory-output-style@claude-plugins-official', name: 'Explanatory', desc: 'Erklärender Output mit Insights und Kontext', provides: 'Setzt outputStyle auf "explanatory", fügt Insight-Boxen hinzu' },
+              { id: 'learning-output-style@claude-plugins-official', name: 'Learning', desc: 'Lernorientierter Output mit didaktischen Erklärungen', provides: 'Setzt outputStyle auf "learning", fordert User-Code-Beiträge ein' },
             ]
           },
           {
             name: 'Creative',
             plugins: [
-              { id: 'frontend-design@claude-plugins-official', name: 'Frontend Design', desc: 'Distinctive, production-grade Frontend-Interfaces' },
-              { id: 'playground@claude-plugins-official', name: 'Playground', desc: 'Interaktive HTML-Playgrounds erstellen' },
+              { id: 'frontend-design@claude-plugins-official', name: 'Frontend Design', desc: 'Distinctive, production-grade Frontend-Interfaces', skills: ['/frontend-design'], provides: 'Kreative UI-Generierung mit Anti-AI-Ästhetik' },
+              { id: 'playground@claude-plugins-official', name: 'Playground', desc: 'Interaktive HTML-Playgrounds erstellen', skills: ['/playground'], provides: 'Single-file HTML Explorer mit Controls + Live Preview' },
               { id: 'frontend-slides@community', name: 'Frontend Slides', desc: 'Animierte HTML-Präsentationen aus Text oder PowerPoint erstellen', community: true, install: 'GitHub: zarazhangrui/frontend-slides → SKILL.md nach ~/.claude/skills/frontend-slides/' },
               { id: 'ui-design-system@community', name: 'UI Design System', desc: 'Design-Token-Generierung, Component-Dokumentation und responsive Berechnungen', community: true, install: 'npx claude-code-templates@latest --skill creative-design/ui-design-system' },
               { id: 'frontend-design-community@community', name: 'Frontend Design (Community)', desc: 'Production-grade Interfaces mit hoher Design-Qualität — Community-Version mit 6.5k+ Downloads', community: true, install: 'npx claude-code-templates@latest --skill creative-design/frontend-design' },
@@ -1451,28 +2319,18 @@
           {
             name: 'Local / Custom',
             plugins: [
-              { id: 'superpowers@local-desktop-app-uploads', name: 'Superpowers', desc: 'Erweiterte Workflows: Brainstorming, TDD, Debugging, Planung' },
+              { id: 'superpowers@local-desktop-app-uploads', name: 'Superpowers', desc: 'Erweiterte Workflows: Brainstorming, TDD, Debugging, Planung', skills: ['/brainstorming', '/tdd', '/debugging', '/planning'], provides: 'Strukturierte Workflows für Feature-Entwicklung, Testing und Debugging' },
+              { id: 'obsidian-vault@local-skills', name: 'Obsidian Vault Navigator', desc: 'Sucht automatisch im Obsidian Vault bei Erwähnung von Obsidian, Notes, IPARAG oder Zettelkasten', skills: ['/obsidian-vault'], provides: 'Vault-Navigation, Projekt-Notes lesen/updaten, Inbox-Captures, Galaxy/Zettelkasten-Suche' },
             ]
           }
         ],
 
-        settings: {
-          model: '', effortLevel: '', outputStyle: '', language: '',
-          alwaysThinkingEnabled: false, autoUpdatesChannel: 'latest',
-          permissions: { allow: [], ask: [], deny: [], additionalDirectories: [], defaultMode: 'allowPrompt', disableBypassPermissionsMode: '' },
-          enabledPlugins: {},
-          hooks: {},
-          sandbox: { enabled: false, filesystem: { allowWrite: [], denyWrite: [], denyRead: [] }, network: { allowedDomains: [], allowLocalBinding: false, allowAllUnixSockets: false } },
-          env: {},
-          spinnerVerbs: { mode: 'append', verbs: [] },
-          spinnerTipsEnabled: true, showTurnDuration: true, prefersReducedMotion: false,
-          statusLine: { type: '', command: '', url: '', refresh: 5000, disabled: false },
-          attribution: { commit: '', pr: '' },
-          cleanupPeriodDays: 30, fastModePerSessionOptIn: false, enableAllProjectMcpServers: false,
-          respectGitignore: true, teamateMode: 'auto', forceLoginMethod: ''
-        },
+        settings: defaultSettings(),
 
-        markUnsaved() { this.unsaved = true; },
+        markUnsaved() {
+          this.unsaved = true;
+          this.pushHistory();
+        },
 
         notify(message, type = 'success') {
           this.notification = { show: true, message, type };
@@ -1484,7 +2342,7 @@
             if (!window.showOpenFilePicker) {
               const input = document.createElement('input');
               input.type = 'file'; input.accept = '.json';
-              input.onchange = async (e) => { const file = e.target.files[0]; if (!file) return; this.loadJson(await file.text()); this.fileName = file.name; };
+              input.onchange = async (e) => { const file = e.target.files[0]; if (!file) return; this.loadJson(await file.text()); this.fileName = file.name; this._detectFileScope(file.name); };
               input.click(); return;
             }
             const [handle] = await window.showOpenFilePicker({ types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
@@ -1492,6 +2350,7 @@
             const file = await handle.getFile();
             this.loadJson(await file.text());
             this.fileName = file.name;
+            this._detectFileScope(handle.name);
             this.notify('Datei geladen: ' + file.name);
           } catch (e) { if (e.name !== 'AbortError') this.notify('Fehler beim Öffnen: ' + e.message, 'error'); }
         },
@@ -1530,19 +2389,7 @@
 
         resetSettings() {
           if (!confirm('Alle Einstellungen zurücksetzen?')) return;
-          this.settings = {
-            model: '', effortLevel: '', outputStyle: '', language: '',
-            alwaysThinkingEnabled: false, autoUpdatesChannel: 'latest',
-            permissions: { allow: [], ask: [], deny: [], additionalDirectories: [], defaultMode: 'allowPrompt', disableBypassPermissionsMode: '' },
-            enabledPlugins: {}, hooks: {},
-            sandbox: { enabled: false, filesystem: { allowWrite: [], denyWrite: [], denyRead: [] }, network: { allowedDomains: [], allowLocalBinding: false, allowAllUnixSockets: false } },
-            env: {}, spinnerVerbs: { mode: 'append', verbs: [] },
-            spinnerTipsEnabled: true, showTurnDuration: true, prefersReducedMotion: false,
-            statusLine: { type: '', command: '', url: '', refresh: 5000, disabled: false },
-            attribution: { commit: '', pr: '' },
-            cleanupPeriodDays: 30, fastModePerSessionOptIn: false, enableAllProjectMcpServers: false,
-            respectGitignore: true, teamateMode: 'auto', forceLoginMethod: ''
-          };
+          this.resetSettingsSilent();
           this.unsaved = true; this.notify('Zurückgesetzt!', 'info');
         },
 
@@ -1673,19 +2520,7 @@
         },
 
         resetSettingsSilent() {
-          this.settings = {
-            model: '', effortLevel: '', outputStyle: '', language: '',
-            alwaysThinkingEnabled: false, autoUpdatesChannel: 'latest',
-            permissions: { allow: [], ask: [], deny: [], additionalDirectories: [], defaultMode: 'allowPrompt', disableBypassPermissionsMode: '' },
-            enabledPlugins: {}, hooks: {},
-            sandbox: { enabled: false, filesystem: { allowWrite: [], denyWrite: [], denyRead: [] }, network: { allowedDomains: [], allowLocalBinding: false, allowAllUnixSockets: false } },
-            env: {}, spinnerVerbs: { mode: 'append', verbs: [] },
-            spinnerTipsEnabled: true, showTurnDuration: true, prefersReducedMotion: false,
-            statusLine: { type: '', command: '', url: '', refresh: 5000, disabled: false },
-            attribution: { commit: '', pr: '' },
-            cleanupPeriodDays: 30, fastModePerSessionOptIn: false, enableAllProjectMcpServers: false,
-            respectGitignore: true, teamateMode: 'auto', forceLoginMethod: ''
-          };
+          this.settings = defaultSettings();
         },
 
         saveAsTemplate() {
@@ -1763,6 +2598,12 @@
             if (data.respectGitignore !== undefined) s.respectGitignore = data.respectGitignore;
             if (data.teamateMode) s.teamateMode = data.teamateMode;
             if (data.forceLoginMethod) s.forceLoginMethod = data.forceLoginMethod;
+            if (data.mcpServers) s.mcpServers = JSON.parse(JSON.stringify(data.mcpServers));
+            if (data.apiKeyHelper) s.apiKeyHelper = data.apiKeyHelper;
+            if (data.plansDirectory) s.plansDirectory = data.plansDirectory;
+            if (data.terminalProgressBarEnabled !== undefined) s.terminalProgressBarEnabled = data.terminalProgressBarEnabled;
+            if (data.disableAllHooks !== undefined) s.disableAllHooks = data.disableAllHooks;
+            if (data.availableModels) s.availableModels = [...data.availableModels];
             this.unsaved = false;
           } catch (e) { this.notify('Ungültiges JSON: ' + e.message, 'error'); }
         },
@@ -1822,6 +2663,22 @@
           if (!s.respectGitignore) out.respectGitignore = false;
           if (s.teamateMode && s.teamateMode !== 'auto') out.teamateMode = s.teamateMode;
           if (s.forceLoginMethod) out.forceLoginMethod = s.forceLoginMethod;
+          if (Object.keys(s.mcpServers).length) {
+            const mcp = {};
+            for (const [name, srv] of Object.entries(s.mcpServers)) {
+              const m = { type: srv.type || 'stdio' };
+              if (m.type === 'stdio') { if (srv.command) m.command = srv.command; if (srv.args?.length) m.args = [...srv.args]; }
+              else { if (srv.url) m.url = srv.url; if (srv.headers && Object.keys(srv.headers).length) m.headers = {...srv.headers}; }
+              if (srv.env && Object.keys(srv.env).length) m.env = {...srv.env};
+              mcp[name] = m;
+            }
+            out.mcpServers = mcp;
+          }
+          if (s.apiKeyHelper) out.apiKeyHelper = s.apiKeyHelper;
+          if (s.plansDirectory) out.plansDirectory = s.plansDirectory;
+          if (!s.terminalProgressBarEnabled) out.terminalProgressBarEnabled = false;
+          if (s.disableAllHooks) out.disableAllHooks = true;
+          if (s.availableModels.length) out.availableModels = [...s.availableModels];
           return JSON.stringify(out, null, 2);
         },
 
@@ -1942,6 +2799,33 @@
           }
         },
 
+        addMcpServer() {
+          const name = this.newMcpName.trim();
+          if (!name || this.settings.mcpServers[name]) return;
+          const server = { type: this.newMcpType, env: {} };
+          if (this.newMcpType === 'stdio') { server.command = ''; server.args = []; }
+          else { server.url = ''; server.headers = {}; }
+          this.settings.mcpServers = { ...this.settings.mcpServers, [name]: server };
+          this.newMcpName = ''; this.newMcpType = 'stdio'; this.markUnsaved();
+        },
+
+        addMcpPreset(preset) {
+          if (this.settings.mcpServers[preset.name]) {
+            this.notify('Server "' + preset.name + '" existiert bereits', 'error'); return;
+          }
+          const server = { type: preset.type, command: preset.command, args: [...(preset.args || [])], env: { ...(preset.env || {}) } };
+          this.settings.mcpServers = { ...this.settings.mcpServers, [preset.name]: server };
+          this.markUnsaved();
+          this.notify('MCP Server hinzugefügt: ' + preset.name);
+        },
+
+        addAvailableModel() {
+          const m = this.newAvailableModel.trim();
+          if (m && !this.settings.availableModels.includes(m)) {
+            this.settings.availableModels.push(m); this.newAvailableModel = ''; this.markUnsaved();
+          }
+        },
+
         addSpinnerVerb() {
           if (this.newSpinnerVerb && !this.settings.spinnerVerbs.verbs.includes(this.newSpinnerVerb)) {
             this.settings.spinnerVerbs.verbs.push(this.newSpinnerVerb); this.newSpinnerVerb = ''; this.markUnsaved();
@@ -1985,6 +2869,394 @@
 
         persistSpinnerPacks() {
           localStorage.setItem('claude-spinner-custom-packs', JSON.stringify(this.customSpinnerPacks));
+        },
+
+        // === INIT ===
+        init() {
+          this.$watch('settings.permissions', () => {
+            clearTimeout(this._conflictTimer);
+            this._conflictTimer = setTimeout(() => this.detectPermConflicts(), 100);
+          }, { deep: true });
+          this.$nextTick(() => {
+            this.detectPermConflicts();
+            this.loadFromUrlHash();
+            if (!localStorage.getItem('claude-settings-wizard-done')) {
+              this.showSetupWizard = true;
+            }
+            this.pushHistory();
+          });
+        },
+
+        // === GLOBAL SEARCH ===
+        updateSearchResults() {
+          const q = this.searchQuery.trim().toLowerCase();
+          if (!q) { this.searchResults = []; this.searchActiveIndex = -1; return; }
+          this.searchResults = this.settingsRegistry.filter(e =>
+            e.label.toLowerCase().includes(q) || e.desc.toLowerCase().includes(q) || e.keywords.some(k => k.includes(q))
+          );
+          this.searchResults.forEach((r, i) => r._index = i);
+          this.searchActiveIndex = this.searchResults.length > 0 ? 0 : -1;
+        },
+
+        get groupedSearchResults() {
+          const groups = {};
+          this.searchResults.forEach(r => {
+            if (!groups[r.tab]) {
+              const t = this.tabs.find(t => t.id === r.tab);
+              groups[r.tab] = { tab: r.tab, label: t ? t.label : r.tab, items: [] };
+            }
+            groups[r.tab].items.push(r);
+          });
+          return Object.values(groups);
+        },
+
+        navigateSearch(dir) {
+          if (!this.searchResults.length) return;
+          this.searchActiveIndex = Math.max(0, Math.min(this.searchResults.length - 1, this.searchActiveIndex + dir));
+        },
+
+        selectSearchResult() {
+          if (this.searchActiveIndex >= 0 && this.searchResults[this.searchActiveIndex]) {
+            const r = this.searchResults[this.searchActiveIndex];
+            this.jumpToSetting(r.tab, r.id);
+            this.searchQuery = ''; this.searchResults = [];
+          }
+        },
+
+        jumpToSetting(tab, elementId) {
+          this.activeTab = tab;
+          this.$nextTick(() => {
+            const el = document.getElementById(elementId);
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              el.classList.add('search-highlight');
+              setTimeout(() => el.classList.remove('search-highlight'), 2500);
+            }
+          });
+        },
+
+        // === PERMISSION CONFLICT DETECTION ===
+        detectPermConflicts() {
+          const conflicts = [];
+          const allow = this.settings.permissions.allow || [];
+          const ask = this.settings.permissions.ask || [];
+          const deny = this.settings.permissions.deny || [];
+
+          const parseRule = (rule) => {
+            const m = rule.match(/^([A-Za-z_*]+)(?:\((.+)\))?$/);
+            return m ? { tool: m[1], pattern: m[2] || '' } : { tool: rule, pattern: '' };
+          };
+
+          // Allow vs Deny
+          for (const ar of allow) {
+            for (const dr of deny) {
+              if (ar === dr) {
+                conflicts.push({ type: 'exact', severity: 'high', allowRule: ar, denyRule: dr, message: `"${ar}" ist in Allow und Deny — Deny gewinnt, Allow ist wirkungslos.` });
+                continue;
+              }
+              const a = parseRule(ar), d = parseRule(dr);
+              if (a.tool === d.tool || this._matchesGlob(d.tool, a.tool)) {
+                if (!d.pattern && a.pattern) {
+                  conflicts.push({ type: 'override', severity: 'high', allowRule: ar, denyRule: dr, message: `"${dr}" blockiert das gesamte Tool — "${ar}" wird komplett überschrieben.` });
+                } else if (d.pattern && a.pattern && this._matchesGlob(d.pattern, a.pattern)) {
+                  conflicts.push({ type: 'override', severity: 'medium', allowRule: ar, denyRule: dr, message: `Deny "${dr}" deckt Allow "${ar}" ab.` });
+                }
+              }
+            }
+          }
+
+          // Ask vs Deny
+          for (const ar of ask) {
+            for (const dr of deny) {
+              if (ar === dr) {
+                conflicts.push({ type: 'redundant', severity: 'medium', askRule: ar, denyRule: dr, message: `"${ar}" in Ask ist überflüssig — Deny blockiert komplett.` });
+                continue;
+              }
+              const a = parseRule(ar), d = parseRule(dr);
+              if (a.tool === d.tool || this._matchesGlob(d.tool, a.tool)) {
+                if (!d.pattern && a.pattern) {
+                  conflicts.push({ type: 'override', severity: 'medium', askRule: ar, denyRule: dr, message: `"${dr}" blockiert das gesamte Tool — Ask "${ar}" wird nie erreicht.` });
+                } else if (d.pattern && a.pattern && this._matchesGlob(d.pattern, a.pattern)) {
+                  conflicts.push({ type: 'override', severity: 'medium', askRule: ar, denyRule: dr, message: `Deny "${dr}" deckt Ask "${ar}" ab.` });
+                }
+              }
+            }
+          }
+
+          this.permConflicts = conflicts;
+        },
+
+        _matchesGlob(pattern, candidate) {
+          if (pattern === candidate) return true;
+          if (!pattern.includes('*')) return false;
+          try {
+            const re = '^' + pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$';
+            return new RegExp(re).test(candidate);
+          } catch { return false; }
+        },
+
+        isRuleConflicting(type, rule) {
+          return this.permConflicts.some(c =>
+            (type === 'allow' && c.allowRule === rule) || (type === 'ask' && c.askRule === rule) || (type === 'deny' && c.denyRule === rule)
+          );
+        },
+
+        // === KEYBOARD SHORTCUTS ===
+        handleKeyboard(e) {
+          // Ctrl+S → save
+          if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 's') {
+            e.preventDefault();
+            this.saveFile();
+            return;
+          }
+          // Ctrl+Shift+P → toggle JSON preview
+          if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'P' || e.key === 'p')) {
+            e.preventDefault();
+            this.jsonPreviewOpen = !this.jsonPreviewOpen;
+            return;
+          }
+          // Ctrl+Z → undo
+          if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') {
+            if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+            e.preventDefault();
+            this.undo();
+            return;
+          }
+          // Ctrl+Y or Ctrl+Shift+Z → redo
+          if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) {
+            if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+            e.preventDefault();
+            this.redo();
+            return;
+          }
+          // Ctrl+1-9 → switch tabs
+          if ((e.ctrlKey || e.metaKey) && e.key >= '1' && e.key <= '9') {
+            e.preventDefault();
+            const settingsTabs = this.tabs.filter(t => t.id !== 'separator' && t.id !== 'design-prompts');
+            const idx = parseInt(e.key) - 1;
+            if (idx < settingsTabs.length) this.activeTab = settingsTabs[idx].id;
+            return;
+          }
+          // Ctrl+0 → Design Prompts
+          if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+            e.preventDefault();
+            this.activeTab = 'design-prompts';
+            return;
+          }
+          // / → focus global search (when not in input)
+          if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+            e.preventDefault();
+            this.$refs.globalSearch?.focus();
+            return;
+          }
+          // ? → show shortcuts help
+          if (e.key === '?' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+            e.preventDefault();
+            this.showShortcuts = !this.showShortcuts;
+            return;
+          }
+          // Escape → close modals
+          if (e.key === 'Escape') {
+            if (this.showShortcuts) { this.showShortcuts = false; return; }
+            if (this.showDiffModal) { this.showDiffModal = false; return; }
+            if (this.showSetupWizard) { this.showSetupWizard = false; localStorage.setItem('claude-settings-wizard-done', '1'); return; }
+          }
+        },
+
+        // === UNDO / REDO ===
+        pushHistory() {
+          const snapshot = JSON.stringify(this.settings);
+          // Avoid duplicate snapshots
+          if (this.settingsHistory.length > 0 && this.settingsHistory[this.historyIndex] === snapshot) return;
+          // Trim future states if we're in the middle of history
+          this.settingsHistory = this.settingsHistory.slice(0, this.historyIndex + 1);
+          this.settingsHistory.push(snapshot);
+          // Cap history size
+          if (this.settingsHistory.length > 50) {
+            this.settingsHistory = this.settingsHistory.slice(-50);
+          }
+          this.historyIndex = this.settingsHistory.length - 1;
+        },
+
+        undo() {
+          if (this.historyIndex <= 0) return;
+          this.historyIndex--;
+          const snapshot = JSON.parse(this.settingsHistory[this.historyIndex]);
+          this._restoreSettings(snapshot);
+          this.notify('Rückgängig', 'info');
+        },
+
+        redo() {
+          if (this.historyIndex >= this.settingsHistory.length - 1) return;
+          this.historyIndex++;
+          const snapshot = JSON.parse(this.settingsHistory[this.historyIndex]);
+          this._restoreSettings(snapshot);
+          this.notify('Wiederhergestellt', 'info');
+        },
+
+        _restoreSettings(snapshot) {
+          // Restore without triggering pushHistory
+          const prevMarkUnsaved = this.unsaved;
+          Object.assign(this.settings, snapshot);
+          this.unsaved = prevMarkUnsaved;
+        },
+
+        // === CLAUDE.md BUILDER ===
+        async openClaudeMd() {
+          try {
+            if (!window.showOpenFilePicker) {
+              const input = document.createElement('input');
+              input.type = 'file'; input.accept = '.md,.markdown,.txt';
+              input.onchange = async (e) => { const file = e.target.files[0]; if (!file) return; this.claudeMdContent = await file.text(); this.notify('CLAUDE.md geladen: ' + file.name); };
+              input.click(); return;
+            }
+            const [handle] = await window.showOpenFilePicker({ types: [{ description: 'Markdown', accept: { 'text/markdown': ['.md', '.markdown'], 'text/plain': ['.txt'] } }] });
+            this.claudeMdFileHandle = handle;
+            const file = await handle.getFile();
+            this.claudeMdContent = await file.text();
+            this.notify('CLAUDE.md geladen: ' + file.name);
+          } catch (e) { if (e.name !== 'AbortError') this.notify('Fehler: ' + e.message, 'error'); }
+        },
+
+        async saveClaudeMd() {
+          try {
+            const text = this.claudeMdContent;
+            if (this.claudeMdFileHandle) {
+              const w = await this.claudeMdFileHandle.createWritable(); await w.write(text); await w.close();
+              this.notify('CLAUDE.md gespeichert!');
+            } else {
+              if (window.showSaveFilePicker) {
+                const handle = await window.showSaveFilePicker({ suggestedName: 'CLAUDE.md', types: [{ description: 'Markdown', accept: { 'text/markdown': ['.md'] } }] });
+                this.claudeMdFileHandle = handle;
+                const w = await handle.createWritable(); await w.write(text); await w.close();
+                this.notify('CLAUDE.md gespeichert!');
+              } else {
+                const blob = new Blob([text], { type: 'text/markdown' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = 'CLAUDE.md'; a.click();
+                URL.revokeObjectURL(url);
+                this.notify('CLAUDE.md heruntergeladen!');
+              }
+            }
+          } catch (e) { if (e.name !== 'AbortError') this.notify('Fehler: ' + e.message, 'error'); }
+        },
+
+        insertClaudeMdSection(content) {
+          const editor = this.$refs.claudeMdEditor;
+          if (!editor) { this.claudeMdContent += (this.claudeMdContent && !this.claudeMdContent.endsWith('\n') ? '\n' : '') + content + '\n'; return; }
+          const start = editor.selectionStart;
+          const end = editor.selectionEnd;
+          const before = this.claudeMdContent.substring(0, start);
+          const after = this.claudeMdContent.substring(end);
+          const prefix = before && !before.endsWith('\n') ? '\n' : '';
+          const suffix = after && !after.startsWith('\n') ? '\n' : '';
+          this.claudeMdContent = before + prefix + content + suffix + after;
+          this.$nextTick(() => {
+            const newPos = start + prefix.length + content.length;
+            editor.setSelectionRange(newPos, newPos);
+            editor.focus();
+          });
+          this.notify('Eingefügt!', 'info');
+        },
+
+        // === FILE SCOPE DETECTION ===
+        _detectFileScope(name) {
+          // Heuristic: if opened from a project .claude dir, it's project-scoped
+          // File System Access API doesn't expose full path, so we rely on filename patterns
+          // Global: usually ~/.claude/settings.json → just "settings.json"
+          // Project: usually .claude/settings.json inside a project
+          this.fileScope = 'global'; // default assumption
+        },
+
+        // === SHARE VIA URL ===
+        shareViaUrl() {
+          try {
+            const json = this.cleanJson();
+            const encoded = btoa(unescape(encodeURIComponent(json)));
+            const url = window.location.origin + window.location.pathname + '#settings=' + encoded;
+            navigator.clipboard.writeText(url).then(() => {
+              this.notify('Share-URL in Zwischenablage kopiert!');
+            }, () => {
+              // Fallback: show URL in prompt
+              prompt('Share-URL:', url);
+            });
+          } catch (e) {
+            this.notify('Fehler beim Erstellen der URL: ' + e.message, 'error');
+          }
+        },
+
+        loadFromUrlHash() {
+          try {
+            const hash = window.location.hash;
+            if (!hash.startsWith('#settings=')) return;
+            const encoded = hash.substring('#settings='.length);
+            const json = decodeURIComponent(escape(atob(encoded)));
+            this.loadJson(json);
+            this.notify('Settings aus URL geladen!');
+            // Clean URL
+            history.replaceState(null, '', window.location.pathname);
+          } catch (e) {
+            // Silently ignore invalid hash
+          }
+        },
+
+        // === SETTINGS DIFF VIEW ===
+        computeDiff() {
+          let baseline;
+          if (this.diffBaseline === 'default') {
+            baseline = {};
+            this.diffBaselineLabel = 'Default';
+          } else {
+            const custom = this.customTemplates.find(t => t.id === this.diffBaseline);
+            if (custom) {
+              baseline = this._cleanSettingsObj(custom.settings);
+              this.diffBaselineLabel = custom.name;
+            } else {
+              baseline = {};
+              this.diffBaselineLabel = 'Default';
+            }
+          }
+
+          const current = JSON.parse(this.cleanJson());
+          this.diffEntries = [];
+          this._diffObjects(current, baseline, '');
+        },
+
+        _cleanSettingsObj(rawSettings) {
+          // Temporarily swap settings to use cleanJson() logic
+          const saved = JSON.parse(JSON.stringify(this.settings));
+          const savedUnsaved = this.unsaved;
+          // Load raw settings
+          Object.assign(this.settings, defaultSettings());
+          for (const [k, v] of Object.entries(rawSettings)) {
+            if (this.settings.hasOwnProperty(k)) this.settings[k] = JSON.parse(JSON.stringify(v));
+          }
+          const result = JSON.parse(this.cleanJson());
+          // Restore
+          Object.assign(this.settings, saved);
+          this.unsaved = savedUnsaved;
+          return result;
+        },
+
+        _diffObjects(current, baseline, prefix) {
+          const allKeys = new Set([...Object.keys(current || {}), ...Object.keys(baseline || {})]);
+          for (const key of allKeys) {
+            const path = prefix ? prefix + '.' + key : key;
+            const cv = current?.[key], bv = baseline?.[key];
+            if (bv === undefined && cv !== undefined) {
+              this.diffEntries.push({ path, type: 'added', oldVal: undefined, newVal: cv });
+            } else if (cv === undefined && bv !== undefined) {
+              this.diffEntries.push({ path, type: 'removed', oldVal: bv, newVal: undefined });
+            } else if (typeof cv === 'object' && typeof bv === 'object' && cv !== null && bv !== null) {
+              if (Array.isArray(cv) && Array.isArray(bv)) {
+                if (JSON.stringify(cv) !== JSON.stringify(bv)) this.diffEntries.push({ path, type: 'changed', oldVal: bv, newVal: cv });
+              } else {
+                this._diffObjects(cv, bv, path);
+              }
+            } else if (cv !== bv) {
+              this.diffEntries.push({ path, type: 'changed', oldVal: bv, newVal: cv });
+            }
+          }
         },
 
         syntaxHighlight(json) {
