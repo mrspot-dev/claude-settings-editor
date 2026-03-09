@@ -198,35 +198,48 @@
   <div class="flex h-screen overflow-hidden relative z-10">
 
     <!-- ═══════════════ SIDEBAR ═══════════════ -->
-    <aside class="w-56 flex-shrink-0 flex flex-col border-r border-[rgba(255,255,255,0.08)]" style="background: rgba(18, 18, 26, 0.8); backdrop-filter: blur(12px);">
+    <aside class="flex-shrink-0 flex flex-col border-r border-[rgba(255,255,255,0.08)] transition-all duration-200"
+           :class="sidebarCollapsed ? 'w-12' : 'w-56'"
+           style="background: rgba(18, 18, 26, 0.8); backdrop-filter: blur(12px);">
       <!-- Logo -->
-      <div class="px-4 py-5 border-b border-[rgba(255,255,255,0.08)]">
-        <h1 class="font-display font-bold text-base tracking-tight text-white flex items-center gap-2.5">
-          <span class="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-amber-600 flex items-center justify-center text-bg text-xs font-bold shadow-[0_0_24px_rgba(245,158,11,0.35)]">CC</span>
-          Settings Editor
+      <div class="py-5 border-b border-[rgba(255,255,255,0.08)] transition-all duration-200" :class="sidebarCollapsed ? 'px-2' : 'px-4'">
+        <h1 class="font-display font-bold text-base tracking-tight text-white flex items-center gap-2.5" :class="sidebarCollapsed ? 'justify-center' : ''">
+          <span class="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-amber-600 flex items-center justify-center text-bg text-xs font-bold shadow-[0_0_24px_rgba(245,158,11,0.35)] flex-shrink-0">CC</span>
+          <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap">Settings Editor</span>
         </h1>
-        <p class="text-[10px] text-fg-dim/40 mt-1.5 font-mono">v1.0 · made with 💛</p>
-        <p class="text-[10px] text-fg-dim/40 mt-0.5 font-mono">by <a href="https://github.com/mrspot-dev" target="_blank" class="text-fg-muted hover:text-accent transition-colors">mrspot-dev</a></p>
+        <template x-if="!sidebarCollapsed">
+          <div>
+            <p class="text-[10px] text-fg-dim/40 mt-1.5 font-mono">v1.0 · made with 💛</p>
+            <p class="text-[10px] text-fg-dim/40 mt-0.5 font-mono">by <a href="https://github.com/mrspot-dev" target="_blank" class="text-fg-muted hover:text-accent transition-colors">mrspot-dev</a></p>
+          </div>
+        </template>
       </div>
 
       <!-- Nav Tabs -->
-      <nav class="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
+      <nav class="flex-1 py-3 space-y-0.5 overflow-y-auto transition-all duration-200" :class="sidebarCollapsed ? 'px-1' : 'px-2'">
         <template x-for="tab in tabs.filter(t => t.id !== 'separator')" :key="tab.id">
           <button @click="activeTab = tab.id"
+                  :title="sidebarCollapsed ? tab.label : ''"
                   :class="activeTab === tab.id
                     ? 'bg-accent/10 text-accent border-accent/25 shadow-[inset_0_0_20px_rgba(245,158,11,0.06)]'
                     : 'text-fg-muted border-transparent hover:bg-[rgba(255,255,255,0.04)] hover:text-fg hover:translate-x-0.5'"
-                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border"
+                  class="w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 border"
+                  :class="[sidebarCollapsed ? 'justify-center px-0 py-2' : 'px-3 py-2.5']"
                   :style="tab.id === 'design-prompts' ? 'margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06);' : ''">
             <span x-html="tab.icon" class="w-4 h-4 flex-shrink-0" :class="activeTab === tab.id ? 'opacity-100' : 'opacity-50'"></span>
-            <span x-text="tab.label"></span>
-            <span x-show="activeTab === tab.id" class="ml-auto w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_8px_rgba(245,158,11,0.6)]"></span>
+            <span x-show="!sidebarCollapsed" x-text="tab.label" x-transition.opacity></span>
+            <span x-show="activeTab === tab.id && !sidebarCollapsed" class="ml-auto w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_8px_rgba(245,158,11,0.6)]"></span>
           </button>
         </template>
       </nav>
 
+      <!-- Collapse Toggle -->
+      <button @click="toggleSidebar()" class="mx-auto my-1 p-1.5 rounded-lg text-fg-dim hover:text-fg-muted hover:bg-[rgba(255,255,255,0.04)] transition-all" :title="sidebarCollapsed ? 'Sidebar ausklappen' : 'Sidebar einklappen'">
+        <svg class="w-4 h-4 transition-transform duration-200" :class="sidebarCollapsed ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+      </button>
+
       <!-- File Info -->
-      <div class="px-3 py-3 border-t border-[rgba(255,255,255,0.08)] text-xs text-fg-dim space-y-2">
+      <div x-show="!sidebarCollapsed" x-transition.opacity class="px-3 py-3 border-t border-[rgba(255,255,255,0.08)] text-xs text-fg-dim space-y-2">
         <div x-show="fileName" class="flex items-center gap-1.5 truncate">
           <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           <span x-text="fileName" class="truncate font-mono"></span>
@@ -414,10 +427,63 @@
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
             <span class="hidden md:inline">Share</span>
           </button>
-          <button @click="openFile()" class="btn-secondary px-3 py-1.5 text-xs font-mono font-medium rounded-full border border-[rgba(255,255,255,0.15)] text-fg flex items-center gap-1.5" title="Datei öffnen">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-            <span class="hidden md:inline">Open</span>
-          </button>
+          <!-- Bundle Import/Export -->
+          <div class="flex items-center gap-0.5 border border-[rgba(255,255,255,0.15)] rounded-full">
+            <button @click="exportBundle()" class="btn-secondary px-2.5 py-1.5 text-xs font-mono font-medium rounded-l-full text-fg flex items-center gap-1.5" title="Bundle exportieren (Settings + Templates + Spinners)">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+              <span class="hidden lg:inline">Export</span>
+            </button>
+            <div class="w-px h-4 bg-[rgba(255,255,255,0.1)]"></div>
+            <button @click="importBundle()" class="btn-secondary px-2.5 py-1.5 text-xs font-mono font-medium rounded-r-full text-fg flex items-center gap-1.5" title="Bundle importieren">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+              <span class="hidden lg:inline">Import</span>
+            </button>
+          </div>
+          <span class="text-fg-dim/30 text-[10px]">Bundle</span>
+          <!-- Open Button Group with Dropdown -->
+          <div class="relative" @click.outside="showOpenDropdown = false">
+            <div class="flex items-center border border-[rgba(255,255,255,0.15)] rounded-full overflow-hidden">
+              <button @click="openFile()" class="btn-secondary px-3 py-1.5 text-xs font-mono font-medium text-fg flex items-center gap-1.5" title="Datei öffnen">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                <span class="hidden md:inline">Open</span>
+              </button>
+              <button @click="showOpenDropdown = !showOpenDropdown" class="px-1.5 py-1.5 text-fg-muted hover:text-fg border-l border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.04)] transition-colors" title="Schnellzugriff">
+                <svg class="w-3 h-3 transition-transform" :class="showOpenDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+            </div>
+            <!-- Dropdown -->
+            <div x-show="showOpenDropdown" x-transition
+                 class="absolute top-full right-0 mt-1.5 w-72 rounded-xl glass border border-[rgba(255,255,255,0.1)] shadow-xl z-50 py-1.5 text-xs">
+              <button @click="openFile(); showOpenDropdown = false" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] text-fg flex items-center gap-2 transition-colors">
+                <svg class="w-3.5 h-3.5 text-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                Datei öffnen...
+              </button>
+              <div class="mx-3 my-1 border-t border-[rgba(255,255,255,0.06)]"></div>
+              <button @click="openFile(); showOpenDropdown = false" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] transition-colors group">
+                <div class="flex items-center gap-2 text-fg">
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Global</span>
+                  settings.json
+                </div>
+                <div class="text-[10px] text-fg-dim mt-0.5 font-mono group-hover:text-fg-muted transition-colors">~/.claude/settings.json</div>
+              </button>
+              <button @click="openFile(); showOpenDropdown = false" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] transition-colors group">
+                <div class="flex items-center gap-2 text-fg">
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-violet-500/10 text-violet-400 border border-violet-500/20">Project</span>
+                  settings.json
+                </div>
+                <div class="text-[10px] text-fg-dim mt-0.5 font-mono group-hover:text-fg-muted transition-colors">.claude/settings.json (im Projektordner)</div>
+              </button>
+              <template x-if="lastOpenedFileName">
+                <div>
+                  <div class="mx-3 my-1 border-t border-[rgba(255,255,255,0.06)]"></div>
+                  <button @click="openFile(); showOpenDropdown = false" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] text-fg-muted hover:text-fg transition-colors flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Zuletzt: <span class="font-mono text-fg" x-text="lastOpenedFileName"></span></span>
+                  </button>
+                </div>
+              </template>
+            </div>
+          </div>
           <button @click="saveFile()" class="btn-secondary px-3 py-1.5 text-xs font-mono font-medium rounded-full border border-[rgba(255,255,255,0.15)] text-fg flex items-center gap-1.5" title="Datei speichern">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
             <span class="hidden md:inline">Save</span>
@@ -1897,6 +1963,9 @@
       return {
         activeTab: 'general',
         jsonPreviewOpen: false,
+        sidebarCollapsed: localStorage.getItem('claude-settings-sidebar-collapsed') === 'true',
+        showOpenDropdown: false,
+        lastOpenedFileName: localStorage.getItem('claude-settings-last-file') || '',
         fileHandle: null,
         fileName: '',
         fileScope: 'global', // 'global' or 'project'
@@ -2265,7 +2334,11 @@
               { id: 'claude-md-management@claude-plugins-official', name: 'CLAUDE.md Management', desc: 'CLAUDE.md Dateien verwalten und verbessern', skills: ['/revise-claude-md', '/claude-md-improver'] },
               { id: 'skill-creator@claude-plugins-official', name: 'Skill Creator', desc: 'Neue Skills erstellen und testen', skills: ['/skill-creator'], provides: 'Skill-Erstellung, Evals, Performance-Benchmarks' },
               { id: 'claude-code-setup@claude-plugins-official', name: 'Claude Code Setup', desc: 'Automatisierungs-Empfehlungen für Projekte', provides: 'Analysiert Codebase und empfiehlt Hooks, Skills, Plugins, MCP' },
-              { id: 'plugin-dev@claude-plugins-official', name: 'Plugin Dev', desc: 'Claude Code Plugins entwickeln' },
+              { id: 'plugin-dev@claude-plugins-official', name: 'Plugin Dev', desc: 'Claude Code Plugins entwickeln', skills: ['/create-plugin', '/agent-development', '/command-development', '/mcp-integration', '/plugin-settings', '/plugin-structure', '/hook-development', '/skill-development'], provides: 'Komplettes Plugin-Entwicklungs-Toolkit mit Agents, Commands, Hooks, Skills' },
+              { id: 'claude-api@claude-plugins-official', name: 'Claude API', desc: 'Hilfe beim Bauen mit der Claude API und Anthropic SDK', skills: ['/claude-api'], provides: 'API-Integration, SDK-Beispiele, Tool Use, Agent SDK' },
+              { id: 'keybindings-help@claude-plugins-official', name: 'Keybindings', desc: 'Keyboard-Shortcuts anpassen und konfigurieren', skills: ['/keybindings-help'], provides: 'Rebind Keys, Chord Bindings, keybindings.json Editor' },
+              { id: 'start-script@claude-plugins-official', name: 'Start Script', desc: 'Launcher-Scripts für Projekte erstellen', skills: ['/start-script'], provides: 'Plattform-spezifische Start-Scripts (Install + Launch + Browser)' },
+              { id: 'loop@claude-plugins-official', name: 'Loop', desc: 'Prompts oder Slash-Commands auf Intervall wiederholen', skills: ['/loop'], provides: 'Recurring Tasks, Status-Polling, periodische Ausführung' },
             ]
           },
           {
@@ -2351,12 +2424,91 @@
           setTimeout(() => this.notification.show = false, 3000);
         },
 
+        toggleSidebar() {
+          this.sidebarCollapsed = !this.sidebarCollapsed;
+          localStorage.setItem('claude-settings-sidebar-collapsed', this.sidebarCollapsed);
+        },
+
+        async exportBundle() {
+          const bundle = {
+            version: 1,
+            exportedAt: new Date().toISOString(),
+            settings: JSON.parse(this.cleanJson()),
+            customTemplates: this.customTemplates,
+            customSpinnerPacks: this.customSpinnerPacks
+          };
+          const json = JSON.stringify(bundle, null, 2);
+          const blob = new Blob([json], { type: 'application/json' });
+          try {
+            if (window.showSaveFilePicker) {
+              const handle = await window.showSaveFilePicker({
+                suggestedName: 'claude-settings-bundle.json',
+                types: [{ description: 'JSON Bundle', accept: { 'application/json': ['.json'] } }]
+              });
+              const writable = await handle.createWritable();
+              await writable.write(blob);
+              await writable.close();
+            } else {
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url; a.download = 'claude-settings-bundle.json'; a.click();
+              URL.revokeObjectURL(url);
+            }
+            this.notify('Bundle exportiert! (Settings + ' + this.customTemplates.length + ' Templates + ' + this.customSpinnerPacks.length + ' Spinner Packs)');
+          } catch (e) { if (e.name !== 'AbortError') this.notify('Export fehlgeschlagen: ' + e.message, 'error'); }
+        },
+
+        async importBundle() {
+          try {
+            let text;
+            if (window.showOpenFilePicker) {
+              const [handle] = await window.showOpenFilePicker({ types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
+              const file = await handle.getFile();
+              text = await file.text();
+            } else {
+              text = await new Promise((resolve, reject) => {
+                const input = document.createElement('input');
+                input.type = 'file'; input.accept = '.json';
+                input.onchange = async (e) => { const f = e.target.files[0]; if (f) resolve(await f.text()); else reject(new Error('Keine Datei')); };
+                input.click();
+              });
+            }
+            const data = JSON.parse(text);
+            if (!data.version || !data.exportedAt) {
+              // Not a bundle — treat as regular settings.json
+              this.loadJson(text);
+              this.notify('Als settings.json importiert (kein Bundle-Format)');
+              return;
+            }
+            // Bundle import
+            const parts = [];
+            if (data.settings) { this.loadJson(JSON.stringify(data.settings)); parts.push('Settings'); }
+            if (data.customTemplates && data.customTemplates.length) {
+              this.customTemplates = data.customTemplates;
+              this.persistCustomTemplates();
+              parts.push(data.customTemplates.length + ' Templates');
+            }
+            if (data.customSpinnerPacks && data.customSpinnerPacks.length) {
+              this.customSpinnerPacks = data.customSpinnerPacks;
+              this.persistSpinnerPacks();
+              parts.push(data.customSpinnerPacks.length + ' Spinner Packs');
+            }
+            this.notify('Bundle importiert: ' + parts.join(', '));
+          } catch (e) { if (e.name !== 'AbortError') this.notify('Import fehlgeschlagen: ' + e.message, 'error'); }
+        },
+
         async openFile() {
           try {
             if (!window.showOpenFilePicker) {
               const input = document.createElement('input');
               input.type = 'file'; input.accept = '.json';
-              input.onchange = async (e) => { const file = e.target.files[0]; if (!file) return; this.loadJson(await file.text()); this.fileName = file.name; this._detectFileScope(file.name); };
+              input.onchange = async (e) => {
+                const file = e.target.files[0]; if (!file) return;
+                this.loadJson(await file.text());
+                this.fileName = file.name;
+                this._detectFileScope(file.name);
+                this._saveLastOpened(file.name);
+              };
               input.click(); return;
             }
             const [handle] = await window.showOpenFilePicker({ types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
@@ -2365,8 +2517,14 @@
             this.loadJson(await file.text());
             this.fileName = file.name;
             this._detectFileScope(handle.name);
+            this._saveLastOpened(file.name);
             this.notify('Datei geladen: ' + file.name);
           } catch (e) { if (e.name !== 'AbortError') this.notify('Fehler beim Öffnen: ' + e.message, 'error'); }
+        },
+
+        _saveLastOpened(name) {
+          this.lastOpenedFileName = name;
+          localStorage.setItem('claude-settings-last-file', name);
         },
 
         async saveFile() {
