@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Claude Code Settings Editor</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.8/dist/cdn.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1523,7 +1524,7 @@
                     Kopieren
                   </button>
                 </div>
-                <span class="text-[11px] font-mono text-fg-dim" x-text="claudeMdContent.length + ' Zeichen · ' + (claudeMdContent.split('\\n').length) + ' Zeilen'"></span>
+                <span class="text-[11px] font-mono text-fg-dim" x-text="claudeMdContent.length + ' Zeichen · ' + (claudeMdContent.split('\n').length) + ' Zeilen'"></span>
               </div>
 
               <!-- Editor + Quick Insert Split -->
@@ -1758,7 +1759,7 @@
           <h3 class="font-display font-bold text-xl text-white">Permission-Modus</h3>
           <p class="text-sm text-fg-muted mt-2">Wie viel Freiheit soll Claude haben?</p>
           <div class="mt-4 space-y-2">
-            <template x-for="pm in [{id:'plan',label:'Nur Lesen',desc:'Claude liest nur, fragt vor jeder Änderung'},{id:'allowPrompt',label:'Fragen vor Änderungen',desc:'Automatisch lesen, fragt vor Edits & Bash'},{id:'acceptEdits',label:'Produktiv',desc:'Edits automatisch, fragt vor Bash-Befehlen'},{id:'fullAutoMode',label:'Voller Autopilot',desc:'Alles automatisch — nur für Erfahrene'}]" :key="pm.id">
+            <template x-for="pm in [{id:'plan',label:'Nur Lesen',desc:'Claude liest nur, fragt vor jeder Änderung'},{id:'allowPrompt',label:'Fragen vor Änderungen',desc:'Automatisch lesen, fragt vor Edits & Bash'},{id:'acceptEdits',label:'Produktiv',desc:'Edits automatisch, fragt vor Bash-Befehlen'},{id:'acceptAll',label:'Voller Autopilot',desc:'Alles automatisch — nur für Erfahrene'}]" :key="pm.id">
               <button @click="settings.permissions.defaultMode = pm.id; markUnsaved()"
                       class="w-full text-left p-3 rounded-xl border transition-all"
                       :class="settings.permissions.defaultMode === pm.id ? 'border-accent/40 bg-accent/5' : 'border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.15)]'">
@@ -2049,7 +2050,7 @@
         newSpinnerPackName: '',
         newSpinnerPackIcon: '📦',
         spinnerPackEmojis: ['📦', '🎯', '🔥', '🌈', '🎮', '🚀', '💡', '🎵'],
-        customSpinnerPacks: JSON.parse(localStorage.getItem('claude-spinner-custom-packs') || '[]'),
+        customSpinnerPacks: (() => { try { return JSON.parse(localStorage.getItem('claude-spinner-custom-packs') || '[]'); } catch { return []; } })(),
 
         spinnerPacks: [
           { name: 'Star Wars', icon: '⚔️', verbs: [
@@ -2125,7 +2126,7 @@
           return all;
         },
 
-        customTemplates: JSON.parse(localStorage.getItem('claude-settings-custom-templates') || '[]'),
+        customTemplates: (() => { try { return JSON.parse(localStorage.getItem('claude-settings-custom-templates') || '[]'); } catch { return []; } })(),
         newTplName: '',
         showSaveTplDialog: false,
 
@@ -2662,10 +2663,12 @@
           if (s.statusLine.type === 'command' && s.statusLine.command) {
             const sl = { type: 'command', command: s.statusLine.command };
             if (s.statusLine.refresh && s.statusLine.refresh !== 5000) sl.refresh = s.statusLine.refresh;
+            if (s.statusLine.disabled) sl.disabled = true;
             out.statusLine = sl;
           } else if (s.statusLine.type === 'http' && s.statusLine.url) {
             const sl = { type: 'http', url: s.statusLine.url };
             if (s.statusLine.refresh && s.statusLine.refresh !== 5000) sl.refresh = s.statusLine.refresh;
+            if (s.statusLine.disabled) sl.disabled = true;
             out.statusLine = sl;
           }
           const attr = {};
@@ -3110,10 +3113,13 @@
         },
 
         _restoreSettings(snapshot) {
-          // Restore without triggering pushHistory
-          const prevMarkUnsaved = this.unsaved;
-          Object.assign(this.settings, snapshot);
-          this.unsaved = prevMarkUnsaved;
+          // Deep clone to prevent history mutation, then restore
+          const deep = JSON.parse(JSON.stringify(snapshot));
+          for (const key of Object.keys(deep)) {
+            this.settings[key] = deep[key];
+          }
+          this.unsaved = true;
+          this.$nextTick(() => this.detectPermConflicts());
         },
 
         // === CLAUDE.md BUILDER ===
@@ -3238,17 +3244,17 @@
         },
 
         _cleanSettingsObj(rawSettings) {
-          // Temporarily swap settings to use cleanJson() logic
-          const saved = JSON.parse(JSON.stringify(this.settings));
-          const savedUnsaved = this.unsaved;
-          // Load raw settings
-          Object.assign(this.settings, defaultSettings());
+          // Build a standalone settings object without mutating this.settings
+          const tempSettings = Object.assign({}, defaultSettings());
           for (const [k, v] of Object.entries(rawSettings)) {
-            if (this.settings.hasOwnProperty(k)) this.settings[k] = JSON.parse(JSON.stringify(v));
+            if (tempSettings.hasOwnProperty(k)) tempSettings[k] = JSON.parse(JSON.stringify(v));
           }
+          // Temporarily swap and restore
+          const saved = this.settings;
+          const savedUnsaved = this.unsaved;
+          this.settings = tempSettings;
           const result = JSON.parse(this.cleanJson());
-          // Restore
-          Object.assign(this.settings, saved);
+          this.settings = saved;
           this.unsaved = savedUnsaved;
           return result;
         },
