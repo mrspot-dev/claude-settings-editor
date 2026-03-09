@@ -199,10 +199,10 @@
 
     <!-- ═══════════════ SIDEBAR ═══════════════ -->
     <aside class="flex-shrink-0 flex flex-col border-r border-[rgba(255,255,255,0.08)] transition-all duration-200"
-           :class="sidebarCollapsed ? 'w-12' : 'w-56'"
+           :class="sidebarCollapsed ? 'w-14' : 'w-56'"
            style="background: rgba(18, 18, 26, 0.8); backdrop-filter: blur(12px);">
       <!-- Logo -->
-      <div class="py-5 border-b border-[rgba(255,255,255,0.08)] transition-all duration-200" :class="sidebarCollapsed ? 'px-2' : 'px-4'">
+      <div class="py-5 border-b border-[rgba(255,255,255,0.08)] transition-all duration-200" :class="sidebarCollapsed ? 'px-2.5' : 'px-4'">
         <h1 class="font-display font-bold text-base tracking-tight text-white flex items-center gap-2.5" :class="sidebarCollapsed ? 'justify-center' : ''">
           <span class="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-amber-600 flex items-center justify-center text-bg text-xs font-bold shadow-[0_0_24px_rgba(245,158,11,0.35)] flex-shrink-0">CC</span>
           <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap">Settings Editor</span>
@@ -216,15 +216,15 @@
       </div>
 
       <!-- Nav Tabs -->
-      <nav class="flex-1 py-3 space-y-0.5 overflow-y-auto transition-all duration-200" :class="sidebarCollapsed ? 'px-1' : 'px-2'">
+      <nav class="flex-1 py-3 space-y-0.5 overflow-y-auto transition-all duration-200" :class="sidebarCollapsed ? 'px-1.5' : 'px-2'">
         <template x-for="tab in tabs.filter(t => t.id !== 'separator')" :key="tab.id">
           <button @click="activeTab = tab.id"
                   :title="sidebarCollapsed ? tab.label : ''"
                   :class="activeTab === tab.id
                     ? 'bg-accent/10 text-accent border-accent/25 shadow-[inset_0_0_20px_rgba(245,158,11,0.06)]'
                     : 'text-fg-muted border-transparent hover:bg-[rgba(255,255,255,0.04)] hover:text-fg hover:translate-x-0.5'"
-                  class="w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 border"
-                  :class="[sidebarCollapsed ? 'justify-center px-0 py-2' : 'px-3 py-2.5']"
+                  class="w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 border py-2.5"
+                  :class="sidebarCollapsed ? 'justify-center px-2' : 'px-3'"
                   :style="tab.id === 'design-prompts' ? 'margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06);' : ''">
             <span x-html="tab.icon" class="w-4 h-4 flex-shrink-0" :class="activeTab === tab.id ? 'opacity-100' : 'opacity-50'"></span>
             <span x-show="!sidebarCollapsed" x-text="tab.label" x-transition.opacity></span>
