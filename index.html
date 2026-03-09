@@ -198,62 +198,78 @@
   <div class="flex h-screen overflow-hidden relative z-10">
 
     <!-- ═══════════════ SIDEBAR ═══════════════ -->
-    <aside class="flex-shrink-0 flex flex-col border-r border-[rgba(255,255,255,0.08)] transition-all duration-200"
-           :class="sidebarCollapsed ? 'w-14' : 'w-56'"
+    <aside class="flex-shrink-0 flex flex-col border-r border-[rgba(255,255,255,0.08)] overflow-hidden transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+           :class="sidebarCollapsed ? 'w-[52px]' : 'w-56'"
            style="background: rgba(18, 18, 26, 0.8); backdrop-filter: blur(12px);">
       <!-- Logo -->
-      <div class="py-5 border-b border-[rgba(255,255,255,0.08)] transition-all duration-200" :class="sidebarCollapsed ? 'px-2.5' : 'px-4'">
-        <h1 class="font-display font-bold text-base tracking-tight text-white flex items-center gap-2.5" :class="sidebarCollapsed ? 'justify-center' : ''">
-          <span class="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-amber-600 flex items-center justify-center text-bg text-xs font-bold shadow-[0_0_24px_rgba(245,158,11,0.35)] flex-shrink-0">CC</span>
-          <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap">Settings Editor</span>
+      <div class="px-4 py-5 border-b border-[rgba(255,255,255,0.08)]">
+        <h1 class="font-display font-bold text-base tracking-tight text-white flex items-center gap-2.5"
+            :class="sidebarCollapsed ? 'justify-center' : ''">
+          <span class="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-amber-600 flex items-center justify-center text-bg text-xs font-bold shadow-[0_0_24px_rgba(245,158,11,0.35)] flex-shrink-0 transition-transform duration-300"
+                :class="sidebarCollapsed ? 'scale-105' : ''">CC</span>
+          <span class="whitespace-nowrap overflow-hidden transition-all duration-300"
+                :class="sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'">Settings Editor</span>
         </h1>
-        <template x-if="!sidebarCollapsed">
-          <div>
-            <p class="text-[10px] text-fg-dim/40 mt-1.5 font-mono">v1.0 · made with 💛</p>
-            <p class="text-[10px] text-fg-dim/40 mt-0.5 font-mono">by <a href="https://github.com/mrspot-dev" target="_blank" class="text-fg-muted hover:text-accent transition-colors">mrspot-dev</a></p>
-          </div>
-        </template>
+        <div class="overflow-hidden transition-all duration-300"
+             :class="sidebarCollapsed ? 'max-h-0 opacity-0' : 'max-h-12 opacity-100'">
+          <p class="text-[10px] text-fg-dim/40 mt-1.5 font-mono whitespace-nowrap">v1.0 · made with 💛</p>
+          <p class="text-[10px] text-fg-dim/40 mt-0.5 font-mono whitespace-nowrap">by <a href="https://github.com/mrspot-dev" target="_blank" class="text-fg-muted hover:text-accent transition-colors">mrspot-dev</a></p>
+        </div>
       </div>
 
       <!-- Nav Tabs -->
-      <nav class="flex-1 py-3 space-y-0.5 overflow-y-auto transition-all duration-200" :class="sidebarCollapsed ? 'px-1.5' : 'px-2'">
+      <nav class="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto overflow-x-hidden">
         <template x-for="tab in tabs.filter(t => t.id !== 'separator')" :key="tab.id">
           <button @click="activeTab = tab.id"
                   :title="sidebarCollapsed ? tab.label : ''"
-                  :class="activeTab === tab.id
-                    ? 'bg-accent/10 text-accent border-accent/25 shadow-[inset_0_0_20px_rgba(245,158,11,0.06)]'
-                    : 'text-fg-muted border-transparent hover:bg-[rgba(255,255,255,0.04)] hover:text-fg hover:translate-x-0.5'"
-                  class="w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 border py-2.5"
-                  :class="sidebarCollapsed ? 'justify-center px-2' : 'px-3'"
+                  class="w-full flex items-center rounded-xl text-sm font-medium transition-all duration-200 border px-3 py-2.5"
+                  :class="[
+                    activeTab === tab.id
+                      ? 'bg-accent/10 text-accent border-accent/25 shadow-[inset_0_0_20px_rgba(245,158,11,0.06)]'
+                      : 'text-fg-muted border-transparent hover:bg-[rgba(255,255,255,0.04)] hover:text-fg',
+                    sidebarCollapsed ? 'justify-center !px-0 gap-0' : 'gap-3'
+                  ]"
                   :style="tab.id === 'design-prompts' ? 'margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06);' : ''">
             <span x-html="tab.icon" class="w-4 h-4 flex-shrink-0" :class="activeTab === tab.id ? 'opacity-100' : 'opacity-50'"></span>
-            <span x-show="!sidebarCollapsed" x-text="tab.label" x-transition.opacity></span>
-            <span x-show="activeTab === tab.id && !sidebarCollapsed" class="ml-auto w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_8px_rgba(245,158,11,0.6)]"></span>
+            <span class="whitespace-nowrap overflow-hidden transition-all duration-300"
+                  :class="sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'"
+                  x-text="tab.label"></span>
+            <span x-show="activeTab === tab.id && !sidebarCollapsed" class="ml-auto w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_8px_rgba(245,158,11,0.6)] flex-shrink-0"></span>
           </button>
         </template>
       </nav>
 
       <!-- Collapse Toggle -->
-      <button @click="toggleSidebar()" class="mx-auto my-1 p-1.5 rounded-lg text-fg-dim hover:text-fg-muted hover:bg-[rgba(255,255,255,0.04)] transition-all" :title="sidebarCollapsed ? 'Sidebar ausklappen' : 'Sidebar einklappen'">
-        <svg class="w-4 h-4 transition-transform duration-200" :class="sidebarCollapsed ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
-      </button>
+      <div class="border-t border-[rgba(255,255,255,0.06)] px-2 py-2">
+        <button @click="toggleSidebar()"
+                class="w-full flex items-center justify-center rounded-lg py-1.5 text-fg-dim/50 hover:text-fg-muted hover:bg-[rgba(255,255,255,0.04)] transition-all duration-200 group"
+                :title="sidebarCollapsed ? 'Sidebar ausklappen' : 'Sidebar einklappen'">
+          <svg class="w-4 h-4 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-accent/60"
+               :class="sidebarCollapsed ? 'rotate-180' : ''"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+      </div>
 
       <!-- File Info -->
-      <div x-show="!sidebarCollapsed" x-transition.opacity class="px-3 py-3 border-t border-[rgba(255,255,255,0.08)] text-xs text-fg-dim space-y-2">
-        <div x-show="fileName" class="flex items-center gap-1.5 truncate">
-          <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-          <span x-text="fileName" class="truncate font-mono"></span>
-          <span x-show="unsaved" class="text-accent ml-auto">*</span>
-        </div>
-        <div x-show="fileName" class="flex items-center gap-1.5">
-          <span class="px-1.5 py-0.5 rounded text-[9px] font-mono border"
-                :class="fileScope === 'project' ? 'bg-violet-500/10 text-violet-400 border-violet-500/20' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'"
-                x-text="fileScope === 'project' ? 'Project' : 'Global'"></span>
-        </div>
-        <div x-show="!fileName" class="text-fg-dim/50 italic">Keine Datei geladen</div>
-        <!-- Keyboard shortcut hint -->
-        <div class="pt-1 border-t border-[rgba(255,255,255,0.05)] text-[10px] text-fg-dim/40">
-          <span class="kbd">?</span> Tastenkürzel
+      <div class="overflow-hidden transition-all duration-300 border-t border-[rgba(255,255,255,0.08)]"
+           :class="sidebarCollapsed ? 'max-h-0 opacity-0 py-0 border-transparent' : 'max-h-40 opacity-100 py-3'">
+        <div class="px-3 text-xs text-fg-dim space-y-2">
+          <div x-show="fileName" class="flex items-center gap-1.5 truncate">
+            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span x-text="fileName" class="truncate font-mono"></span>
+            <span x-show="unsaved" class="text-accent ml-auto">*</span>
+          </div>
+          <div x-show="fileName" class="flex items-center gap-1.5">
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-mono border"
+                  :class="fileScope === 'project' ? 'bg-violet-500/10 text-violet-400 border-violet-500/20' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'"
+                  x-text="fileScope === 'project' ? 'Project' : 'Global'"></span>
+          </div>
+          <div x-show="!fileName" class="text-fg-dim/50 italic whitespace-nowrap">Keine Datei geladen</div>
+          <div class="pt-1 border-t border-[rgba(255,255,255,0.05)] text-[10px] text-fg-dim/40">
+            <span class="kbd">?</span> Tastenkürzel
+          </div>
         </div>
       </div>
     </aside>
