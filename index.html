@@ -229,7 +229,7 @@
                       : 'text-fg-muted border-transparent hover:bg-[rgba(255,255,255,0.04)] hover:text-fg',
                     sidebarCollapsed ? 'justify-center !px-0 gap-0' : 'gap-3'
                   ]"
-                  :style="tab.id === 'design-prompts' ? 'margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06);' : ''">
+                  :style="tab.id === 'design-prompts' ? (sidebarCollapsed ? 'margin-top: 8px;' : 'margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06);') : ''">
             <span x-html="tab.icon" class="w-4 h-4 flex-shrink-0" :class="activeTab === tab.id ? 'opacity-100' : 'opacity-50'"></span>
             <span class="whitespace-nowrap overflow-hidden transition-all duration-300"
                   :class="sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'"
@@ -353,7 +353,7 @@
               <span class="hidden md:inline">Templates</span>
               <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': tplOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </button>
-            <div x-show="tplOpen" @click.away="tplOpen = false" x-transition
+            <div x-show="tplOpen" @click.outside="tplOpen = false" x-transition
                  class="absolute right-0 top-full mt-2 rounded-2xl overflow-hidden z-50 bg-[#12121A] flex"
                  :class="customTemplates.length > 0 ? 'w-[38rem]' : 'w-80'"
                  style="border: 1px solid #2A2A36; box-shadow: 0 20px 60px #000, 0 0 0 1px #1A1A24;">
@@ -444,18 +444,16 @@
             <span class="hidden md:inline">Share</span>
           </button>
           <!-- Bundle Import/Export -->
-          <div class="flex items-center gap-0.5 border border-[rgba(255,255,255,0.15)] rounded-full">
-            <button @click="exportBundle()" class="btn-secondary px-2.5 py-1.5 text-xs font-mono font-medium rounded-l-full text-fg flex items-center gap-1.5" title="Bundle exportieren (Settings + Templates + Spinners)">
+          <div class="flex items-center gap-0.5 border border-[rgba(255,255,255,0.15)] rounded-full" title="Bundle: Settings + Templates + Spinner Packs">
+            <button @click="exportBundle()" class="btn-secondary px-2.5 py-1.5 text-xs font-mono font-medium rounded-l-full text-fg flex items-center gap-1.5" title="Bundle exportieren">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-              <span class="hidden lg:inline">Export</span>
+              <span class="hidden lg:inline">Bundle</span>
             </button>
             <div class="w-px h-4 bg-[rgba(255,255,255,0.1)]"></div>
             <button @click="importBundle()" class="btn-secondary px-2.5 py-1.5 text-xs font-mono font-medium rounded-r-full text-fg flex items-center gap-1.5" title="Bundle importieren">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-              <span class="hidden lg:inline">Import</span>
             </button>
           </div>
-          <span class="text-fg-dim/30 text-[10px]">Bundle</span>
           <!-- Open Button Group with Dropdown -->
           <div class="relative" @click.outside="showOpenDropdown = false">
             <div class="flex items-center border border-[rgba(255,255,255,0.15)] rounded-full overflow-hidden">
@@ -469,33 +467,35 @@
             </div>
             <!-- Dropdown -->
             <div x-show="showOpenDropdown" x-transition
-                 class="absolute top-full right-0 mt-1.5 w-72 rounded-xl glass border border-[rgba(255,255,255,0.1)] shadow-xl z-50 py-1.5 text-xs">
+                 class="absolute top-full mt-1.5 w-72 rounded-xl glass border border-[rgba(255,255,255,0.1)] shadow-xl z-50 py-1.5 text-xs"
+                 :style="'right: max(0px, min(0px, calc(100vw - 100% - 16px)))'">
               <button @click="openFile(); showOpenDropdown = false" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] text-fg flex items-center gap-2 transition-colors">
                 <svg class="w-3.5 h-3.5 text-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
                 Datei öffnen...
               </button>
               <div class="mx-3 my-1 border-t border-[rgba(255,255,255,0.06)]"></div>
-              <button @click="openFile(); showOpenDropdown = false" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] transition-colors group">
+              <div class="px-3 py-1.5 text-[10px] text-fg-dim/60 uppercase tracking-wider font-medium">Standardpfade — Klick kopiert Pfad</div>
+              <button @click="navigator.clipboard.writeText('~/.claude/settings.json').then(() => { notify('Pfad kopiert — im File-Picker dorthin navigieren'); showOpenDropdown = false; })" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] transition-colors group">
                 <div class="flex items-center gap-2 text-fg">
                   <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Global</span>
-                  settings.json
+                  <span class="font-mono text-fg-muted group-hover:text-fg transition-colors">~/.claude/settings.json</span>
+                  <svg class="w-3 h-3 ml-auto text-fg-dim/40 group-hover:text-fg-muted transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                 </div>
-                <div class="text-[10px] text-fg-dim mt-0.5 font-mono group-hover:text-fg-muted transition-colors">~/.claude/settings.json</div>
               </button>
-              <button @click="openFile(); showOpenDropdown = false" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] transition-colors group">
+              <button @click="navigator.clipboard.writeText('.claude/settings.json').then(() => { notify('Pfad kopiert — im File-Picker dorthin navigieren'); showOpenDropdown = false; })" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] transition-colors group">
                 <div class="flex items-center gap-2 text-fg">
                   <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-violet-500/10 text-violet-400 border border-violet-500/20">Project</span>
-                  settings.json
+                  <span class="font-mono text-fg-muted group-hover:text-fg transition-colors">.claude/settings.json</span>
+                  <svg class="w-3 h-3 ml-auto text-fg-dim/40 group-hover:text-fg-muted transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                 </div>
-                <div class="text-[10px] text-fg-dim mt-0.5 font-mono group-hover:text-fg-muted transition-colors">.claude/settings.json (im Projektordner)</div>
               </button>
               <template x-if="lastOpenedFileName">
                 <div>
                   <div class="mx-3 my-1 border-t border-[rgba(255,255,255,0.06)]"></div>
-                  <button @click="openFile(); showOpenDropdown = false" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] text-fg-muted hover:text-fg transition-colors flex items-center gap-2">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span>Zuletzt: <span class="font-mono text-fg" x-text="lastOpenedFileName"></span></span>
-                  </button>
+                  <div class="px-3 py-1.5 text-fg-dim/50 flex items-center gap-1.5">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Zuletzt: <span class="font-mono text-fg-muted" x-text="lastOpenedFileName"></span>
+                  </div>
                 </div>
               </template>
             </div>
@@ -2485,7 +2485,8 @@
               text = await new Promise((resolve, reject) => {
                 const input = document.createElement('input');
                 input.type = 'file'; input.accept = '.json';
-                input.onchange = async (e) => { const f = e.target.files[0]; if (f) resolve(await f.text()); else reject(new Error('Keine Datei')); };
+                input.onchange = async (e) => { const f = e.target.files[0]; if (f) resolve(await f.text()); else reject(new DOMException('Abgebrochen', 'AbortError')); };
+                input.addEventListener('cancel', () => reject(new DOMException('Abgebrochen', 'AbortError')));
                 input.click();
               });
             }
@@ -2509,6 +2510,7 @@
               this.persistSpinnerPacks();
               parts.push(data.customSpinnerPacks.length + ' Spinner Packs');
             }
+            this.unsaved = true;
             this.notify('Bundle importiert: ' + parts.join(', '));
           } catch (e) { if (e.name !== 'AbortError') this.notify('Import fehlgeschlagen: ' + e.message, 'error'); }
         },
@@ -3386,9 +3388,16 @@
             if (!hash.startsWith('#settings=')) return;
             const encoded = hash.substring('#settings='.length);
             const json = decodeURIComponent(escape(atob(encoded)));
+            // Security: confirm before loading external settings
+            const data = JSON.parse(json);
+            const keyCount = Object.keys(data).length;
+            if (!confirm('Settings aus URL importieren?\n\n' + keyCount + ' Einstellungen erkannt.\n\nNur importieren, wenn du der Quelle vertraust.')) {
+              history.replaceState(null, '', window.location.pathname);
+              return;
+            }
             this.loadJson(json);
+            this.unsaved = true;
             this.notify('Settings aus URL geladen!');
-            // Clean URL
             history.replaceState(null, '', window.location.pathname);
           } catch (e) {
             // Silently ignore invalid hash
