@@ -825,21 +825,31 @@
               <input type="text" x-model="pluginSearch" placeholder="Skills & Plugins durchsuchen..." class="setting-input pl-9">
               <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-[10px] text-fg-dim font-mono mr-1">Filter:</span>
+              <button @click="pluginAvailFilter = 'all'" class="px-2 py-0.5 rounded-full text-[10px] font-mono transition-colors border border-transparent" :class="pluginAvailFilter === 'all' ? 'bg-fg/10 text-fg border-fg/15' : 'text-fg-dim hover:text-fg'">Alle</button>
+              <button @click="pluginAvailFilter = pluginAvailFilter === 'ready' ? 'all' : 'ready'" class="px-2 py-0.5 rounded-full text-[10px] font-mono transition-colors border border-transparent" :class="pluginAvailFilter === 'ready' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20' : 'text-fg-dim hover:text-emerald-400'">Ready</button>
+              <button @click="pluginAvailFilter = pluginAvailFilter === 'setup' ? 'all' : 'setup'" class="px-2 py-0.5 rounded-full text-[10px] font-mono transition-colors border border-transparent" :class="pluginAvailFilter === 'setup' ? 'bg-amber-500/15 text-amber-400 border-amber-500/20' : 'text-fg-dim hover:text-amber-400'">Needs Setup</button>
+              <button @click="pluginAvailFilter = pluginAvailFilter === 'lsp' ? 'all' : 'lsp'" class="px-2 py-0.5 rounded-full text-[10px] font-mono transition-colors border border-transparent" :class="pluginAvailFilter === 'lsp' ? 'bg-blue-500/15 text-blue-400 border-blue-500/20' : 'text-fg-dim hover:text-blue-400'">LSP</button>
+            </div>
 
             <template x-for="cat in pluginCategories" :key="cat.name">
-              <div>
+              <div x-show="cat.plugins.some(p => (!pluginSearch || p.name.toLowerCase().includes(pluginSearch.toLowerCase()) || p.desc.toLowerCase().includes(pluginSearch.toLowerCase())) && (pluginAvailFilter === 'all' || p.availability === pluginAvailFilter))">
                 <h3 class="font-mono text-[11px] font-semibold uppercase tracking-wider text-fg-dim mb-2 mt-6" x-text="cat.name"></h3>
                 <div class="space-y-1.5">
-                  <template x-for="p in cat.plugins.filter(p => !pluginSearch || p.name.toLowerCase().includes(pluginSearch.toLowerCase()) || p.desc.toLowerCase().includes(pluginSearch.toLowerCase()))" :key="p.id">
+                  <template x-for="p in cat.plugins.filter(p => (!pluginSearch || p.name.toLowerCase().includes(pluginSearch.toLowerCase()) || p.desc.toLowerCase().includes(pluginSearch.toLowerCase())) && (pluginAvailFilter === 'all' || p.availability === pluginAvailFilter))" :key="p.id">
                     <div class="flex items-start gap-3 p-3.5 rounded-2xl glass transition-all duration-300 hover:bg-glass-hover group"
                          :class="settings.enabledPlugins[p.id] ? 'border-accent/15 shadow-[0_0_15px_rgba(245,158,11,0.03)]' : ''">
                       <div class="toggle bg-bg-elevated mt-0.5 flex-shrink-0"
                            :class="{ 'active': settings.enabledPlugins[p.id] }"
                            @click="settings.enabledPlugins[p.id] = !settings.enabledPlugins[p.id]; markUnsaved()"></div>
                       <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                           <span class="font-display text-sm font-medium text-fg" x-text="p.name"></span>
                           <span x-show="p.community" class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-violet-500/15 text-violet-400 border border-violet-500/20">Community</span>
+                          <span x-show="p.availability === 'ready'" class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/20" title="Funktioniert sofort — kein Setup nötig">Ready</span>
+                          <span x-show="p.availability === 'setup'" class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-amber-500/15 text-amber-400 border border-amber-500/20 cursor-help" :title="'Needs Setup: ' + (p.setup || '')">Needs Setup</span>
+                          <span x-show="p.availability === 'lsp'" class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-blue-500/15 text-blue-400 border border-blue-500/20 cursor-help" :title="'Language Server: ' + (p.setup || '')">LSP</span>
                         </div>
                         <div class="text-xs text-fg-muted mt-0.5" x-text="p.desc"></div>
                         <div x-show="p.skills && p.skills.length" class="flex flex-wrap gap-1 mt-1.5">
@@ -848,6 +858,11 @@
                           </template>
                         </div>
                         <div x-show="p.provides" class="text-[10px] text-fg-dim/70 mt-1 italic" x-text="p.provides"></div>
+                        <div x-show="p.setup && (p.availability === 'setup' || p.availability === 'lsp')" class="flex items-center gap-1.5 mt-1.5 px-2 py-1 rounded-lg text-[10px] font-mono"
+                             :class="p.availability === 'lsp' ? 'bg-blue-500/8 text-blue-400/80 border border-blue-500/10' : 'bg-amber-500/8 text-amber-400/80 border border-amber-500/10'">
+                          <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                          <span x-text="p.setup"></span>
+                        </div>
                         <code class="text-[10px] font-mono text-fg-dim/50 mt-1 block" x-text="p.id"></code>
                         <div x-show="p.install" class="mt-1.5 flex items-center gap-1.5">
                           <span class="text-[10px] text-fg-dim font-mono">Install:</span>
@@ -1987,6 +2002,7 @@
         fileScope: 'global', // 'global' or 'project'
         unsaved: false,
         pluginSearch: '',
+        pluginAvailFilter: 'all',
         notification: { show: false, message: '', type: 'success' },
 
         newPerm: { allowTool: '', allowPattern: '', askTool: '', askPattern: '', denyTool: '', denyPattern: '' },
@@ -2342,88 +2358,88 @@
           {
             name: 'Workflow',
             plugins: [
-              { id: 'commit-commands@claude-plugins-official', name: 'Commit Commands', desc: 'Git Commit, Push und PR Skills', skills: ['/commit', '/commit-push-pr', '/clean-gone'], provides: 'Automatische Commit-Messages, Push + PR in einem Schritt' },
-              { id: 'pr-review-toolkit@claude-plugins-official', name: 'PR Review Toolkit', desc: 'Umfassende Pull-Request-Reviews', skills: ['/review-pr'], provides: 'Multi-Agent Review: Code, Comments, Tests, Types, Silent Failures' },
-              { id: 'feature-dev@claude-plugins-official', name: 'Feature Dev', desc: 'Geführte Feature-Entwicklung mit Architektur-Fokus', skills: ['/feature-dev'], provides: 'Architektur-Analyse, Code Explorer, Code Reviewer Agents' },
-              { id: 'code-review@claude-plugins-official', name: 'Code Review', desc: 'Code-Review für Pull Requests', skills: ['/code-review'], provides: 'Strukturierte PR-Reviews mit Checkliste' },
-              { id: 'code-simplifier@claude-plugins-official', name: 'Code Simplifier', desc: 'Vereinfacht Code für Klarheit und Wartbarkeit', skills: ['/simplify'], provides: '3 parallele Agents: Reuse, Quality, Efficiency' },
-              { id: 'claude-md-management@claude-plugins-official', name: 'CLAUDE.md Management', desc: 'CLAUDE.md Dateien verwalten und verbessern', skills: ['/revise-claude-md', '/claude-md-improver'] },
-              { id: 'skill-creator@claude-plugins-official', name: 'Skill Creator', desc: 'Neue Skills erstellen und testen', skills: ['/skill-creator'], provides: 'Skill-Erstellung, Evals, Performance-Benchmarks' },
-              { id: 'claude-code-setup@claude-plugins-official', name: 'Claude Code Setup', desc: 'Automatisierungs-Empfehlungen für Projekte', provides: 'Analysiert Codebase und empfiehlt Hooks, Skills, Plugins, MCP' },
-              { id: 'plugin-dev@claude-plugins-official', name: 'Plugin Dev', desc: 'Claude Code Plugins entwickeln', skills: ['/create-plugin', '/agent-development', '/command-development', '/mcp-integration', '/plugin-settings', '/plugin-structure', '/hook-development', '/skill-development'], provides: 'Komplettes Plugin-Entwicklungs-Toolkit mit Agents, Commands, Hooks, Skills' },
-              { id: 'claude-api@claude-plugins-official', name: 'Claude API', desc: 'Hilfe beim Bauen mit der Claude API und Anthropic SDK', skills: ['/claude-api'], provides: 'API-Integration, SDK-Beispiele, Tool Use, Agent SDK' },
-              { id: 'keybindings-help@claude-plugins-official', name: 'Keybindings', desc: 'Keyboard-Shortcuts anpassen und konfigurieren', skills: ['/keybindings-help'], provides: 'Rebind Keys, Chord Bindings, keybindings.json Editor' },
-              { id: 'start-script@claude-plugins-official', name: 'Start Script', desc: 'Launcher-Scripts für Projekte erstellen', skills: ['/start-script'], provides: 'Plattform-spezifische Start-Scripts (Install + Launch + Browser)' },
-              { id: 'loop@claude-plugins-official', name: 'Loop', desc: 'Prompts oder Slash-Commands auf Intervall wiederholen', skills: ['/loop'], provides: 'Recurring Tasks, Status-Polling, periodische Ausführung' },
+              { id: 'commit-commands@claude-plugins-official', name: 'Commit Commands', desc: 'Git Commit, Push und PR Skills', skills: ['/commit', '/commit-push-pr', '/clean-gone'], provides: 'Automatische Commit-Messages, Push + PR in einem Schritt', availability: 'ready' },
+              { id: 'pr-review-toolkit@claude-plugins-official', name: 'PR Review Toolkit', desc: 'Umfassende Pull-Request-Reviews', skills: ['/review-pr'], provides: 'Multi-Agent Review: Code, Comments, Tests, Types, Silent Failures', availability: 'ready' },
+              { id: 'feature-dev@claude-plugins-official', name: 'Feature Dev', desc: 'Geführte Feature-Entwicklung mit Architektur-Fokus', skills: ['/feature-dev'], provides: 'Architektur-Analyse, Code Explorer, Code Reviewer Agents', availability: 'ready' },
+              { id: 'code-review@claude-plugins-official', name: 'Code Review', desc: 'Code-Review für Pull Requests', skills: ['/code-review'], provides: 'Strukturierte PR-Reviews mit Checkliste', availability: 'ready' },
+              { id: 'code-simplifier@claude-plugins-official', name: 'Code Simplifier', desc: 'Vereinfacht Code für Klarheit und Wartbarkeit', skills: ['/simplify'], provides: '3 parallele Agents: Reuse, Quality, Efficiency', availability: 'ready' },
+              { id: 'claude-md-management@claude-plugins-official', name: 'CLAUDE.md Management', desc: 'CLAUDE.md Dateien verwalten und verbessern', skills: ['/revise-claude-md', '/claude-md-improver'], availability: 'ready' },
+              { id: 'skill-creator@claude-plugins-official', name: 'Skill Creator', desc: 'Neue Skills erstellen und testen', skills: ['/skill-creator'], provides: 'Skill-Erstellung, Evals, Performance-Benchmarks', availability: 'ready' },
+              { id: 'claude-code-setup@claude-plugins-official', name: 'Claude Code Setup', desc: 'Automatisierungs-Empfehlungen für Projekte', provides: 'Analysiert Codebase und empfiehlt Hooks, Skills, Plugins, MCP', availability: 'ready' },
+              { id: 'plugin-dev@claude-plugins-official', name: 'Plugin Dev', desc: 'Claude Code Plugins entwickeln', skills: ['/create-plugin', '/agent-development', '/command-development', '/mcp-integration', '/plugin-settings', '/plugin-structure', '/hook-development', '/skill-development'], provides: 'Komplettes Plugin-Entwicklungs-Toolkit mit Agents, Commands, Hooks, Skills', availability: 'ready' },
+              { id: 'claude-api@claude-plugins-official', name: 'Claude API', desc: 'Hilfe beim Bauen mit der Claude API und Anthropic SDK', skills: ['/claude-api'], provides: 'API-Integration, SDK-Beispiele, Tool Use, Agent SDK', availability: 'ready' },
+              { id: 'keybindings-help@claude-plugins-official', name: 'Keybindings', desc: 'Keyboard-Shortcuts anpassen und konfigurieren', skills: ['/keybindings-help'], provides: 'Rebind Keys, Chord Bindings, keybindings.json Editor', availability: 'ready' },
+              { id: 'start-script@claude-plugins-official', name: 'Start Script', desc: 'Launcher-Scripts für Projekte erstellen', skills: ['/start-script'], provides: 'Plattform-spezifische Start-Scripts (Install + Launch + Browser)', availability: 'ready' },
+              { id: 'loop@claude-plugins-official', name: 'Loop', desc: 'Prompts oder Slash-Commands auf Intervall wiederholen', skills: ['/loop'], provides: 'Recurring Tasks, Status-Polling, periodische Ausführung', availability: 'ready' },
             ]
           },
           {
             name: 'Integrations',
             plugins: [
-              { id: 'firebase@claude-plugins-official', name: 'Firebase', desc: 'Firebase Projekt-Management und Firestore', provides: 'MCP-Server für Firestore CRUD, Auth, Hosting, Functions Logs' },
-              { id: 'stripe@claude-plugins-official', name: 'Stripe', desc: 'Stripe Payment-Integration und Best Practices', skills: ['/test-cards', '/explain-error', '/stripe-best-practices'] },
-              { id: 'vercel@claude-plugins-official', name: 'Vercel', desc: 'Vercel Deployment und Logs', skills: ['/deploy', '/logs', '/setup'] },
-              { id: 'supabase@claude-plugins-official', name: 'Supabase', desc: 'Supabase Datenbank-Integration' },
-              { id: 'github@claude-plugins-official', name: 'GitHub', desc: 'GitHub Integration' },
-              { id: 'gitlab@claude-plugins-official', name: 'GitLab', desc: 'GitLab Integration' },
-              { id: 'Notion@claude-plugins-official', name: 'Notion', desc: 'Notion Workspace-Integration' },
-              { id: 'coderabbit@claude-plugins-official', name: 'CodeRabbit', desc: 'AI-basierte Code-Reviews mit CodeRabbit' },
-              { id: 'sonatype-guide@claude-plugins-official', name: 'Sonatype Guide', desc: 'Dependency-Analyse und Sicherheitsprüfung' },
-              { id: 'firecrawl@claude-plugins-official', name: 'Firecrawl', desc: 'Web-Crawling und Scraping' },
-              { id: 'semgrep@claude-plugins-official', name: 'Semgrep', desc: 'Statische Code-Analyse' },
-              { id: 'huggingface-skills@claude-plugins-official', name: 'HuggingFace Skills', desc: 'HuggingFace ML-Modelle und Datasets' },
+              { id: 'firebase@claude-plugins-official', name: 'Firebase', desc: 'Firebase Projekt-Management und Firestore', provides: 'MCP-Server für Firestore CRUD, Auth, Hosting, Functions Logs', availability: 'setup', setup: 'npm i -g firebase-tools + Firebase-Projekt' },
+              { id: 'stripe@claude-plugins-official', name: 'Stripe', desc: 'Stripe Payment-Integration und Best Practices', skills: ['/test-cards', '/explain-error', '/stripe-best-practices'], availability: 'setup', setup: 'Stripe-Account + API-Key in Umgebung' },
+              { id: 'vercel@claude-plugins-official', name: 'Vercel', desc: 'Vercel Deployment und Logs', skills: ['/deploy', '/logs', '/setup'], availability: 'setup', setup: 'npm i -g vercel + vercel login' },
+              { id: 'supabase@claude-plugins-official', name: 'Supabase', desc: 'Supabase Datenbank-Integration', availability: 'setup', setup: 'Supabase-Projekt + API-Key konfigurieren' },
+              { id: 'github@claude-plugins-official', name: 'GitHub', desc: 'GitHub Integration', availability: 'setup', setup: 'gh CLI installiert + gh auth login' },
+              { id: 'gitlab@claude-plugins-official', name: 'GitLab', desc: 'GitLab Integration', availability: 'setup', setup: 'GitLab-Token konfigurieren' },
+              { id: 'Notion@claude-plugins-official', name: 'Notion', desc: 'Notion Workspace-Integration', availability: 'setup', setup: 'Notion API-Key + Integration erstellen' },
+              { id: 'coderabbit@claude-plugins-official', name: 'CodeRabbit', desc: 'AI-basierte Code-Reviews mit CodeRabbit', availability: 'setup', setup: 'CodeRabbit-Account + API-Key' },
+              { id: 'sonatype-guide@claude-plugins-official', name: 'Sonatype Guide', desc: 'Dependency-Analyse und Sicherheitsprüfung', availability: 'ready' },
+              { id: 'firecrawl@claude-plugins-official', name: 'Firecrawl', desc: 'Web-Crawling und Scraping', availability: 'setup', setup: 'Firecrawl API-Key konfigurieren' },
+              { id: 'semgrep@claude-plugins-official', name: 'Semgrep', desc: 'Statische Code-Analyse', availability: 'setup', setup: 'pip install semgrep oder brew install semgrep' },
+              { id: 'huggingface-skills@claude-plugins-official', name: 'HuggingFace Skills', desc: 'HuggingFace ML-Modelle und Datasets', availability: 'setup', setup: 'HuggingFace API-Token konfigurieren' },
             ]
           },
           {
             name: 'Language Servers',
             plugins: [
-              { id: 'typescript-lsp@claude-plugins-official', name: 'TypeScript LSP', desc: 'TypeScript/JavaScript Language Server' },
-              { id: 'pyright-lsp@claude-plugins-official', name: 'Pyright LSP', desc: 'Python Type-Checking und Analyse' },
-              { id: 'rust-analyzer-lsp@claude-plugins-official', name: 'Rust Analyzer', desc: 'Rust Language Server' },
-              { id: 'gopls-lsp@claude-plugins-official', name: 'gopls LSP', desc: 'Go Language Server' },
-              { id: 'csharp-lsp@claude-plugins-official', name: 'C# LSP', desc: 'C# / .NET Language Server' },
-              { id: 'swift-lsp@claude-plugins-official', name: 'Swift LSP', desc: 'Swift Language Server' },
-              { id: 'clangd-lsp@claude-plugins-official', name: 'Clangd LSP', desc: 'C/C++ Language Server' },
-              { id: 'kotlin-lsp@claude-plugins-official', name: 'Kotlin LSP', desc: 'Kotlin Language Server' },
-              { id: 'lua-lsp@claude-plugins-official', name: 'Lua LSP', desc: 'Lua Language Server' },
-              { id: 'php-lsp@claude-plugins-official', name: 'PHP LSP', desc: 'PHP Language Server' },
+              { id: 'typescript-lsp@claude-plugins-official', name: 'TypeScript LSP', desc: 'TypeScript/JavaScript Language Server', availability: 'lsp', setup: 'Node.js installiert (npx tsx)' },
+              { id: 'pyright-lsp@claude-plugins-official', name: 'Pyright LSP', desc: 'Python Type-Checking und Analyse', availability: 'lsp', setup: 'Python + pip install pyright' },
+              { id: 'rust-analyzer-lsp@claude-plugins-official', name: 'Rust Analyzer', desc: 'Rust Language Server', availability: 'lsp', setup: 'Rust Toolchain (rustup) installiert' },
+              { id: 'gopls-lsp@claude-plugins-official', name: 'gopls LSP', desc: 'Go Language Server', availability: 'lsp', setup: 'Go installiert (go install golang.org/x/tools/gopls)' },
+              { id: 'csharp-lsp@claude-plugins-official', name: 'C# LSP', desc: 'C# / .NET Language Server', availability: 'lsp', setup: '.NET SDK installiert' },
+              { id: 'swift-lsp@claude-plugins-official', name: 'Swift LSP', desc: 'Swift Language Server', availability: 'lsp', setup: 'Xcode / Swift Toolchain installiert' },
+              { id: 'clangd-lsp@claude-plugins-official', name: 'Clangd LSP', desc: 'C/C++ Language Server', availability: 'lsp', setup: 'LLVM/Clang installiert' },
+              { id: 'kotlin-lsp@claude-plugins-official', name: 'Kotlin LSP', desc: 'Kotlin Language Server', availability: 'lsp', setup: 'JDK + Kotlin Compiler installiert' },
+              { id: 'lua-lsp@claude-plugins-official', name: 'Lua LSP', desc: 'Lua Language Server', availability: 'lsp', setup: 'lua-language-server installiert' },
+              { id: 'php-lsp@claude-plugins-official', name: 'PHP LSP', desc: 'PHP Language Server', availability: 'lsp', setup: 'PHP + Intelephense (npm i -g intelephense)' },
             ]
           },
           {
             name: 'Output Styles',
             plugins: [
-              { id: 'explanatory-output-style@claude-plugins-official', name: 'Explanatory', desc: 'Erklärender Output mit Insights und Kontext', provides: 'Setzt outputStyle auf "explanatory", fügt Insight-Boxen hinzu' },
-              { id: 'learning-output-style@claude-plugins-official', name: 'Learning', desc: 'Lernorientierter Output mit didaktischen Erklärungen', provides: 'Setzt outputStyle auf "learning", fordert User-Code-Beiträge ein' },
+              { id: 'explanatory-output-style@claude-plugins-official', name: 'Explanatory', desc: 'Erklärender Output mit Insights und Kontext', provides: 'Setzt outputStyle auf "explanatory", fügt Insight-Boxen hinzu', availability: 'ready' },
+              { id: 'learning-output-style@claude-plugins-official', name: 'Learning', desc: 'Lernorientierter Output mit didaktischen Erklärungen', provides: 'Setzt outputStyle auf "learning", fordert User-Code-Beiträge ein', availability: 'ready' },
             ]
           },
           {
             name: 'Creative',
             plugins: [
-              { id: 'frontend-design@claude-plugins-official', name: 'Frontend Design', desc: 'Distinctive, production-grade Frontend-Interfaces', skills: ['/frontend-design'], provides: 'Kreative UI-Generierung mit Anti-AI-Ästhetik' },
-              { id: 'playground@claude-plugins-official', name: 'Playground', desc: 'Interaktive HTML-Playgrounds erstellen', skills: ['/playground'], provides: 'Single-file HTML Explorer mit Controls + Live Preview' },
-              { id: 'frontend-slides@community', name: 'Frontend Slides', desc: 'Animierte HTML-Präsentationen aus Text oder PowerPoint erstellen', community: true, install: 'GitHub: zarazhangrui/frontend-slides → SKILL.md nach ~/.claude/skills/frontend-slides/' },
-              { id: 'ui-design-system@community', name: 'UI Design System', desc: 'Design-Token-Generierung, Component-Dokumentation und responsive Berechnungen', community: true, install: 'npx claude-code-templates@latest --skill creative-design/ui-design-system' },
-              { id: 'frontend-design-community@community', name: 'Frontend Design (Community)', desc: 'Production-grade Interfaces mit hoher Design-Qualität — Community-Version mit 6.5k+ Downloads', community: true, install: 'npx claude-code-templates@latest --skill creative-design/frontend-design' },
+              { id: 'frontend-design@claude-plugins-official', name: 'Frontend Design', desc: 'Distinctive, production-grade Frontend-Interfaces', skills: ['/frontend-design'], provides: 'Kreative UI-Generierung mit Anti-AI-Ästhetik', availability: 'ready' },
+              { id: 'playground@claude-plugins-official', name: 'Playground', desc: 'Interaktive HTML-Playgrounds erstellen', skills: ['/playground'], provides: 'Single-file HTML Explorer mit Controls + Live Preview', availability: 'ready' },
+              { id: 'frontend-slides@community', name: 'Frontend Slides', desc: 'Animierte HTML-Präsentationen aus Text oder PowerPoint erstellen', community: true, install: 'GitHub: zarazhangrui/frontend-slides → SKILL.md nach ~/.claude/skills/frontend-slides/', availability: 'setup', setup: 'Manuell installieren (siehe Install)' },
+              { id: 'ui-design-system@community', name: 'UI Design System', desc: 'Design-Token-Generierung, Component-Dokumentation und responsive Berechnungen', community: true, install: 'npx claude-code-templates@latest --skill creative-design/ui-design-system', availability: 'setup', setup: 'npx claude-code-templates installieren' },
+              { id: 'frontend-design-community@community', name: 'Frontend Design (Community)', desc: 'Production-grade Interfaces mit hoher Design-Qualität — Community-Version mit 6.5k+ Downloads', community: true, install: 'npx claude-code-templates@latest --skill creative-design/frontend-design', availability: 'setup', setup: 'npx claude-code-templates installieren' },
             ]
           },
           {
             name: 'AI & Research',
             plugins: [
-              { id: 'agent-tool-builder@community', name: 'Agent Tool Builder', desc: 'AI-Agent-Tools und MCP-Tool-Schemas effektiv designen', community: true, install: 'npx claude-code-templates@latest --skill ai-research/agent-tool-builder' },
-              { id: 'context7-auto-research@community', name: 'Context7 Auto Research', desc: 'Aktuelle Framework-Doku automatisch via Context7 API abrufen', community: true, install: 'npx claude-code-templates@latest --skill ai-research/context7-auto-research' },
+              { id: 'agent-tool-builder@community', name: 'Agent Tool Builder', desc: 'AI-Agent-Tools und MCP-Tool-Schemas effektiv designen', community: true, install: 'npx claude-code-templates@latest --skill ai-research/agent-tool-builder', availability: 'setup', setup: 'npx claude-code-templates installieren' },
+              { id: 'context7-auto-research@community', name: 'Context7 Auto Research', desc: 'Aktuelle Framework-Doku automatisch via Context7 API abrufen', community: true, install: 'npx claude-code-templates@latest --skill ai-research/context7-auto-research', availability: 'setup', setup: 'npx claude-code-templates installieren' },
             ]
           },
           {
             name: 'Security',
             plugins: [
-              { id: 'security-guidance@claude-plugins-official', name: 'Security Guidance', desc: 'Sicherheitsrichtlinien und Best Practices' },
+              { id: 'security-guidance@claude-plugins-official', name: 'Security Guidance', desc: 'Sicherheitsrichtlinien und Best Practices', availability: 'ready' },
             ]
           },
           {
             name: 'Local / Custom',
             plugins: [
-              { id: 'superpowers@local-desktop-app-uploads', name: 'Superpowers', desc: 'Erweiterte Workflows: Brainstorming, TDD, Debugging, Planung', skills: ['/brainstorming', '/tdd', '/debugging', '/planning'], provides: 'Strukturierte Workflows für Feature-Entwicklung, Testing und Debugging' },
-              { id: 'obsidian-vault@local-skills', name: 'Obsidian Vault Navigator', desc: 'Sucht automatisch im Obsidian Vault bei Erwähnung von Obsidian, Notes, IPARAG oder Zettelkasten', skills: ['/obsidian-vault'], provides: 'Vault-Navigation, Projekt-Notes lesen/updaten, Inbox-Captures, Galaxy/Zettelkasten-Suche' },
+              { id: 'superpowers@local-desktop-app-uploads', name: 'Superpowers', desc: 'Erweiterte Workflows: Brainstorming, TDD, Debugging, Planung', skills: ['/brainstorming', '/tdd', '/debugging', '/planning'], provides: 'Strukturierte Workflows für Feature-Entwicklung, Testing und Debugging', availability: 'ready' },
+              { id: 'obsidian-vault@local-skills', name: 'Obsidian Vault Navigator', desc: 'Sucht automatisch im Obsidian Vault bei Erwähnung von Obsidian, Notes, IPARAG oder Zettelkasten', skills: ['/obsidian-vault'], provides: 'Vault-Navigation, Projekt-Notes lesen/updaten, Inbox-Captures, Galaxy/Zettelkasten-Suche', availability: 'ready' },
             ]
           }
         ],
