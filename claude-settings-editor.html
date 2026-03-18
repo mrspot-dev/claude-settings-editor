@@ -247,7 +247,7 @@
       </div>
 
       <!-- Nav Tabs -->
-      <nav class="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto overflow-x-hidden" role="tablist" aria-label="Settings-Tabs">
+      <nav class="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto overflow-x-hidden" role="tablist" :aria-label="t('sidebar.settingsTabs')">
         <template x-for="tab in tabs.filter(item => item.id !== 'separator')" :key="tab.id">
           <button @click="activeTab = tab.id"
                   role="tab"
@@ -298,9 +298,9 @@
             <span x-show="unsaved" class="text-accent ml-auto">*</span>
           </div>
           <div x-show="fileName" class="flex items-center gap-1.5">
-            <span class="px-1.5 py-0.5 rounded text-[9px] font-mono border"
-                  :class="fileScope === 'project' ? 'bg-violet-500/10 text-violet-400 border-violet-500/20' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'"
-                  x-text="fileScope === 'project' ? 'Project' : 'Global'"></span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-mono border bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
+                  :title="t('sidebar.scopeHint')"
+                  x-text="'Global'"></span>
           </div>
           <div x-show="!fileName" class="text-fg-dim/50 italic whitespace-nowrap" x-text="t('sidebar.noFile')"></div>
           <div class="pt-1 border-t border-[rgba(255,255,255,0.05)] text-[10px] text-fg-dim/40">
@@ -386,16 +386,16 @@
         <div class="flex items-center gap-2 flex-shrink-0 flex-wrap" x-show="!['design-prompts','terminal-prompts'].includes(activeTab)">
           <!-- Language Switcher -->
           <div class="relative" x-data="{ langOpen: false }">
-            <button @click="langOpen = !langOpen" class="btn-secondary px-2.5 py-1.5 text-xs font-mono font-medium rounded-full border border-[rgba(255,255,255,0.15)] text-fg flex items-center gap-1.5" :title="t('toolbar.language')">
+            <button @click="langOpen = !langOpen" :aria-expanded="langOpen" class="btn-secondary px-2.5 py-1.5 text-xs font-mono font-medium rounded-full border border-[rgba(255,255,255,0.15)] text-fg flex items-center gap-1.5" :title="t('toolbar.language')">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
               <span class="hidden md:inline uppercase" x-text="lang"></span>
               <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': langOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </button>
-            <div x-show="langOpen" @click.outside="langOpen = false" x-transition
+            <div x-show="langOpen" @click.outside="langOpen = false" x-transition role="menu"
                  class="absolute right-0 top-full mt-2 w-44 rounded-xl overflow-hidden z-50 bg-[#12121A] py-1"
                  style="border: 1px solid #2A2A36; box-shadow: 0 20px 60px #000;">
               <template x-for="lc in ['de','en','es','fr','ja','pt']" :key="lc">
-                <button @click="setLang(lc); langOpen = false"
+                <button @click="setLang(lc); langOpen = false" role="menuitem"
                         class="w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2.5"
                         :class="lang === lc ? 'bg-accent/10 text-accent' : 'text-fg-muted hover:bg-[rgba(255,255,255,0.04)] hover:text-fg'">
                   <span class="font-mono text-[10px] uppercase w-5 text-center font-bold" :class="lang === lc ? 'text-accent' : 'text-fg-dim'" x-text="lc"></span>
@@ -407,12 +407,12 @@
           </div>
           <!-- Template Picker -->
           <div class="relative" x-data="{ tplOpen: false }">
-            <button @click="tplOpen = !tplOpen" class="btn-secondary px-4 py-1.5 text-xs font-mono font-medium rounded-full border border-accent/30 text-accent hover:bg-accent/10 flex items-center gap-1.5">
+            <button @click="tplOpen = !tplOpen" :aria-expanded="tplOpen" class="btn-secondary px-4 py-1.5 text-xs font-mono font-medium rounded-full border border-accent/30 text-accent hover:bg-accent/10 flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
               <span class="hidden md:inline">Templates</span>
               <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': tplOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </button>
-            <div x-show="tplOpen" @click.outside="tplOpen = false" x-transition
+            <div x-show="tplOpen" @click.outside="tplOpen = false" x-transition role="menu"
                  class="absolute right-0 top-full mt-2 rounded-2xl overflow-hidden z-50 bg-[#12121A] flex max-w-[calc(100vw-2rem)]"
                  :class="customTemplates.length > 0 ? 'w-[38rem]' : 'w-80'"
                  style="border: 1px solid #2A2A36; box-shadow: 0 20px 60px #000, 0 0 0 1px #1A1A24;">
@@ -440,7 +440,7 @@
                 </div>
                 <div class="py-1 bg-[#12121A]">
                   <template x-for="tpl in templates" :key="tpl.id">
-                    <button @click="applyTemplate(tpl.id); tplOpen = false"
+                    <button @click="applyTemplate(tpl.id); tplOpen = false" role="menuitem"
                             class="w-full text-left px-4 py-2.5 group bg-[#12121A] hover:bg-[#1E1E2A] transition-colors">
                       <div class="flex items-center gap-2.5">
                         <span class="w-2 h-2 rounded-full flex-shrink-0" :class="tpl.color"></span>
@@ -464,7 +464,7 @@
                   </div>
                   <div class="py-1 bg-[#12121A]">
                     <template x-for="tpl in customTemplates" :key="tpl.id">
-                      <div class="w-full flex items-center px-4 py-2.5 group bg-[#12121A] hover:bg-[#1E1E2A] transition-colors">
+                      <div role="menuitem" class="w-full flex items-center px-4 py-2.5 group bg-[#12121A] hover:bg-[#1E1E2A] transition-colors">
                         <button @click="applyTemplate(tpl.id); tplOpen = false" class="flex-1 text-left flex items-center gap-2.5 min-w-0">
                           <span class="w-2 h-2 rounded-full flex-shrink-0" :class="tpl.color"></span>
                           <div class="flex-1 min-w-0">
@@ -525,28 +525,28 @@
               </button>
             </div>
             <!-- Dropdown -->
-            <div x-show="showOpenDropdown" x-transition
+            <div x-show="showOpenDropdown" x-transition role="menu"
                  class="absolute top-full mt-1.5 w-72 rounded-xl glass border border-[rgba(255,255,255,0.1)] shadow-xl z-50 py-1.5 text-xs"
                  :style="'right: max(0px, min(0px, calc(100vw - 100% - 16px)))'">
-              <button @click="openFile(); showOpenDropdown = false" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] text-fg flex items-center gap-2 transition-colors">
+              <button @click="openFile(); showOpenDropdown = false" role="menuitem" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] text-fg flex items-center gap-2 transition-colors">
                 <svg class="w-3.5 h-3.5 text-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
                 <span x-text="t('toolbar.open') + '...'"></span>
               </button>
-              <button @click="autoDetectSettings(); showOpenDropdown = false" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] text-fg flex items-center gap-2 transition-colors">
+              <button @click="autoDetectSettings(); showOpenDropdown = false" role="menuitem" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] text-fg flex items-center gap-2 transition-colors">
                 <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <span class="text-fg">Auto-Detect</span>
                 <span class="text-[10px] text-fg-dim ml-auto" x-text="t('toolbar.autoDetectSub')"></span>
               </button>
               <div class="mx-3 my-1 border-t border-[rgba(255,255,255,0.06)]"></div>
               <div class="px-3 py-1.5 text-[10px] text-fg-dim/60 uppercase tracking-wider font-medium" x-text="t('toolbar.standardPaths')"></div>
-              <button @click="navigator.clipboard.writeText('~/.claude/settings.json').then(() => { notify(t('toolbar.pathCopied')); showOpenDropdown = false; })" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] transition-colors group">
+              <button @click="navigator.clipboard.writeText('~/.claude/settings.json').then(() => { notify(t('toolbar.pathCopied')); showOpenDropdown = false; })" role="menuitem" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] transition-colors group">
                 <div class="flex items-center gap-2 text-fg">
                   <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Global</span>
                   <span class="font-mono text-fg-muted group-hover:text-fg transition-colors">~/.claude/settings.json</span>
                   <svg class="w-3 h-3 ml-auto text-fg-dim/40 group-hover:text-fg-muted transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                 </div>
               </button>
-              <button @click="navigator.clipboard.writeText('.claude/settings.json').then(() => { notify(t('toolbar.pathCopied')); showOpenDropdown = false; })" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] transition-colors group">
+              <button @click="navigator.clipboard.writeText('.claude/settings.json').then(() => { notify(t('toolbar.pathCopied')); showOpenDropdown = false; })" role="menuitem" class="w-full text-left px-3 py-2 hover:bg-[rgba(255,255,255,0.04)] transition-colors group">
                 <div class="flex items-center gap-2 text-fg">
                   <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-violet-500/10 text-violet-400 border border-violet-500/20">Project</span>
                   <span class="font-mono text-fg-muted group-hover:text-fg transition-colors">.claude/settings.json</span>
@@ -1925,7 +1925,7 @@
   <!-- Diff Modal -->
   <div x-show="showDiffModal" x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center p-6" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);">
     <div x-ref="diffModal" @click.outside="showDiffModal = false; releaseFocus($refs.diffModal)" x-transition
-         role="dialog" aria-modal="true" aria-label="Settings Diff"
+         role="dialog" aria-modal="true" :aria-label="t('diff.title')"
          class="w-full max-w-2xl max-h-[80vh] rounded-3xl overflow-hidden flex flex-col"
          style="background:#12121A;border:1px solid #2A2A36;box-shadow:0 30px 80px #000;">
       <!-- Header -->
@@ -1995,7 +1995,7 @@
 
   <!-- Setup Wizard Modal -->
   <div x-show="showSetupWizard" x-transition.opacity class="fixed inset-0 z-[60] flex items-center justify-center p-6" style="background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);">
-    <div x-ref="wizardModal" @click.outside="releaseFocus($refs.wizardModal); showSetupWizard = false; localStorage.setItem('claude-settings-wizard-done', '1')" x-transition role="dialog" aria-modal="true" aria-label="Setup Wizard" class="w-full max-w-lg rounded-3xl overflow-hidden flex flex-col"
+    <div x-ref="wizardModal" @click.outside="releaseFocus($refs.wizardModal); showSetupWizard = false; localStorage.setItem('claude-settings-wizard-done', '1')" x-transition role="dialog" aria-modal="true" :aria-label="t('wizard.title')" class="w-full max-w-lg rounded-3xl overflow-hidden flex flex-col"
          style="background:#12121A;border:1px solid #2A2A36;box-shadow:0 30px 80px #000;">
       <!-- Header -->
       <div class="px-8 pt-8 pb-4">
@@ -2100,7 +2100,7 @@
   <!-- Keyboard Shortcuts Info (toggle with ?) -->
   <div x-show="showShortcuts" x-transition.opacity @click.self="showShortcuts = false; releaseFocus($refs.shortcutsModal)"
        class="fixed inset-0 z-50 flex items-center justify-center p-6" style="background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);">
-    <div x-ref="shortcutsModal" x-transition role="dialog" aria-modal="true" aria-label="Keyboard Shortcuts" class="w-full max-w-sm rounded-2xl p-6"
+    <div x-ref="shortcutsModal" x-transition role="dialog" aria-modal="true" :aria-label="t('shortcuts.title')" class="w-full max-w-sm rounded-2xl p-6"
          style="background:#12121A;border:1px solid #2A2A36;box-shadow:0 30px 80px #000;">
       <h3 class="font-display font-bold text-lg text-white mb-4" x-text="t('shortcuts.title')"></h3>
       <div class="space-y-2 text-sm">
@@ -2179,6 +2179,8 @@
       'sidebar.expand': { de: 'Sidebar ausklappen', en: 'Expand sidebar', es: 'Expandir barra lateral', fr: 'Deplier la barre laterale', ja: 'サイドバーを展開する', pt: 'Expandir barra lateral' },
       'sidebar.noFile': { de: 'Keine Datei geladen', en: 'No file loaded', es: 'Ningun archivo cargado', fr: 'Aucun fichier charge', ja: 'ファイルが読み込まれていません', pt: 'Nenhum arquivo carregado' },
       'sidebar.shortcuts': { de: 'Tastenkuerzel', en: 'Keyboard shortcuts', es: 'Atajos de teclado', fr: 'Raccourcis clavier', ja: 'キーボードショートカット', pt: 'Atalhos de teclado' },
+      'sidebar.scopeHint': { de: 'Scope-Erkennung nicht moeglich (File System Access API gibt keine Pfade preis)', en: 'Scope detection not possible (File System Access API does not expose paths)', es: 'Deteccion de alcance no posible (la API de acceso al sistema de archivos no expone rutas)', fr: 'Detection de portee impossible (l\'API File System Access ne revele pas les chemins)', ja: 'スコープ検出不可（File System Access APIはパスを公開しません）', pt: 'Detecao de escopo nao possivel (a API File System Access nao expoe caminhos)' },
+      'sidebar.settingsTabs': { de: 'Einstellungs-Tabs', en: 'Settings tabs', es: 'Pestanas de configuracion', fr: 'Onglets de parametres', ja: '設定タブ', pt: 'Abas de configuracoes' },
 
       // ─── Toolbar ───
       'toolbar.search': { de: 'Einstellung suchen...', en: 'Search settings...', es: 'Buscar ajustes...', fr: 'Rechercher parametres...', ja: '設定を検索...', pt: 'Buscar configuracoes...' },
@@ -2770,6 +2772,7 @@
       'diff.changedCount': { de: 'geaendert', en: 'changed', es: 'cambiado(s)', fr: 'modifie(s)', ja: '変更', pt: 'alterado(s)' },
       'diff.removedCount': { de: 'entfernt', en: 'removed', es: 'eliminado(s)', fr: 'supprime(s)', ja: '削除', pt: 'removido(s)' },
       // ─── Setup Wizard ───
+      'wizard.title': { de: 'Setup-Assistent', en: 'Setup Wizard', es: 'Asistente de configuracion', fr: 'Assistant de configuration', ja: 'セットアップウィザード', pt: 'Assistente de configuracao' },
       'wizard.welcome': { de: 'Willkommen beim Setup', en: 'Welcome to Setup', es: 'Bienvenido a la configuracion', fr: 'Bienvenue dans la configuration', ja: 'セットアップへようこそ', pt: 'Bem-vindo a configuracao' },
       'wizard.welcomeDesc': { de: 'In 5 Schritten konfigurierst du Claude Code nach deinen Wuenschen. Du kannst jederzeit abbrechen und manuell anpassen.', en: 'Configure Claude Code to your preferences in 5 steps. You can cancel anytime and adjust manually.', es: 'Configura Claude Code a tu gusto en 5 pasos. Puedes cancelar en cualquier momento y ajustar manualmente.', fr: 'Configurez Claude Code selon vos preferences en 5 etapes. Vous pouvez annuler a tout moment et ajuster manuellement.', ja: '5ステップでClaude Codeを好みに合わせて設定します。いつでもキャンセルして手動で調整できます。', pt: 'Configure o Claude Code ao seu gosto em 5 passos. Pode cancelar a qualquer momento e ajustar manualmente.' },
       'wizard.modelTitle': { de: 'Modell waehlen', en: 'Choose model', es: 'Elegir modelo', fr: 'Choisir le modele', ja: 'モデルを選択', pt: 'Escolher modelo' },
@@ -4113,6 +4116,7 @@
             verbs: [...this.settings.spinnerVerbs.verbs]
           });
           this.persistSpinnerPacks();
+          this._spinnerMixCache = null;
           this.newSpinnerPackName = '';
           this.newSpinnerPackIcon = '📦';
           this.showSaveSpinnerPackDialog = false;
@@ -4124,6 +4128,7 @@
           if (!pack || !confirm(this.t('confirm.packDelete') + ' "' + pack.name + '"')) return;
           this.customSpinnerPacks = this.customSpinnerPacks.filter(p => p.id !== id);
           this.persistSpinnerPacks();
+          this._spinnerMixCache = null;
           this.notify(this.t('notify.packDeleted'), 'info');
         },
 
