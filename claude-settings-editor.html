@@ -202,12 +202,6 @@
     /* Toggle focus style */
     .toggle:focus { outline: none; box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.4), 0 0 12px rgba(245, 158, 11, 0.15); }
 
-    /* Settings form elements */
-    .settings-group { margin-bottom: 1.25rem; }
-    .setting-label { display: block; font-weight: 600; font-size: 0.875rem; color: var(--fg, #FAFAFA); margin-bottom: 0.25rem; font-family: 'DM Sans', 'Inter', sans-serif; }
-    .setting-input { display: block; width: 100%; padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.75rem; color: var(--fg, #FAFAFA); font-size: 0.875rem; font-family: 'JetBrains Mono', monospace; outline: none; transition: border-color 0.15s; }
-    .setting-input:focus { border-color: var(--accent, #F59E0B); }
-    .setting-input::placeholder { color: var(--fg-dim, #71717A); }
   </style>
 </head>
 <body class="min-h-screen relative overflow-x-hidden" x-data="settingsEditor()" @keydown.window="handleKeyboard($event)">
@@ -254,7 +248,7 @@
 
       <!-- Nav Tabs -->
       <nav class="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto overflow-x-hidden" role="tablist" aria-label="Settings-Tabs">
-        <template x-for="tab in tabs.filter(t => t.id !== 'separator')" :key="tab.id">
+        <template x-for="tab in tabs.filter(item => item.id !== 'separator')" :key="tab.id">
           <button @click="activeTab = tab.id"
                   role="tab"
                   :aria-selected="activeTab === tab.id"
@@ -323,7 +317,7 @@
       <header class="flex-shrink-0 overflow-visible" style="background: #12121A; position: relative; z-index: 40;">
         <!-- Row 1: Tab Info -->
         <div class="px-6 pt-3.5 pb-2.5">
-          <h2 class="font-display font-bold text-lg text-white tracking-tight" x-text="tabs.find(t => t.id === activeTab)?.label"></h2>
+          <h2 class="font-display font-bold text-lg text-white tracking-tight" x-text="tabs.find(item => item.id === activeTab)?.label"></h2>
           <p class="text-xs text-fg-muted mt-0.5" x-text="tabDesc(activeTab)"></p>
         </div>
         <!-- Row 2: Toolbar -->
@@ -392,7 +386,7 @@
         <div class="flex items-center gap-2 flex-shrink-0 flex-wrap" x-show="!['design-prompts','terminal-prompts'].includes(activeTab)">
           <!-- Language Switcher -->
           <div class="relative" x-data="{ langOpen: false }">
-            <button @click="langOpen = !langOpen" class="btn-secondary px-2.5 py-1.5 text-xs font-mono font-medium rounded-full border border-[rgba(255,255,255,0.15)] text-fg flex items-center gap-1.5" title="Language / Sprache">
+            <button @click="langOpen = !langOpen" class="btn-secondary px-2.5 py-1.5 text-xs font-mono font-medium rounded-full border border-[rgba(255,255,255,0.15)] text-fg flex items-center gap-1.5" :title="t('toolbar.language')">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
               <span class="hidden md:inline uppercase" x-text="lang"></span>
               <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': langOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -405,7 +399,7 @@
                         class="w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2.5"
                         :class="lang === lc ? 'bg-accent/10 text-accent' : 'text-fg-muted hover:bg-[rgba(255,255,255,0.04)] hover:text-fg'">
                   <span class="font-mono text-[10px] uppercase w-5 text-center font-bold" :class="lang === lc ? 'text-accent' : 'text-fg-dim'" x-text="lc"></span>
-                  <span x-text="({'de':'Deutsch','en':'English','es':'Espanol','fr':'Francais','ja':'Japanese','pt':'Portugues'})[lc]"></span>
+                  <span x-text="({'de':'Deutsch','en':'English','es':'Español','fr':'Français','ja':'日本語','pt':'Português'})[lc]"></span>
                   <svg x-show="lang === lc" class="w-3 h-3 ml-auto text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 </button>
               </template>
@@ -478,7 +472,7 @@
                             <div class="text-[11px] text-fg-dim mt-0.5 leading-snug" x-text="tpl.desc"></div>
                           </div>
                         </button>
-                        <button @click.stop="deleteCustomTemplate(tpl.id)" class="ml-2 p-1 rounded text-fg-dim hover:text-red-400 hover:bg-red-400/10 transition-colors flex-shrink-0" title="Template löschen">
+                        <button @click.stop="deleteCustomTemplate(tpl.id)" class="ml-2 p-1 rounded text-fg-dim hover:text-red-400 hover:bg-red-400/10 transition-colors flex-shrink-0" :title="t('toolbar.deleteTemplate')">
                           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         </button>
                       </div>
@@ -509,24 +503,24 @@
             <span class="hidden md:inline">Share</span>
           </button>
           <!-- Bundle Import/Export -->
-          <div class="flex items-center gap-0.5 border border-[rgba(255,255,255,0.15)] rounded-full" title="Bundle: Settings + Templates + Spinner Packs">
-            <button @click="exportBundle()" class="btn-secondary px-2.5 py-1.5 text-xs font-mono font-medium rounded-l-full text-fg flex items-center gap-1.5" title="Bundle exportieren">
+          <div class="flex items-center gap-0.5 border border-[rgba(255,255,255,0.15)] rounded-full" :title="t('toolbar.bundleDesc')">
+            <button @click="exportBundle()" class="btn-secondary px-2.5 py-1.5 text-xs font-mono font-medium rounded-l-full text-fg flex items-center gap-1.5" :title="t('toolbar.bundleExport')">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
               <span class="hidden lg:inline">Bundle</span>
             </button>
             <div class="w-px h-4 bg-[rgba(255,255,255,0.1)]"></div>
-            <button @click="importBundle()" class="btn-secondary px-2.5 py-1.5 text-xs font-mono font-medium rounded-r-full text-fg flex items-center gap-1.5" title="Bundle importieren">
+            <button @click="importBundle()" class="btn-secondary px-2.5 py-1.5 text-xs font-mono font-medium rounded-r-full text-fg flex items-center gap-1.5" :title="t('toolbar.bundleImport')">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
             </button>
           </div>
           <!-- Open Button Group with Dropdown -->
           <div class="relative" @click.outside="showOpenDropdown = false">
             <div class="flex items-center border border-[rgba(255,255,255,0.15)] rounded-full overflow-hidden">
-              <button @click="openFile()" class="btn-secondary px-3 py-1.5 text-xs font-mono font-medium text-fg flex items-center gap-1.5" title="Datei öffnen">
+              <button @click="openFile()" class="btn-secondary px-3 py-1.5 text-xs font-mono font-medium text-fg flex items-center gap-1.5" :title="t('toolbar.open')">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
                 <span class="hidden md:inline">Open</span>
               </button>
-              <button @click="showOpenDropdown = !showOpenDropdown" :aria-expanded="showOpenDropdown" class="px-1.5 py-1.5 text-fg-muted hover:text-fg border-l border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.04)] transition-colors" title="Schnellzugriff">
+              <button @click="showOpenDropdown = !showOpenDropdown" :aria-expanded="showOpenDropdown" class="px-1.5 py-1.5 text-fg-muted hover:text-fg border-l border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.04)] transition-colors" :title="t('toolbar.openMenu')">
                 <svg class="w-3 h-3 transition-transform" :class="showOpenDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
               </button>
             </div>
@@ -570,15 +564,15 @@
               </template>
             </div>
           </div>
-          <button @click="saveFile()" class="btn-secondary px-3 py-1.5 text-xs font-mono font-medium rounded-full border border-[rgba(255,255,255,0.15)] text-fg flex items-center gap-1.5" title="Datei speichern">
+          <button @click="saveFile()" class="btn-secondary px-3 py-1.5 text-xs font-mono font-medium rounded-full border border-[rgba(255,255,255,0.15)] text-fg flex items-center gap-1.5" :title="t('toolbar.saveFile')">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
             <span class="hidden md:inline">Save</span>
           </button>
-          <button @click="exportJson()" class="btn-primary px-3 py-1.5 text-xs font-mono font-medium rounded-full bg-accent text-bg flex items-center gap-1.5" title="JSON exportieren">
+          <button @click="exportJson()" class="btn-primary px-3 py-1.5 text-xs font-mono font-medium rounded-full bg-accent text-bg flex items-center gap-1.5" :title="t('toolbar.export')">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             <span class="hidden md:inline">Export</span>
           </button>
-          <button @click="resetSettings()" class="btn-danger px-3 py-1.5 text-xs font-mono font-medium rounded-full text-red-400 border border-red-500/20 flex items-center gap-1.5" title="Zurücksetzen">
+          <button @click="resetSettings()" class="btn-danger px-3 py-1.5 text-xs font-mono font-medium rounded-full text-red-400 border border-red-500/20 flex items-center gap-1.5" :title="t('toolbar.reset')">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
             <span class="hidden md:inline">Reset</span>
           </button>
@@ -591,11 +585,11 @@
         <div class="max-w-3xl mx-auto flex items-center gap-3">
           <div class="flex items-center gap-2">
             <svg class="w-4 h-4 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
-            <span class="text-xs text-fg-muted font-mono">Validation</span>
+            <span class="text-xs text-fg-muted font-mono" x-text="t('validation.title')"></span>
           </div>
           <div class="flex items-center gap-1.5">
-            <span x-show="getValidationCount('error') > 0" class="validation-badge validation-error" x-text="getValidationCount('error') + ' Error' + (getValidationCount('error') > 1 ? 's' : '')"></span>
-            <span x-show="getValidationCount('warn') > 0" class="validation-badge validation-warn" x-text="getValidationCount('warn') + ' Warning' + (getValidationCount('warn') > 1 ? 's' : '')"></span>
+            <span x-show="getValidationCount('error') > 0" class="validation-badge validation-error" x-text="getValidationCount('error') + ' ' + (getValidationCount('error') > 1 ? t('validation.errors') : t('validation.error'))"></span>
+            <span x-show="getValidationCount('warn') > 0" class="validation-badge validation-warn" x-text="getValidationCount('warn') + ' ' + (getValidationCount('warn') > 1 ? t('validation.warnings') : t('validation.warning'))"></span>
           </div>
           <template x-if="getValidationForTab(activeTab).length > 0">
             <div class="flex-1 flex items-center gap-2 overflow-x-auto">
@@ -656,12 +650,12 @@
                 <template x-if="!custom">
                   <select id="input-output-style" x-model="settings.outputStyle" @change="markUnsaved()" class="setting-input flex-1" :class="{ 'has-value': settings.outputStyle }">
                     <option value="" x-text="t('general.outputStyleDefault')"></option>
-                    <option value="explanatory">Explanatory — Erklärender Output mit Insights</option>
-                    <option value="learning">Learning — Didaktisch, lernorientiert</option>
-                    <option value="concise">Concise — Kurz und knapp</option>
-                    <option value="verbose">Verbose — Ausführlich und detailliert</option>
-                    <option value="formal">Formal — Sachlich und professionell</option>
-                    <option value="casual">Casual — Locker und umgangssprachlich</option>
+                    <option value="explanatory" x-text="t('general.outputStyle.explanatory')"></option>
+                    <option value="learning" x-text="t('general.outputStyle.learning')"></option>
+                    <option value="concise" x-text="t('general.outputStyle.concise')"></option>
+                    <option value="verbose" x-text="t('general.outputStyle.verbose')"></option>
+                    <option value="formal" x-text="t('general.outputStyle.formal')"></option>
+                    <option value="casual" x-text="t('general.outputStyle.casual')"></option>
                   </select>
                 </template>
                 <template x-if="custom">
@@ -962,9 +956,9 @@
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-[10px] text-fg-dim font-mono mr-1">Filter:</span>
               <button @click="pluginAvailFilter = 'all'" class="px-2 py-0.5 rounded-full text-[10px] font-mono transition-colors border border-transparent" :class="pluginAvailFilter === 'all' ? 'bg-fg/10 text-fg border-fg/15' : 'text-fg-dim hover:text-fg'" x-text="t('plugins.filterAll')"></button>
-              <button @click="pluginAvailFilter = pluginAvailFilter === 'ready' ? 'all' : 'ready'" class="px-2 py-0.5 rounded-full text-[10px] font-mono transition-colors border border-transparent" :class="pluginAvailFilter === 'ready' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20' : 'text-fg-dim hover:text-emerald-400'">Ready</button>
-              <button @click="pluginAvailFilter = pluginAvailFilter === 'setup' ? 'all' : 'setup'" class="px-2 py-0.5 rounded-full text-[10px] font-mono transition-colors border border-transparent" :class="pluginAvailFilter === 'setup' ? 'bg-amber-500/15 text-amber-400 border-amber-500/20' : 'text-fg-dim hover:text-amber-400'">Needs Setup</button>
-              <button @click="pluginAvailFilter = pluginAvailFilter === 'lsp' ? 'all' : 'lsp'" class="px-2 py-0.5 rounded-full text-[10px] font-mono transition-colors border border-transparent" :class="pluginAvailFilter === 'lsp' ? 'bg-blue-500/15 text-blue-400 border-blue-500/20' : 'text-fg-dim hover:text-blue-400'">LSP</button>
+              <button @click="pluginAvailFilter = pluginAvailFilter === 'ready' ? 'all' : 'ready'" class="px-2 py-0.5 rounded-full text-[10px] font-mono transition-colors border border-transparent" :class="pluginAvailFilter === 'ready' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20' : 'text-fg-dim hover:text-emerald-400'" x-text="t('plugins.filterReady')"></button>
+              <button @click="pluginAvailFilter = pluginAvailFilter === 'setup' ? 'all' : 'setup'" class="px-2 py-0.5 rounded-full text-[10px] font-mono transition-colors border border-transparent" :class="pluginAvailFilter === 'setup' ? 'bg-amber-500/15 text-amber-400 border-amber-500/20' : 'text-fg-dim hover:text-amber-400'" x-text="t('plugins.filterSetup')"></button>
+              <button @click="pluginAvailFilter = pluginAvailFilter === 'lsp' ? 'all' : 'lsp'" class="px-2 py-0.5 rounded-full text-[10px] font-mono transition-colors border border-transparent" :class="pluginAvailFilter === 'lsp' ? 'bg-blue-500/15 text-blue-400 border-blue-500/20' : 'text-fg-dim hover:text-blue-400'" x-text="t('plugins.filterLsp')"></button>
             </div>
 
             <template x-for="cat in pluginCategories" :key="cat.name">
@@ -981,9 +975,9 @@
                         <div class="flex items-center gap-2 flex-wrap">
                           <span class="font-display text-sm font-medium text-fg" x-text="p.name"></span>
                           <span x-show="p.community" class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-violet-500/15 text-violet-400 border border-violet-500/20">Community</span>
-                          <span x-show="p.availability === 'ready'" class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/20" title="Funktioniert sofort — kein Setup nötig">Ready</span>
-                          <span x-show="p.availability === 'setup'" class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-amber-500/15 text-amber-400 border border-amber-500/20 cursor-help" :title="'Needs Setup: ' + (p.setup || '')">Needs Setup</span>
-                          <span x-show="p.availability === 'lsp'" class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-blue-500/15 text-blue-400 border border-blue-500/20 cursor-help" :title="'Language Server: ' + (p.setup || '')">LSP</span>
+                          <span x-show="p.availability === 'ready'" class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/20" :title="t('plugins.readyTooltip')" x-text="t('plugins.filterReady')"></span>
+                          <span x-show="p.availability === 'setup'" class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-amber-500/15 text-amber-400 border border-amber-500/20 cursor-help" :title="t('plugins.setupTooltip') + ': ' + (p.setup || '')" x-text="t('plugins.filterSetup')"></span>
+                          <span x-show="p.availability === 'lsp'" class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-blue-500/15 text-blue-400 border border-blue-500/20 cursor-help" :title="t('plugins.lspTooltip') + ': ' + (p.setup || '')" x-text="t('plugins.filterLsp')"></span>
                         </div>
                         <div class="text-xs text-fg-muted mt-0.5" x-text="td('data.plugin.' + p.id.split('@')[0] + '.desc', p.desc)"></div>
                         <div x-show="p.skills && p.skills.length" class="flex flex-wrap gap-1 mt-1.5">
@@ -1142,12 +1136,12 @@
                       <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                       Test
                     </button>
-                    <button @click="const tmp = {...settings.mcpServers}; delete tmp[name]; settings.mcpServers = tmp; markUnsaved()" class="text-fg-dim hover:text-red-400 text-xs font-mono transition-colors">Remove</button>
+                    <button @click="const tmp = {...settings.mcpServers}; delete tmp[name]; settings.mcpServers = tmp; markUnsaved()" class="text-fg-dim hover:text-red-400 text-xs font-mono transition-colors" x-text="t('mcp.remove')"></button>
                   </div>
                 </div>
                 <div class="p-4 space-y-3">
                   <div class="flex items-center gap-2">
-                    <label class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0">Type</label>
+                    <label class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0" x-text="t('mcp.type')"></label>
                     <select x-model="server.type" @change="markUnsaved()" class="setting-input flex-1 !text-sm has-value">
                       <option value="stdio" x-text="t('mcp.typeStdio')"></option>
                       <option value="http" x-text="t('mcp.typeHttp')"></option>
@@ -1159,18 +1153,18 @@
                   <template x-if="!server.type || server.type === 'stdio'">
                     <div class="space-y-3">
                       <div class="flex items-center gap-2">
-                        <label class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0">Command</label>
+                        <label class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0" x-text="t('mcp.command')"></label>
                         <input type="text" x-model="server.command" @input="markUnsaved()" placeholder="npx, node, python..." class="setting-input flex-1 !text-sm font-mono">
                       </div>
                       <div>
-                        <label class="text-xs text-fg-dim font-mono tracking-wide block mb-1.5">Args</label>
+                        <label class="text-xs text-fg-dim font-mono tracking-wide block mb-1.5" x-text="t('mcp.args')"></label>
                         <template x-for="(arg, ai) in (server.args || [])" :key="'arg-'+ai">
                           <div class="flex items-center gap-2 mb-1.5 group">
                             <input type="text" x-model="server.args[ai]" @input="markUnsaved()" class="setting-input flex-1 !text-sm font-mono">
                             <button @click="server.args.splice(ai, 1); markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
                           </div>
                         </template>
-                        <button @click="if(!server.args) server.args = []; server.args.push(''); markUnsaved()" class="text-xs font-mono text-purple-400 hover:text-purple-300 transition-colors">+ Argument</button>
+                        <button @click="if(!server.args) server.args = []; server.args.push(''); markUnsaved()" class="text-xs font-mono text-purple-400 hover:text-purple-300 transition-colors" x-text="t('mcp.addArgument')"></button>
                       </div>
                     </div>
                   </template>
@@ -1179,11 +1173,11 @@
                   <template x-if="server.type === 'http' || server.type === 'sse'">
                     <div class="space-y-3">
                       <div class="flex items-center gap-2">
-                        <label class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0">URL</label>
+                        <label class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0" x-text="t('mcp.url')"></label>
                         <input type="text" x-model="server.url" @input="markUnsaved()" placeholder="https://mcp.example.com" class="setting-input flex-1 !text-sm font-mono">
                       </div>
                       <div>
-                        <label class="text-xs text-fg-dim font-mono tracking-wide block mb-1.5">Headers</label>
+                        <label class="text-xs text-fg-dim font-mono tracking-wide block mb-1.5" x-text="t('mcp.headers')"></label>
                         <template x-for="(val, key) in (server.headers || {})" :key="'hdr-'+key">
                           <div class="flex items-center gap-2 mb-1.5 group">
                             <span class="text-xs font-mono text-fg-dim w-32 truncate" x-text="key"></span>
@@ -1202,7 +1196,7 @@
 
                   <!-- env (for all types) -->
                   <div>
-                    <label class="text-xs text-fg-dim font-mono tracking-wide block mb-1.5">Env</label>
+                    <label class="text-xs text-fg-dim font-mono tracking-wide block mb-1.5" x-text="t('mcp.env')"></label>
                     <template x-for="(val, key) in (server.env || {})" :key="'mcpenv-'+key">
                       <div class="flex items-center gap-2 mb-1.5 group">
                         <span class="text-xs font-mono text-fg-dim w-32 truncate" x-text="key"></span>
@@ -1229,7 +1223,7 @@
                   <option value="http">http</option>
                   <option value="sse">sse</option>
                 </select>
-                <button @click="addMcpServer()" :disabled="!newMcpName" class="btn-primary px-4 py-2 text-xs font-mono font-medium rounded-xl bg-purple-500 text-white disabled:opacity-30 disabled:cursor-not-allowed">+ Server</button>
+                <button @click="addMcpServer()" :disabled="!newMcpName" class="btn-primary px-4 py-2 text-xs font-mono font-medium rounded-xl bg-purple-500 text-white disabled:opacity-30 disabled:cursor-not-allowed" x-text="t('mcp.addServerBtn')"></button>
               </div>
 
               <!-- Quick-add presets -->
@@ -1378,7 +1372,7 @@
               <p class="setting-desc" x-text="t('display.statusLineDesc')"></p>
               <div class="space-y-3 mt-3">
                 <div class="flex items-center gap-2">
-                  <label for="input-statusline-type" class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0">Type</label>
+                  <label for="input-statusline-type" class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0" x-text="t('display.statusLineType')"></label>
                   <select id="input-statusline-type" x-model="settings.statusLine.type" @change="markUnsaved()" class="setting-input flex-1 !text-sm" :class="{ 'has-value': settings.statusLine.type }">
                     <option value="" x-text="t('display.statusLineNone')"></option>
                     <option value="command" x-text="t('display.statusLineCommand')"></option>
@@ -1386,11 +1380,11 @@
                   </select>
                 </div>
                 <div x-show="settings.statusLine.type === 'command'" class="flex items-center gap-2">
-                  <label for="input-statusline-command" class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0">Command</label>
+                  <label for="input-statusline-command" class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0" x-text="t('display.statusLineCmd')"></label>
                   <input id="input-statusline-command" type="text" x-model="settings.statusLine.command" @input="markUnsaved()" placeholder="~/.claude/statusline.sh" class="setting-input flex-1 font-mono !text-sm">
                 </div>
                 <div x-show="settings.statusLine.type === 'http'" class="flex items-center gap-2">
-                  <label for="input-statusline-url" class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0">URL</label>
+                  <label for="input-statusline-url" class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0" x-text="t('display.statusLineUrl')"></label>
                   <input id="input-statusline-url" type="text" x-model="settings.statusLine.url" @input="markUnsaved()" placeholder="http://localhost:3000/status" class="setting-input flex-1 font-mono !text-sm">
                 </div>
                 <div x-show="(settings.statusLine.type === 'command' && !settings.statusLine.command) || (settings.statusLine.type === 'http' && !settings.statusLine.url)"
@@ -1399,7 +1393,7 @@
                   <span class="text-xs text-amber-400" x-text="settings.statusLine.type === 'command' ? t('display.statusLineWarnCmd') : t('display.statusLineWarnUrl')"></span>
                 </div>
                 <div x-show="settings.statusLine.type" class="flex items-center gap-2">
-                  <label for="input-statusline-refresh" class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0">Refresh</label>
+                  <label for="input-statusline-refresh" class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0" x-text="t('display.statusLineRefresh')"></label>
                   <input id="input-statusline-refresh" type="number" x-model.number="settings.statusLine.refresh" @input="markUnsaved()" placeholder="5000" class="setting-input !w-32 !text-sm">
                   <span class="text-xs text-fg-dim">ms</span>
                 </div>
@@ -1856,7 +1850,7 @@
                 <button @click="terminalPromptsCategory = terminalPromptsCategory === cat ? '' : cat"
                         class="px-3 py-1.5 rounded-full text-xs font-mono border transition-all"
                         :class="terminalPromptsCategory === cat ? 'border-accent/40 bg-accent/15 text-accent' : 'border-[rgba(255,255,255,0.08)] text-fg-dim hover:text-fg-muted hover:border-[rgba(255,255,255,0.15)]'"
-                        x-text="cat">
+                        x-text="td('terminal.cat.' + cat, cat)">
                 </button>
               </template>
               <span class="text-[11px] font-mono text-fg-dim ml-2" x-text="filteredTerminalPrompts.length + ' ' + t('prompts.prompts')"></span>
@@ -1872,7 +1866,7 @@
                         <h3 class="font-display font-bold text-base text-white leading-tight" x-text="tp.name"></h3>
                         <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-mono border"
                               :class="tp.category === 'CLAUDE.md' ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' : 'text-fg-dim border-[rgba(255,255,255,0.06)]'"
-                              x-text="tp.category"></span>
+                              x-text="td('terminal.cat.' + tp.category, tp.category)"></span>
                       </div>
                       <div class="flex gap-1 flex-shrink-0">
                         <template x-for="tag in tp.tags.slice(0, 3)" :key="tag">
@@ -2001,7 +1995,7 @@
 
   <!-- Setup Wizard Modal -->
   <div x-show="showSetupWizard" x-transition.opacity class="fixed inset-0 z-[60] flex items-center justify-center p-6" style="background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);">
-    <div x-transition role="dialog" aria-modal="true" aria-label="Setup Wizard" class="w-full max-w-lg rounded-3xl overflow-hidden flex flex-col"
+    <div x-ref="wizardModal" @click.outside="releaseFocus($refs.wizardModal); showSetupWizard = false; localStorage.setItem('claude-settings-wizard-done', '1')" x-transition role="dialog" aria-modal="true" aria-label="Setup Wizard" class="w-full max-w-lg rounded-3xl overflow-hidden flex flex-col"
          style="background:#12121A;border:1px solid #2A2A36;box-shadow:0 30px 80px #000;">
       <!-- Header -->
       <div class="px-8 pt-8 pb-4">
@@ -2085,7 +2079,7 @@
 
       <!-- Footer -->
       <div class="px-8 pb-8 pt-2 flex items-center justify-between">
-        <button @click="showSetupWizard = false; localStorage.setItem('claude-settings-wizard-done', '1')" class="text-xs text-fg-dim hover:text-fg transition-colors">
+        <button @click="releaseFocus($refs.wizardModal); showSetupWizard = false; localStorage.setItem('claude-settings-wizard-done', '1')" class="text-xs text-fg-dim hover:text-fg transition-colors">
           <span x-text="t('wizard.skip')"></span>
         </button>
         <div class="flex gap-2">
@@ -2095,7 +2089,7 @@
           <button x-show="wizardStep < 4" @click="wizardStep++" class="px-5 py-2 text-xs font-display font-semibold rounded-xl bg-accent text-bg hover:bg-accent-hover transition-colors">
             <span x-text="wizardStep === 0 ? t('wizard.start') : t('wizard.next')"></span>
           </button>
-          <button x-show="wizardStep === 4" @click="showSetupWizard = false; localStorage.setItem('claude-settings-wizard-done', '1')" class="px-5 py-2 text-xs font-display font-semibold rounded-xl bg-accent text-bg hover:bg-accent-hover transition-colors">
+          <button x-show="wizardStep === 4" @click="releaseFocus($refs.wizardModal); showSetupWizard = false; localStorage.setItem('claude-settings-wizard-done', '1')" class="px-5 py-2 text-xs font-display font-semibold rounded-xl bg-accent text-bg hover:bg-accent-hover transition-colors">
             <span x-text="t('wizard.finish')"></span>
           </button>
         </div>
@@ -2148,7 +2142,7 @@
       color: #FAFAFA;
       box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
     }
-    .setting-input::placeholder { color: #52525B; }
+    .setting-input::placeholder { color: #71717A; }
     .setting-input:hover { border-color: rgba(255, 255, 255, 0.15); background: rgba(22, 22, 32, 0.8); }
   </style>
 
@@ -2211,8 +2205,17 @@
       'toolbar.reset': { de: 'Zuruecksetzen', en: 'Reset', es: 'Restablecer', fr: 'Reinitialiser', ja: 'リセット', pt: 'Redefinir' },
       'toolbar.export': { de: 'JSON exportieren', en: 'Export JSON', es: 'Exportar JSON', fr: 'Exporter JSON', ja: 'JSONをエクスポート', pt: 'Exportar JSON' },
       'toolbar.tplName': { de: 'Template-Name...', en: 'Template name...', es: 'Nombre de plantilla...', fr: 'Nom du modele...', ja: 'テンプレート名...', pt: 'Nome do modelo...' },
+      'toolbar.language': { de: 'Sprache', en: 'Language', es: 'Idioma', fr: 'Langue', ja: '言語', pt: 'Idioma' },
+      'toolbar.saveFile': { de: 'Datei speichern', en: 'Save file', es: 'Guardar archivo', fr: 'Enregistrer le fichier', ja: 'ファイルを保存', pt: 'Salvar arquivo' },
+      'toolbar.deleteTemplate': { de: 'Template loeschen', en: 'Delete template', es: 'Eliminar plantilla', fr: 'Supprimer le modele', ja: 'テンプレートを削除', pt: 'Excluir modelo' },
+      'toolbar.bundleDesc': { de: 'Bundle: Settings + Templates + Spinner Packs', en: 'Bundle: Settings + Templates + Spinner Packs', es: 'Paquete: Ajustes + Plantillas + Spinner Packs', fr: 'Paquet: Parametres + Modeles + Spinner Packs', ja: 'バンドル: 設定 + テンプレート + スピナーパック', pt: 'Pacote: Configuracoes + Modelos + Spinner Packs' },
 
       // ─── Validation Banner ───
+      'validation.title': { de: 'Validierung', en: 'Validation', es: 'Validacion', fr: 'Validation', ja: 'バリデーション', pt: 'Validacao' },
+      'validation.error': { de: 'Fehler', en: 'Error', es: 'Error', fr: 'Erreur', ja: 'エラー', pt: 'Erro' },
+      'validation.errors': { de: 'Fehler', en: 'Errors', es: 'Errores', fr: 'Erreurs', ja: 'エラー', pt: 'Erros' },
+      'validation.warning': { de: 'Warnung', en: 'Warning', es: 'Advertencia', fr: 'Avertissement', ja: '警告', pt: 'Aviso' },
+      'validation.warnings': { de: 'Warnungen', en: 'Warnings', es: 'Advertencias', fr: 'Avertissements', ja: '警告', pt: 'Avisos' },
       'validation.thisTab': { de: 'Dieser Tab:', en: 'This tab:', es: 'Esta pestana:', fr: 'Cet onglet:', ja: 'このタブ:', pt: 'Esta aba:' },
       'validation.more': { de: 'weitere', en: 'more', es: 'mas', fr: 'de plus', ja: 'その他', pt: 'mais' },
 
@@ -2238,6 +2241,12 @@
       'general.outputStyleDesc': { de: 'Steuert den Stil der Antworten. Plugins registrieren eigene Styles.', en: 'Controls the style of responses. Plugins register their own styles.', es: 'Controla el estilo de las respuestas. Los plugins registran sus propios estilos.', fr: 'Controle le style des reponses. Les plugins enregistrent leurs propres styles.', ja: '回答のスタイルを制御します。プラグインが独自のスタイルを登録できます。', pt: 'Controla o estilo das respostas. Os plugins registram seus proprios estilos.' },
       'general.outputStyleDefault': { de: 'Standard (kein Style)', en: 'Default (no style)', es: 'Predeterminado (sin estilo)', fr: 'Par defaut (pas de style)', ja: 'デフォルト（スタイルなし）', pt: 'Padrao (sem estilo)' },
       'general.outputStyleCustom': { de: 'Eigenen Style eingeben...', en: 'Enter custom style...', es: 'Ingrese estilo personalizado...', fr: 'Entrez un style personnalise...', ja: 'カスタムスタイルを入力...', pt: 'Insira estilo personalizado...' },
+      'general.outputStyle.explanatory': { de: 'Explanatory — Erklaerend mit Insights', en: 'Explanatory — Explaining output with insights', es: 'Explanatory — Salida explicativa con perspectivas', fr: 'Explanatory — Sortie explicative avec insights', ja: 'Explanatory — 洞察を含む説明的な出力', pt: 'Explanatory — Saida explicativa com insights' },
+      'general.outputStyle.learning': { de: 'Learning — Didaktisch, lernorientiert', en: 'Learning — Didactic, learning-oriented', es: 'Learning — Didactico, orientado al aprendizaje', fr: 'Learning — Didactique, oriente apprentissage', ja: 'Learning — 教育的、学習指向', pt: 'Learning — Didatico, orientado a aprendizagem' },
+      'general.outputStyle.concise': { de: 'Concise — Kurz und knapp', en: 'Concise — Short and to the point', es: 'Concise — Breve y directo', fr: 'Concise — Court et precis', ja: 'Concise — 簡潔で要点を押さえた', pt: 'Concise — Breve e direto' },
+      'general.outputStyle.verbose': { de: 'Verbose — Ausfuehrlich und detailliert', en: 'Verbose — Detailed and comprehensive', es: 'Verbose — Detallado y exhaustivo', fr: 'Verbose — Detaille et complet', ja: 'Verbose — 詳細で包括的', pt: 'Verbose — Detalhado e abrangente' },
+      'general.outputStyle.formal': { de: 'Formal — Sachlich und professionell', en: 'Formal — Professional and objective', es: 'Formal — Profesional y objetivo', fr: 'Formal — Professionnel et objectif', ja: 'Formal — 専門的で客観的', pt: 'Formal — Profissional e objetivo' },
+      'general.outputStyle.casual': { de: 'Casual — Locker und umgangssprachlich', en: 'Casual — Relaxed and colloquial', es: 'Casual — Relajado y coloquial', fr: 'Casual — Decontracte et familier', ja: 'Casual — カジュアルで口語的', pt: 'Casual — Descontraido e coloquial' },
       'general.listOrCustom': { de: 'Eigener', en: 'Custom', es: 'Personalizado', fr: 'Personnalise', ja: 'カスタム', pt: 'Personalizado' },
       'general.listOrList': { de: 'Liste', en: 'List', es: 'Lista', fr: 'Liste', ja: 'リスト', pt: 'Lista' },
       'general.language': { de: 'Language', en: 'Language', es: 'Idioma', fr: 'Langue', ja: '言語', pt: 'Idioma' },
@@ -2305,6 +2314,15 @@
       'mcp.headerValuePlaceholder': { de: 'Wert (${ENV_VAR} erlaubt)', en: 'Value (${ENV_VAR} allowed)', es: 'Valor (${ENV_VAR} permitido)', fr: 'Valeur (${ENV_VAR} autorise)', ja: '値 (${ENV_VAR} 使用可)', pt: 'Valor (${ENV_VAR} permitido)' },
       'mcp.envValuePlaceholder': { de: 'Wert', en: 'Value', es: 'Valor', fr: 'Valeur', ja: '値', pt: 'Valor' },
       'mcp.serverNamePlaceholder': { de: 'Server-Name (z.B. filesystem, github)', en: 'Server name (e.g. filesystem, github)', es: 'Nombre del servidor (ej. filesystem, github)', fr: 'Nom du serveur (ex. filesystem, github)', ja: 'サーバー名（例: filesystem, github）', pt: 'Nome do servidor (ex. filesystem, github)' },
+      'mcp.remove': { de: 'Entfernen', en: 'Remove', es: 'Eliminar', fr: 'Supprimer', ja: '削除', pt: 'Remover' },
+      'mcp.type': { de: 'Typ', en: 'Type', es: 'Tipo', fr: 'Type', ja: 'タイプ', pt: 'Tipo' },
+      'mcp.command': { de: 'Command', en: 'Command', es: 'Comando', fr: 'Commande', ja: 'コマンド', pt: 'Comando' },
+      'mcp.args': { de: 'Args', en: 'Args', es: 'Args', fr: 'Args', ja: '引数', pt: 'Args' },
+      'mcp.url': { de: 'URL', en: 'URL', es: 'URL', fr: 'URL', ja: 'URL', pt: 'URL' },
+      'mcp.headers': { de: 'Headers', en: 'Headers', es: 'Headers', fr: 'En-tetes', ja: 'ヘッダー', pt: 'Headers' },
+      'mcp.env': { de: 'Env', en: 'Env', es: 'Env', fr: 'Env', ja: '環境変数', pt: 'Env' },
+      'mcp.addArgument': { de: '+ Argument', en: '+ Argument', es: '+ Argumento', fr: '+ Argument', ja: '+ 引数', pt: '+ Argumento' },
+      'mcp.addServerBtn': { de: '+ Server', en: '+ Server', es: '+ Servidor', fr: '+ Serveur', ja: '+ サーバー', pt: '+ Servidor' },
       'sandbox.pathPrefixInfo': { de: 'Pfad-Prefixes: <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">//</code> = absoluter Pfad, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">~/</code> = Home-Verzeichnis, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">./</code> = relativ zum Projekt. Sinnvoll wenn Claude in sensiblen Umgebungen laeuft oder du verhindern willst, dass z.B. ~/.ssh oder ~/.aws gelesen werden.', en: 'Path prefixes: <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">//</code> = absolute path, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">~/</code> = home directory, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">./</code> = relative to project. Useful when Claude runs in sensitive environments or you want to prevent access to e.g. ~/.ssh or ~/.aws.', es: 'Prefijos de ruta: <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">//</code> = ruta absoluta, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">~/</code> = directorio home, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">./</code> = relativo al proyecto. Util cuando Claude se ejecuta en entornos sensibles o quieres evitar el acceso a ~/.ssh o ~/.aws.', fr: 'Prefixes de chemin: <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">//</code> = chemin absolu, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">~/</code> = repertoire personnel, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">./</code> = relatif au projet. Utile quand Claude fonctionne dans des environnements sensibles ou pour empecher l\'acces a ~/.ssh ou ~/.aws.', ja: 'パスプレフィックス: <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">//</code> = 絶対パス、<code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">~/</code> = ホームディレクトリ、<code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">./</code> = プロジェクト相対。Claudeが機密環境で実行される場合や ~/.ssh や ~/.aws へのアクセスを防止したい場合に有用。', pt: 'Prefixos de caminho: <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">//</code> = caminho absoluto, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">~/</code> = diretorio home, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">./</code> = relativo ao projeto. Util quando o Claude roda em ambientes sensiveis ou voce quer impedir acesso a ~/.ssh ou ~/.aws.' },
       'env.usageInfo': { de: 'Nuetzlich um z.B. das Subagent-Modell zu steuern (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">CLAUDE_CODE_SUBAGENT_MODEL</code>), Node-Umgebungen zu setzen (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">NODE_ENV</code>), oder Prompt-Caching zu konfigurieren.', en: 'Useful for controlling the subagent model (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">CLAUDE_CODE_SUBAGENT_MODEL</code>), setting Node environments (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">NODE_ENV</code>), or configuring prompt caching.', es: 'Util para controlar el modelo de subagente (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">CLAUDE_CODE_SUBAGENT_MODEL</code>), configurar entornos Node (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">NODE_ENV</code>), o configurar el almacenamiento en cache de prompts.', fr: 'Utile pour controler le modele de sous-agent (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">CLAUDE_CODE_SUBAGENT_MODEL</code>), definir les environnements Node (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">NODE_ENV</code>), ou configurer la mise en cache des prompts.', ja: 'サブエージェントモデルの制御 (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">CLAUDE_CODE_SUBAGENT_MODEL</code>)、Node環境の設定 (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">NODE_ENV</code>)、プロンプトキャッシュの設定に便利です。', pt: 'Util para controlar o modelo de subagente (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">CLAUDE_CODE_SUBAGENT_MODEL</code>), definir ambientes Node (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">NODE_ENV</code>), ou configurar o cache de prompts.' },
       'claudemd.editorPlaceholder': { de: '# Projekt Name\n\n## Sprache\n- Kommunikation auf Deutsch\n- Code auf Englisch\n\n## Konventionen\n...\n\nTipp: Klicke rechts auf Snippets um sie einzufuegen →', en: '# Project Name\n\n## Language\n- Communication in English\n- Code in English\n\n## Conventions\n...\n\nTip: Click snippets on the right to insert them →', es: '# Nombre del Proyecto\n\n## Idioma\n- Comunicacion en espanol\n- Codigo en ingles\n\n## Convenciones\n...\n\nConsejo: Haz clic en los snippets a la derecha para insertarlos →', fr: '# Nom du Projet\n\n## Langue\n- Communication en francais\n- Code en anglais\n\n## Conventions\n...\n\nAstuce: Cliquez sur les snippets a droite pour les inserer →', ja: '# プロジェクト名\n\n## 言語\n- コミュニケーションは日本語\n- コードは英語\n\n## 規約\n...\n\nヒント: 右のスニペットをクリックして挿入 →', pt: '# Nome do Projeto\n\n## Idioma\n- Comunicacao em portugues\n- Codigo em ingles\n\n## Convencoes\n...\n\nDica: Clique nos snippets a direita para inseri-los →' },
@@ -2377,6 +2395,12 @@
       // ─── Tab: Plugins ───
       'plugins.search': { de: 'Skills & Plugins durchsuchen...', en: 'Search skills & plugins...', es: 'Buscar skills y plugins...', fr: 'Rechercher skills et plugins...', ja: 'スキルとプラグインを検索...', pt: 'Buscar skills e plugins...' },
       'plugins.filterAll': { de: 'Alle', en: 'All', es: 'Todos', fr: 'Tous', ja: 'すべて', pt: 'Todos' },
+      'plugins.filterReady': { de: 'Ready', en: 'Ready', es: 'Listo', fr: 'Pret', ja: '準備完了', pt: 'Pronto' },
+      'plugins.filterSetup': { de: 'Needs Setup', en: 'Needs Setup', es: 'Requiere config.', fr: 'Config. requise', ja: 'セットアップ必要', pt: 'Requer config.' },
+      'plugins.filterLsp': { de: 'LSP', en: 'LSP', es: 'LSP', fr: 'LSP', ja: 'LSP', pt: 'LSP' },
+      'plugins.readyTooltip': { de: 'Funktioniert sofort — kein Setup noetig', en: 'Works immediately — no setup needed', es: 'Funciona de inmediato — sin configuracion', fr: 'Fonctionne immediatement — aucune configuration', ja: 'すぐに動作します — セットアップ不要', pt: 'Funciona imediatamente — sem configuracao' },
+      'plugins.setupTooltip': { de: 'Needs Setup', en: 'Needs Setup', es: 'Requiere configuracion', fr: 'Configuration requise', ja: 'セットアップが必要', pt: 'Requer configuracao' },
+      'plugins.lspTooltip': { de: 'Language Server', en: 'Language Server', es: 'Language Server', fr: 'Language Server', ja: 'ランゲージサーバー', pt: 'Language Server' },
       'plugins.installCopied': { de: 'Install-Befehl kopiert!', en: 'Install command copied!', es: 'Comando de instalacion copiado!', fr: 'Commande d\'installation copiee!', ja: 'インストールコマンドをコピーしました！', pt: 'Comando de instalacao copiado!' },
 
       // ─── Notifications ───
@@ -2457,6 +2481,10 @@
       'display.statusLineHttp': { de: 'HTTP — Webhook URL', en: 'HTTP — Webhook URL', es: 'HTTP — Webhook URL', fr: 'HTTP — Webhook URL', ja: 'HTTP — Webhook URL', pt: 'HTTP — Webhook URL' },
       'display.statusLineWarnCmd': { de: 'Command ist Pflichtfeld — ohne wird statusLine nicht exportiert.', en: 'Command is required — statusLine won\'t be exported without it.', es: 'El comando es obligatorio — statusLine no se exportara sin el.', fr: 'La commande est obligatoire — statusLine ne sera pas exporte sans.', ja: 'コマンドは必須です — なしではstatusLineはエクスポートされません。', pt: 'O comando e obrigatorio — statusLine nao sera exportado sem ele.' },
       'display.statusLineWarnUrl': { de: 'URL ist Pflichtfeld — ohne wird statusLine nicht exportiert.', en: 'URL is required — statusLine won\'t be exported without it.', es: 'La URL es obligatoria — statusLine no se exportara sin ella.', fr: 'L\'URL est obligatoire — statusLine ne sera pas exporte sans.', ja: 'URLは必須です — なしではstatusLineはエクスポートされません。', pt: 'A URL e obrigatoria — statusLine nao sera exportado sem ela.' },
+      'display.statusLineType': { de: 'Typ', en: 'Type', es: 'Tipo', fr: 'Type', ja: 'タイプ', pt: 'Tipo' },
+      'display.statusLineCmd': { de: 'Command', en: 'Command', es: 'Comando', fr: 'Commande', ja: 'コマンド', pt: 'Comando' },
+      'display.statusLineUrl': { de: 'URL', en: 'URL', es: 'URL', fr: 'URL', ja: 'URL', pt: 'URL' },
+      'display.statusLineRefresh': { de: 'Refresh', en: 'Refresh', es: 'Actualizar', fr: 'Rafraichir', ja: 'リフレッシュ', pt: 'Atualizar' },
       'display.spinnerVerbsDescLong': { de: 'Der Spinner zeigt Aktionswoerter waehrend Claude arbeitet. Eigene Woerter im "Append"-Modus ergaenzen die Standard-Woerter, im "Replace"-Modus ersetzen sie diese.', en: 'The spinner shows action words while Claude works. Custom words in "Append" mode supplement defaults, "Replace" mode replaces them entirely.', es: 'El spinner muestra palabras de accion mientras Claude trabaja. Palabras personalizadas en modo "Append" complementan las predeterminadas, en modo "Replace" las reemplazan.', fr: 'Le spinner affiche des mots d\'action pendant que Claude travaille. Les mots personnalises en mode "Append" completent les defauts, le mode "Replace" les remplace.', ja: 'スピナーはClaude作業中にアクションワードを表示します。「Append」モードではデフォルトに追加、「Replace」モードでは完全に置換します。', pt: 'O spinner mostra palavras de acao enquanto o Claude trabalha. Palavras personalizadas no modo "Append" complementam os padrao, no modo "Replace" os substituem.' },
       'display.spinnerPlaceholder': { de: 'z.B. Pondering, Crafting', en: 'e.g. Pondering, Crafting', es: 'p.ej. Pensando, Creando', fr: 'ex. Reflexion, Creation', ja: '例: 熟考中, 作成中', pt: 'ex. Ponderando, Criando' },
       'display.spinnerCount': { de: 'Aktuell', en: 'Currently', es: 'Actualmente', fr: 'Actuellement', ja: '現在', pt: 'Atualmente' },
@@ -2717,6 +2745,16 @@
       'perm.conflictCount': { de: 'Konflikt', en: 'conflict', es: 'conflicto', fr: 'conflit', ja: '件の競合', pt: 'conflito' },
       'perm.conflictCountPlural': { de: 'Konflikte', en: 'conflicts', es: 'conflictos', fr: 'conflits', ja: '件の競合', pt: 'conflitos' },
       'perm.conflictDetected': { de: 'erkannt', en: 'detected', es: 'detectado(s)', fr: 'detecte(s)', ja: 'を検出', pt: 'detectado(s)' },
+      // ─── Conflict Messages ───
+      'perm.conflict.exactAllowDeny': { de: 'ist in Allow und Deny — Deny gewinnt, Allow ist wirkungslos.', en: 'is in Allow and Deny — Deny wins, Allow has no effect.', es: 'esta en Allow y Deny — Deny gana, Allow no tiene efecto.', fr: 'est dans Allow et Deny — Deny gagne, Allow est sans effet.', ja: 'がAllowとDenyの両方にあります — Denyが優先され、Allowは無効です。', pt: 'esta em Allow e Deny — Deny vence, Allow nao tem efeito.' },
+      'perm.conflict.blockEntireTool': { de: 'blockiert das gesamte Tool —', en: 'blocks the entire tool —', es: 'bloquea toda la herramienta —', fr: "bloque tout l'outil —", ja: 'がツール全体をブロック —', pt: 'bloqueia toda a ferramenta —' },
+      'perm.conflict.overridden': { de: 'wird komplett ueberschrieben.', en: 'is completely overridden.', es: 'se sobrescribe completamente.', fr: 'est completement ecrase.', ja: '完全に上書きされます。', pt: 'e completamente sobrescrito.' },
+      'perm.conflict.denyCoverAllow': { de: 'deckt Allow', en: 'covers Allow', es: 'cubre Allow', fr: 'couvre Allow', ja: 'がAllowの', pt: 'cobre Allow' },
+      'perm.conflict.denyCoverAllowSuffix': { de: 'ab.', en: '.', es: '.', fr: '.', ja: 'をカバーします。', pt: '.' },
+      'perm.conflict.askRedundant': { de: 'in Ask ist ueberfluessig — Deny blockiert komplett.', en: 'in Ask is redundant — Deny blocks completely.', es: 'en Ask es redundante — Deny bloquea completamente.', fr: 'dans Ask est superflu — Deny bloque completement.', ja: 'のAskは冗長です — Denyが完全にブロックします。', pt: 'em Ask e redundante — Deny bloqueia completamente.' },
+      'perm.conflict.askNeverReached': { de: 'wird nie erreicht.', en: 'will never be reached.', es: 'nunca se alcanzara.', fr: 'ne sera jamais atteint.', ja: 'に到達することはありません。', pt: 'nunca sera alcancado.' },
+      'perm.conflict.denyCoverAsk': { de: 'deckt Ask', en: 'covers Ask', es: 'cubre Ask', fr: 'couvre Ask', ja: 'がAskの', pt: 'cobre Ask' },
+      'perm.conflict.denyCoverAskSuffix': { de: 'ab.', en: '.', es: '.', fr: '.', ja: 'をカバーします。', pt: '.' },
       // ─── Diff View ───
       'diff.title': { de: 'Settings Diff', en: 'Settings Diff', es: 'Diferencias de configuracion', fr: 'Differences de configuration', ja: '設定の差分', pt: 'Diferencas de configuracao' },
       'diff.compare': { de: 'Vergleich: aktuell vs.', en: 'Compare: current vs.', es: 'Comparacion: actual vs.', fr: 'Comparaison: actuel vs.', ja: '比較: 現在 vs.', pt: 'Comparacao: atual vs.' },
@@ -2876,6 +2914,9 @@
       'prompts.all': { de: 'Alle', en: 'All', es: 'Todos', fr: 'Tous', ja: 'すべて', pt: 'Todos' },
       'prompts.styles': { de: 'Styles', en: 'Styles', es: 'Estilos', fr: 'Styles', ja: 'スタイル', pt: 'Estilos' },
       'prompts.prompts': { de: 'Prompts', en: 'Prompts', es: 'Prompts', fr: 'Prompts', ja: 'プロンプト', pt: 'Prompts' },
+      // ─── Terminal Prompt Categories ───
+      'terminal.cat.Projekt-Setup': { de: 'Projekt-Setup', en: 'Project Setup', es: 'Configuracion de proyecto', fr: 'Configuration du projet', ja: 'プロジェクトセットアップ', pt: 'Configuracao do projeto' },
+      'terminal.cat.Erklärung': { de: 'Erklaerung', en: 'Explanation', es: 'Explicacion', fr: 'Explication', ja: '説明', pt: 'Explicacao' },
       // ─── MCP ───
       'mcp.testBtn': { de: 'Test', en: 'Test', es: 'Test', fr: 'Test', ja: 'テスト', pt: 'Teste' },
       // ─── Validation Messages ───
@@ -3221,7 +3262,7 @@
           if (this.designCategory) result = result.filter(s => s.category === this.designCategory);
           if (this.designSearch.trim()) {
             const q = this.designSearch.toLowerCase();
-            result = result.filter(s => s.name.toLowerCase().includes(q) || s.desc.toLowerCase().includes(q) || s.tags.some(t => t.includes(q)) || s.category.toLowerCase().includes(q) || s.prompt.toLowerCase().includes(q));
+            result = result.filter(s => s.name.toLowerCase().includes(q) || s.desc.toLowerCase().includes(q) || s.tags.some(tag => tag.includes(q)) || s.category.toLowerCase().includes(q) || s.prompt.toLowerCase().includes(q));
           }
           return result;
         },
@@ -3231,7 +3272,7 @@
           if (this.terminalPromptsCategory) result = result.filter(p => p.category === this.terminalPromptsCategory);
           if (this.terminalPromptsSearch.trim()) {
             const q = this.terminalPromptsSearch.toLowerCase();
-            result = result.filter(p => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.tags.some(t => t.includes(q)) || p.category.toLowerCase().includes(q) || p.prompt.toLowerCase().includes(q));
+            result = result.filter(p => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.tags.some(tag => tag.includes(q)) || p.category.toLowerCase().includes(q) || p.prompt.toLowerCase().includes(q));
           }
           return result;
         },
@@ -3678,7 +3719,7 @@
           // 'minimal' = just the reset defaults, nothing extra
 
           // Check custom templates
-          const custom = this.customTemplates.find(t => t.id === id);
+          const custom = this.customTemplates.find(tpl => tpl.id === id);
           if (custom) {
             this.resetSettingsSilent();
             this.loadJson(JSON.stringify(custom.settings));
@@ -3687,7 +3728,7 @@
             return;
           }
 
-          const tpl = this.templates.find(t => t.id === id);
+          const tpl = this.templates.find(item => item.id === id);
           this.unsaved = true;
           this.notify(this.t('notify.templateLoaded') + ' ' + (tpl ? tpl.name : id));
         },
@@ -3716,9 +3757,9 @@
         },
 
         deleteCustomTemplate(id) {
-          const tpl = this.customTemplates.find(t => t.id === id);
+          const tpl = this.customTemplates.find(item => item.id === id);
           if (!tpl || !confirm(this.t('confirm.templateDelete') + ' "' + tpl.name + '"')) return;
-          this.customTemplates = this.customTemplates.filter(t => t.id !== id);
+          this.customTemplates = this.customTemplates.filter(item => item.id !== id);
           this.persistCustomTemplates();
           this.notify(this.t('notify.templateDeleted'), 'info');
         },
@@ -3832,8 +3873,8 @@
           if (Object.keys(net).length) sandbox.network = net;
           if (Object.keys(sandbox).length) out.sandbox = sandbox;
           if (Object.keys(s.env).length) out.env = { ...s.env };
-          if (!s.spinnerTipsEnabled) out.spinnerTipsEnabled = false;
-          if (!s.showTurnDuration) out.showTurnDuration = false;
+          if (s.spinnerTipsEnabled) out.spinnerTipsEnabled = true;
+          if (s.showTurnDuration) out.showTurnDuration = true;
           if (s.prefersReducedMotion) out.prefersReducedMotion = true;
           if (s.spinnerVerbs.verbs.length) out.spinnerVerbs = { mode: s.spinnerVerbs.mode, verbs: [...s.spinnerVerbs.verbs] };
           if (s.statusLine.type === 'command' && s.statusLine.command) {
@@ -3874,7 +3915,7 @@
           if (s.disableAllHooks) out.disableAllHooks = true;
           if (s.availableModels.length) out.availableModels = [...s.availableModels];
           // Re-attach unknown properties preserved from import
-          if (this._extraProps) {
+          if (!settingsOverride && this._extraProps) {
             for (const [key, value] of Object.entries(this._extraProps)) {
               out[key] = value;
             }
@@ -4183,26 +4224,26 @@
           // Model validation
           const validModels = ['claude-sonnet-4-5-20250514', 'claude-opus-4-5-20250514', 'claude-haiku-4-5-20251001', 'claude-sonnet-4-6', 'claude-opus-4-6', 'sonnet', 'opus', 'haiku'];
           if (s.model && !validModels.includes(s.model)) {
-            errors.push({ tab: 'general', field: 'model', severity: 'warn', message: t('validation.unknownModel') + s.model + t('validation.unknownModelSuffix') });
+            errors.push({ tab: 'general', field: 'model', severity: 'warn', message: this.t('validation.unknownModel') + s.model + this.t('validation.unknownModelSuffix') });
           }
 
           // Permission defaultMode
           const validModes = ['', 'default', 'acceptEdits', 'plan', 'bypassPermissions', 'dontAsk', 'auto'];
           if (s.permissions.defaultMode && !validModes.includes(s.permissions.defaultMode)) {
-            errors.push({ tab: 'permissions', field: 'defaultMode', severity: 'error', message: t('validation.invalidPermMode') + s.permissions.defaultMode + t('validation.invalidPermModeSuffix') });
+            errors.push({ tab: 'permissions', field: 'defaultMode', severity: 'error', message: this.t('validation.invalidPermMode') + s.permissions.defaultMode + this.t('validation.invalidPermModeSuffix') });
           }
 
           // Effort level
           const validEffort = ['', 'low', 'medium', 'high'];
           if (s.effortLevel && !validEffort.includes(s.effortLevel)) {
-            errors.push({ tab: 'general', field: 'effortLevel', severity: 'error', message: t('validation.invalidEffort') + s.effortLevel + t('validation.invalidEffortSuffix') });
+            errors.push({ tab: 'general', field: 'effortLevel', severity: 'error', message: this.t('validation.invalidEffort') + s.effortLevel + this.t('validation.invalidEffortSuffix') });
           }
 
           // Permissions: empty rules
           ['allow', 'ask', 'deny'].forEach(type => {
             s.permissions[type].forEach((rule, i) => {
               if (!rule || !rule.trim()) {
-                errors.push({ tab: 'permissions', field: 'perm-' + type, severity: 'error', message: type.charAt(0).toUpperCase() + type.slice(1) + t('validation.ruleLabel') + (i + 1) + t('validation.emptyRule') });
+                errors.push({ tab: 'permissions', field: 'perm-' + type, severity: 'error', message: type.charAt(0).toUpperCase() + type.slice(1) + this.t('validation.ruleLabel') + (i + 1) + this.t('validation.emptyRule') });
               }
             });
           });
@@ -4212,7 +4253,7 @@
             const seen = new Set();
             s.permissions[type].forEach((rule, i) => {
               if (seen.has(rule)) {
-                errors.push({ tab: 'permissions', field: 'perm-' + type, severity: 'warn', message: t('validation.duplicateRule') + type.charAt(0).toUpperCase() + type.slice(1) + t('validation.duplicateRuleSuffix') + rule + '".' });
+                errors.push({ tab: 'permissions', field: 'perm-' + type, severity: 'warn', message: this.t('validation.duplicateRule') + type.charAt(0).toUpperCase() + type.slice(1) + this.t('validation.duplicateRuleSuffix') + rule + '".' });
               }
               seen.add(rule);
             });
@@ -4222,7 +4263,7 @@
           const allowSet = new Set(s.permissions.allow);
           s.permissions.ask.forEach(rule => {
             if (allowSet.has(rule)) {
-              errors.push({ tab: 'permissions', field: 'perm-ask', severity: 'warn', message: '"' + rule + t('validation.askAllowOverlap') });
+              errors.push({ tab: 'permissions', field: 'perm-ask', severity: 'warn', message: '"' + rule + this.t('validation.askAllowOverlap') });
             }
           });
 
@@ -4231,13 +4272,13 @@
             groups.forEach((group, gi) => {
               group.hooks.forEach((hook, hi) => {
                 if (hook.type === 'command' && !hook.command) {
-                  errors.push({ tab: 'hooks', field: 'hooks', severity: 'error', message: event + t('validation.hookPrefix') + (gi + 1) + '.' + (hi + 1) + t('validation.hookCommandMissing') });
+                  errors.push({ tab: 'hooks', field: 'hooks', severity: 'error', message: event + this.t('validation.hookPrefix') + (gi + 1) + '.' + (hi + 1) + this.t('validation.hookCommandMissing') });
                 }
                 if (hook.type === 'http' && !hook.url) {
-                  errors.push({ tab: 'hooks', field: 'hooks', severity: 'error', message: event + t('validation.hookPrefix') + (gi + 1) + '.' + (hi + 1) + t('validation.hookUrlMissing') });
+                  errors.push({ tab: 'hooks', field: 'hooks', severity: 'error', message: event + this.t('validation.hookPrefix') + (gi + 1) + '.' + (hi + 1) + this.t('validation.hookUrlMissing') });
                 }
                 if (hook.timeout !== undefined && hook.timeout !== '' && (isNaN(hook.timeout) || hook.timeout < 0)) {
-                  errors.push({ tab: 'hooks', field: 'hooks', severity: 'warn', message: event + t('validation.hookPrefix') + (gi + 1) + '.' + (hi + 1) + t('validation.hookTimeoutInvalid') });
+                  errors.push({ tab: 'hooks', field: 'hooks', severity: 'warn', message: event + this.t('validation.hookPrefix') + (gi + 1) + '.' + (hi + 1) + this.t('validation.hookTimeoutInvalid') });
                 }
               });
             });
@@ -4246,42 +4287,42 @@
           // MCP Servers: required fields
           Object.entries(s.mcpServers).forEach(([name, srv]) => {
             if (srv.type === 'stdio' && !srv.command) {
-              errors.push({ tab: 'mcp', field: 'mcp', severity: 'error', message: t('validation.mcpServer') + name + t('validation.mcpCommandMissing') });
+              errors.push({ tab: 'mcp', field: 'mcp', severity: 'error', message: this.t('validation.mcpServer') + name + this.t('validation.mcpCommandMissing') });
             }
             if ((srv.type === 'http' || srv.type === 'sse') && !srv.url) {
-              errors.push({ tab: 'mcp', field: 'mcp', severity: 'error', message: t('validation.mcpServer') + name + t('validation.mcpUrlMissing') + srv.type + t('validation.mcpUrlMissingSuffix') });
+              errors.push({ tab: 'mcp', field: 'mcp', severity: 'error', message: this.t('validation.mcpServer') + name + this.t('validation.mcpUrlMissing') + srv.type + this.t('validation.mcpUrlMissingSuffix') });
             }
           });
 
           // Cleanup period
           if (s.cleanupPeriodDays !== undefined && s.cleanupPeriodDays !== '' && (isNaN(s.cleanupPeriodDays) || s.cleanupPeriodDays < 1)) {
-            errors.push({ tab: 'advanced', field: 'cleanupPeriodDays', severity: 'warn', message: t('validation.cleanupPeriod') });
+            errors.push({ tab: 'advanced', field: 'cleanupPeriodDays', severity: 'warn', message: this.t('validation.cleanupPeriod') });
           }
 
           // Spinner verbs: mode
           if (s.spinnerVerbs.verbs.length && !['append', 'replace'].includes(s.spinnerVerbs.mode)) {
-            errors.push({ tab: 'display', field: 'spinnerVerbs', severity: 'error', message: t('validation.spinnerMode') });
+            errors.push({ tab: 'display', field: 'spinnerVerbs', severity: 'error', message: this.t('validation.spinnerMode') });
           }
 
           // StatusLine: partial config
           if (s.statusLine.type && s.statusLine.type !== '' && s.statusLine.type === 'command' && !s.statusLine.command) {
-            errors.push({ tab: 'display', field: 'statusLine', severity: 'warn', message: t('validation.statusLineNoCmd') });
+            errors.push({ tab: 'display', field: 'statusLine', severity: 'warn', message: this.t('validation.statusLineNoCmd') });
           }
           if (s.statusLine.type && s.statusLine.type !== '' && s.statusLine.type === 'http' && !s.statusLine.url) {
-            errors.push({ tab: 'display', field: 'statusLine', severity: 'warn', message: t('validation.statusLineNoUrl') });
+            errors.push({ tab: 'display', field: 'statusLine', severity: 'warn', message: this.t('validation.statusLineNoUrl') });
           }
 
           // Available models: empty entries
           s.availableModels.forEach((m, i) => {
             if (!m || !m.trim()) {
-              errors.push({ tab: 'advanced', field: 'availableModels', severity: 'error', message: t('validation.emptyAvailModel') + (i + 1) + t('validation.emptyAvailModelSuffix') });
+              errors.push({ tab: 'advanced', field: 'availableModels', severity: 'error', message: this.t('validation.emptyAvailModel') + (i + 1) + this.t('validation.emptyAvailModelSuffix') });
             }
           });
 
           // Env vars: empty keys
           Object.entries(s.env).forEach(([k, v]) => {
             if (!k.trim()) {
-              errors.push({ tab: 'env', field: 'env', severity: 'error', message: t('validation.emptyEnvKey') });
+              errors.push({ tab: 'env', field: 'env', severity: 'error', message: this.t('validation.emptyEnvKey') });
             }
           });
 
@@ -4312,6 +4353,7 @@
             this.loadFromUrlHash();
             if (!localStorage.getItem('claude-settings-wizard-done')) {
               this.showSetupWizard = true;
+              this.$nextTick(() => this.trapFocus(this.$refs.wizardModal));
             }
             this.pushHistory();
           });
@@ -4332,8 +4374,8 @@
           const groups = {};
           this.searchResults.forEach(r => {
             if (!groups[r.tab]) {
-              const t = this.tabs.find(t => t.id === r.tab);
-              groups[r.tab] = { tab: r.tab, label: t ? t.label : r.tab, items: [] };
+              const tab = this.tabs.find(item => item.id === r.tab);
+              groups[r.tab] = { tab: r.tab, label: tab ? tab.label : r.tab, items: [] };
             }
             groups[r.tab].items.push(r);
           });
@@ -4381,15 +4423,15 @@
           for (const ar of allow) {
             for (const dr of deny) {
               if (ar === dr) {
-                conflicts.push({ type: 'exact', severity: 'high', allowRule: ar, denyRule: dr, message: `"${ar}" ist in Allow und Deny — Deny gewinnt, Allow ist wirkungslos.` });
+                conflicts.push({ type: 'exact', severity: 'high', allowRule: ar, denyRule: dr, message: '"' + ar + '" ' + this.t('perm.conflict.exactAllowDeny') });
                 continue;
               }
               const a = parseRule(ar), d = parseRule(dr);
               if (a.tool === d.tool || this._matchesGlob(d.tool, a.tool)) {
                 if (!d.pattern && a.pattern) {
-                  conflicts.push({ type: 'override', severity: 'high', allowRule: ar, denyRule: dr, message: `"${dr}" blockiert das gesamte Tool — "${ar}" wird komplett überschrieben.` });
+                  conflicts.push({ type: 'override', severity: 'high', allowRule: ar, denyRule: dr, message: '"' + dr + '" ' + this.t('perm.conflict.blockEntireTool') + ' "' + ar + '" ' + this.t('perm.conflict.overridden') });
                 } else if (d.pattern && a.pattern && this._matchesGlob(d.pattern, a.pattern)) {
-                  conflicts.push({ type: 'override', severity: 'medium', allowRule: ar, denyRule: dr, message: `Deny "${dr}" deckt Allow "${ar}" ab.` });
+                  conflicts.push({ type: 'override', severity: 'medium', allowRule: ar, denyRule: dr, message: 'Deny "' + dr + '" ' + this.t('perm.conflict.denyCoverAllow') + ' "' + ar + '" ' + this.t('perm.conflict.denyCoverAllowSuffix') });
                 }
               }
             }
@@ -4399,15 +4441,15 @@
           for (const ar of ask) {
             for (const dr of deny) {
               if (ar === dr) {
-                conflicts.push({ type: 'redundant', severity: 'medium', askRule: ar, denyRule: dr, message: `"${ar}" in Ask ist überflüssig — Deny blockiert komplett.` });
+                conflicts.push({ type: 'redundant', severity: 'medium', askRule: ar, denyRule: dr, message: '"' + ar + '" ' + this.t('perm.conflict.askRedundant') });
                 continue;
               }
               const a = parseRule(ar), d = parseRule(dr);
               if (a.tool === d.tool || this._matchesGlob(d.tool, a.tool)) {
                 if (!d.pattern && a.pattern) {
-                  conflicts.push({ type: 'override', severity: 'medium', askRule: ar, denyRule: dr, message: `"${dr}" blockiert das gesamte Tool — Ask "${ar}" wird nie erreicht.` });
+                  conflicts.push({ type: 'override', severity: 'medium', askRule: ar, denyRule: dr, message: '"' + dr + '" ' + this.t('perm.conflict.blockEntireTool') + ' Ask "' + ar + '" ' + this.t('perm.conflict.askNeverReached') });
                 } else if (d.pattern && a.pattern && this._matchesGlob(d.pattern, a.pattern)) {
-                  conflicts.push({ type: 'override', severity: 'medium', askRule: ar, denyRule: dr, message: `Deny "${dr}" deckt Ask "${ar}" ab.` });
+                  conflicts.push({ type: 'override', severity: 'medium', askRule: ar, denyRule: dr, message: 'Deny "' + dr + '" ' + this.t('perm.conflict.denyCoverAsk') + ' "' + ar + '" ' + this.t('perm.conflict.denyCoverAskSuffix') });
                 }
               }
             }
@@ -4462,7 +4504,7 @@
           // Ctrl+1-9 → switch tabs
           if ((e.ctrlKey || e.metaKey) && e.key >= '1' && e.key <= '9') {
             e.preventDefault();
-            const settingsTabs = this.tabs.filter(t => t.id !== 'separator' && t.id !== 'design-prompts');
+            const settingsTabs = this.tabs.filter(item => item.id !== 'separator' && item.id !== 'design-prompts');
             const idx = parseInt(e.key) - 1;
             if (idx < settingsTabs.length) this.activeTab = settingsTabs[idx].id;
             return;
@@ -4491,7 +4533,7 @@
           if (e.key === 'Escape') {
             if (this.showShortcuts) { this.releaseFocus(this.$refs.shortcutsModal); this.showShortcuts = false; return; }
             if (this.showDiffModal) { this.releaseFocus(this.$refs.diffModal); this.showDiffModal = false; return; }
-            if (this.showSetupWizard) { this.showSetupWizard = false; localStorage.setItem('claude-settings-wizard-done', '1'); return; }
+            if (this.showSetupWizard) { this.releaseFocus(this.$refs.wizardModal); this.showSetupWizard = false; localStorage.setItem('claude-settings-wizard-done', '1'); return; }
           }
         },
 
@@ -4644,7 +4686,7 @@
             baseline = {};
             this.diffBaselineLabel = 'Default';
           } else {
-            const custom = this.customTemplates.find(t => t.id === this.diffBaseline);
+            const custom = this.customTemplates.find(tpl => tpl.id === this.diffBaseline);
             if (custom) {
               baseline = this._cleanSettingsObj(custom.settings);
               this.diffBaselineLabel = custom.name;
