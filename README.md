@@ -5,6 +5,7 @@ A visual GUI editor for Claude Code `settings.json` files. Single standalone HTM
 ![HTML](https://img.shields.io/badge/HTML-single%20file-orange)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-CDN-06B6D4)
 ![Alpine.js](https://img.shields.io/badge/Alpine.js-3.14-8BC0D0)
+![i18n](https://img.shields.io/badge/i18n-6%20languages-blueviolet)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## Quick Start
@@ -19,7 +20,8 @@ A visual GUI editor for Claude Code `settings.json` files. Single standalone HTM
 ## Features
 
 ### Core
-- **12 Tabs** covering every `settings.json` option with German explanations
+- **12 Tabs** covering every `settings.json` option
+- **6 Languages** — full i18n support (Deutsch, English, Español, Français, 日本語, Português)
 - **Live JSON Preview** — see the output as you edit
 - **File System Access API** — open and save `settings.json` directly (no copy-paste)
 - **Auto-Detect** — point to your home or project folder, finds `.claude/settings.json` automatically
@@ -27,6 +29,8 @@ A visual GUI editor for Claude Code `settings.json` files. Single standalone HTM
 - **Templates** — built-in presets + save/load your own custom templates
 - **Import/Export Bundles** — backup settings + templates + spinner packs as a single JSON file
 - **Share via URL** — Base64-encoded settings in the URL hash for easy sharing
+- **Guided Setup Wizard** — 5-step onboarding for first-time users
+- **Roundtrip-safe** — unknown properties are preserved on import/export
 
 ### Tabs
 
@@ -34,12 +38,12 @@ A visual GUI editor for Claude Code `settings.json` files. Single standalone HTM
 |-----|----------------|
 | General | Model, effort level, output style, language, thinking mode |
 | Permissions | Allow/Ask/Deny rules, default mode, presets, conflict detection |
-| Skills & Plugins | Toggle plugins with categories, search, availability badges |
+| Skills & Plugins | Toggle plugins with categories, search, availability badges, setup hints |
 | Hooks | Event-based automation (PreToolUse, PostToolUse, SessionStart, etc.) |
 | MCP Servers | stdio/http/sse config, env vars, headers, quick-add presets, status check |
 | Sandbox | Filesystem allow/deny paths, network domains |
 | Environment | Custom environment variables |
-| Display & UI | Spinner verbs, status line, motion preferences |
+| Display & UI | Spinner verbs (8 themed packs + custom), status line, motion preferences |
 | Attribution | Commit and PR attribution strings |
 | Advanced | API key helper, plans directory, cleanup period, available models |
 | Design Prompts | 30 curated design styles with AI prompts and color palettes |
@@ -51,7 +55,7 @@ A visual GUI editor for Claude Code `settings.json` files. Single standalone HTM
 - **Permission Conflict Detection** — warns when Allow and Deny rules overlap
 - **Settings Diff View** — compare current settings against defaults or a custom template
 - **Global Search** — find any setting across all tabs (`/` shortcut)
-- **Undo/Redo** — 50-step history (`Ctrl+Z` / `Ctrl+Y`)
+- **Undo/Redo** — 50-step history with debounced snapshots (`Ctrl+Z` / `Ctrl+Y`)
 - **MCP Server Status Check** — test button to verify HTTP/SSE server connectivity
 
 ### Permission Presets
@@ -59,10 +63,10 @@ A visual GUI editor for Claude Code `settings.json` files. Single standalone HTM
 | Preset | Mode | Description |
 |--------|------|-------------|
 | Safety First | acceptEdits | Broad allow list + comprehensive deny rules |
-| Produktiv | acceptEdits | Common dev tools allowed, minimal deny |
-| Nur Lesen | plan | Read/Glob/Grep only, no writes |
-| Lockdown | allowPrompt | Minimal rights, maximum deny list |
-| Full Send | acceptAll | Everything allowed, only destructive ops denied |
+| Productive | acceptEdits | Common dev tools allowed, minimal deny |
+| Read Only | plan | Read/Glob/Grep only, no writes |
+| Lockdown | default | Minimal rights, maximum deny list |
+| Full Send | bypassPermissions | Everything allowed, only destructive ops denied |
 
 ### Keyboard Shortcuts
 
@@ -76,18 +80,26 @@ A visual GUI editor for Claude Code `settings.json` files. Single standalone HTM
 | `?` | Show shortcuts overlay |
 | `Esc` | Close modals |
 
+### Accessibility
+- Keyboard-navigable toggles with `role="switch"` and `aria-checked`
+- ARIA roles for tabs, modals, alerts, search results
+- Label associations for all form inputs
+- Focus trapping in modal dialogs
+- WCAG AA contrast ratios
+
 ### Design
-- System-adaptive dark theme (off-black `#0A0A0F` base with amber `#F59E0B` accent)
+- Dark theme (off-black `#0A0A0F` base with amber `#F59E0B` accent)
 - Glassmorphism panels with noise texture overlay
 - Staggered tab transition animations
 - Collapsible sidebar with icon-only mode
 - Responsive layout with mobile-friendly header
+- Touch-friendly drag handles
 
 ## Tech Stack
 
 - **[Tailwind CSS](https://tailwindcss.com/)** via CDN — utility-first styling
 - **[Alpine.js](https://alpinejs.dev/)** — reactive state without a build step
-- **JetBrains Mono** + **Space Grotesk** + **Inter** — font stack
+- **JetBrains Mono** + **DM Sans** — font stack
 - **File System Access API** — native browser file read/write
 
 Zero dependencies. No `node_modules`. No `package.json`. Just one HTML file.
