@@ -362,8 +362,8 @@
                           class="w-full text-left px-4 py-2 flex items-center gap-3 transition-colors"
                           :class="searchActiveIndex === result._index ? 'bg-accent/10 text-accent' : 'text-fg-muted hover:bg-[rgba(255,255,255,0.04)]'">
                     <div class="flex-1 min-w-0">
-                      <div class="text-sm font-medium truncate" x-text="result.label"></div>
-                      <div class="text-[11px] text-fg-dim truncate" x-text="result.desc"></div>
+                      <div class="text-sm font-medium truncate" x-text="t(result.label)"></div>
+                      <div class="text-[11px] text-fg-dim truncate" x-text="t(result.desc)"></div>
                     </div>
                     <svg class="w-3 h-3 flex-shrink-0 text-fg-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                   </button>
@@ -1825,8 +1825,8 @@
                   <template x-for="sec in claudeMdSections" :key="sec.id">
                     <button @click="insertClaudeMdSection(sec.content)"
                             class="w-full text-left px-2.5 py-2 rounded-lg text-xs border border-[rgba(255,255,255,0.06)] hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all group">
-                      <div class="font-medium text-fg group-hover:text-emerald-400 transition-colors" x-text="sec.name"></div>
-                      <div class="text-[10px] text-fg-dim mt-0.5" x-text="sec.desc"></div>
+                      <div class="font-medium text-fg group-hover:text-emerald-400 transition-colors" x-text="t(sec.name)"></div>
+                      <div class="text-[10px] text-fg-dim mt-0.5" x-text="t(sec.desc)"></div>
                     </button>
                   </template>
 
@@ -2108,19 +2108,19 @@
        class="fixed inset-0 z-50 flex items-center justify-center p-6" style="background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);">
     <div x-ref="shortcutsModal" x-transition role="dialog" aria-modal="true" aria-label="Keyboard Shortcuts" class="w-full max-w-sm rounded-2xl p-6"
          style="background:#12121A;border:1px solid #2A2A36;box-shadow:0 30px 80px #000;">
-      <h3 class="font-display font-bold text-lg text-white mb-4">Tastenkürzel</h3>
+      <h3 class="font-display font-bold text-lg text-white mb-4" x-text="t('shortcuts.title')"></h3>
       <div class="space-y-2 text-sm">
-        <div class="flex justify-between"><span class="text-fg-muted">Einstellung suchen</span><span class="kbd">/</span></div>
-        <div class="flex justify-between"><span class="text-fg-muted">Speichern</span><span class="kbd">Ctrl+S</span></div>
-        <div class="flex justify-between"><span class="text-fg-muted">JSON Preview</span><span class="kbd">Ctrl+Shift+P</span></div>
-        <div class="flex justify-between"><span class="text-fg-muted">Rückgängig</span><span class="kbd">Ctrl+Z</span></div>
-        <div class="flex justify-between"><span class="text-fg-muted">Wiederherstellen</span><span class="kbd">Ctrl+Y</span></div>
-        <div class="flex justify-between"><span class="text-fg-muted">Tab 1-9</span><span class="kbd">Ctrl+1-9</span></div>
-        <div class="flex justify-between"><span class="text-fg-muted">Design Prompts</span><span class="kbd">Ctrl+0</span></div>
-        <div class="flex justify-between"><span class="text-fg-muted">Shortcuts</span><span class="kbd">?</span></div>
-        <div class="flex justify-between"><span class="text-fg-muted">Modals schließen</span><span class="kbd">Esc</span></div>
+        <div class="flex justify-between"><span class="text-fg-muted" x-text="t('shortcuts.search')"></span><span class="kbd">/</span></div>
+        <div class="flex justify-between"><span class="text-fg-muted" x-text="t('shortcuts.save')"></span><span class="kbd">Ctrl+S</span></div>
+        <div class="flex justify-between"><span class="text-fg-muted" x-text="t('shortcuts.preview')"></span><span class="kbd">Ctrl+Shift+P</span></div>
+        <div class="flex justify-between"><span class="text-fg-muted" x-text="t('shortcuts.undo')"></span><span class="kbd">Ctrl+Z</span></div>
+        <div class="flex justify-between"><span class="text-fg-muted" x-text="t('shortcuts.redo')"></span><span class="kbd">Ctrl+Y</span></div>
+        <div class="flex justify-between"><span class="text-fg-muted" x-text="t('shortcuts.tabs')"></span><span class="kbd">Ctrl+1-9</span></div>
+        <div class="flex justify-between"><span class="text-fg-muted" x-text="t('shortcuts.designPrompts')"></span><span class="kbd">Ctrl+0</span></div>
+        <div class="flex justify-between"><span class="text-fg-muted" x-text="t('shortcuts.shortcuts')"></span><span class="kbd">?</span></div>
+        <div class="flex justify-between"><span class="text-fg-muted" x-text="t('shortcuts.closeModals')"></span><span class="kbd">Esc</span></div>
       </div>
-      <button @click="releaseFocus($refs.shortcutsModal); showShortcuts = false" class="mt-5 w-full py-2 text-xs font-medium rounded-xl bg-accent/10 text-accent hover:bg-accent/20 transition-colors">Schließen</button>
+      <button @click="releaseFocus($refs.shortcutsModal); showShortcuts = false" class="mt-5 w-full py-2 text-xs font-medium rounded-xl bg-accent/10 text-accent hover:bg-accent/20 transition-colors" x-text="t('shortcuts.close')"></button>
     </div>
   </div>
 
@@ -2772,6 +2772,94 @@
       'shortcuts.shortcuts': { de: 'Tastenkuerzel', en: 'Shortcuts', es: 'Atajos', fr: 'Raccourcis', ja: 'ショートカット', pt: 'Atalhos' },
       'shortcuts.closeModals': { de: 'Modals schliessen', en: 'Close modals', es: 'Cerrar modales', fr: 'Fermer les modales', ja: 'モーダルを閉じる', pt: 'Fechar modais' },
       'shortcuts.close': { de: 'Schliessen', en: 'Close', es: 'Cerrar', fr: 'Fermer', ja: '閉じる', pt: 'Fechar' },
+      // ─── Search Registry ───
+      'search.model': { de: 'Model', en: 'Model', es: 'Modelo', fr: 'Modele', ja: 'モデル', pt: 'Modelo' },
+      'search.model.desc': { de: 'Claude Modell (Opus, Sonnet, Haiku)', en: 'Claude model (Opus, Sonnet, Haiku)', es: 'Modelo Claude (Opus, Sonnet, Haiku)', fr: 'Modele Claude (Opus, Sonnet, Haiku)', ja: 'Claudeモデル（Opus, Sonnet, Haiku）', pt: 'Modelo Claude (Opus, Sonnet, Haiku)' },
+      'search.effort': { de: 'Effort Level', en: 'Effort Level', es: 'Nivel de esfuerzo', fr: 'Niveau d\'effort', ja: 'エフォートレベル', pt: 'Nivel de esforco' },
+      'search.effort.desc': { de: 'Denktiefe und Reasoning-Aufwand', en: 'Thinking depth and reasoning effort', es: 'Profundidad de razonamiento', fr: 'Profondeur de reflexion et effort', ja: '思考の深さと推論の労力', pt: 'Profundidade de raciocinio e esforco' },
+      'search.outputStyle': { de: 'Output Style', en: 'Output Style', es: 'Estilo de salida', fr: 'Style de sortie', ja: '出力スタイル', pt: 'Estilo de saida' },
+      'search.outputStyle.desc': { de: 'Stil der Antworten', en: 'Response style', es: 'Estilo de respuestas', fr: 'Style des reponses', ja: '回答のスタイル', pt: 'Estilo das respostas' },
+      'search.language': { de: 'Language', en: 'Language', es: 'Idioma', fr: 'Langue', ja: '言語', pt: 'Idioma' },
+      'search.language.desc': { de: 'Sprache der Antworten', en: 'Response language', es: 'Idioma de las respuestas', fr: 'Langue des reponses', ja: '回答の言語', pt: 'Idioma das respostas' },
+      'search.thinking': { de: 'Always Thinking', en: 'Always Thinking', es: 'Pensamiento permanente', fr: 'Reflexion permanente', ja: '常時思考モード', pt: 'Pensamento permanente' },
+      'search.thinking.desc': { de: 'Thinking-Modus permanent aktivieren', en: 'Permanently enable thinking mode', es: 'Activar modo de pensamiento permanente', fr: 'Activer le mode reflexion permanent', ja: '思考モードを常時有効にする', pt: 'Ativar modo de pensamento permanente' },
+      'search.autoUpdates': { de: 'Auto-Updates Channel', en: 'Auto-Updates Channel', es: 'Canal de actualizaciones', fr: 'Canal de mises a jour', ja: '自動更新チャンネル', pt: 'Canal de atualizacoes' },
+      'search.autoUpdates.desc': { de: 'Release-Kanal fuer Updates', en: 'Release channel for updates', es: 'Canal de lanzamiento para actualizaciones', fr: 'Canal de publication pour les mises a jour', ja: 'アップデートのリリースチャンネル', pt: 'Canal de lancamento para atualizacoes' },
+      'search.permPresets': { de: 'Permission Presets', en: 'Permission Presets', es: 'Presets de permisos', fr: 'Presets de permissions', ja: 'パーミッションプリセット', pt: 'Presets de permissoes' },
+      'search.permPresets.desc': { de: 'Schnellstart-Vorlagen fuer Permissions', en: 'Quick-start templates for permissions', es: 'Plantillas rapidas para permisos', fr: 'Modeles de demarrage rapide pour les permissions', ja: 'パーミッションのクイックスタートテンプレート', pt: 'Modelos de inicio rapido para permissoes' },
+      'search.defaultMode': { de: 'Default Mode', en: 'Default Mode', es: 'Modo predeterminado', fr: 'Mode par defaut', ja: 'デフォルトモード', pt: 'Modo padrao' },
+      'search.defaultMode.desc': { de: 'Fallback wenn keine Regel greift', en: 'Fallback when no rule matches', es: 'Respaldo cuando ninguna regla aplica', fr: 'Repli quand aucune regle ne s\'applique', ja: 'ルールが一致しない場合のフォールバック', pt: 'Fallback quando nenhuma regra se aplica' },
+      'search.bypass': { de: 'Bypass-Modus', en: 'Bypass Mode', es: 'Modo bypass', fr: 'Mode bypass', ja: 'バイパスモード', pt: 'Modo bypass' },
+      'search.bypass.desc': { de: 'Bypass-Modus deaktivieren', en: 'Disable bypass mode', es: 'Desactivar modo bypass', fr: 'Desactiver le mode bypass', ja: 'バイパスモードを無効にする', pt: 'Desativar modo bypass' },
+      'search.allowRules': { de: 'Allow Rules', en: 'Allow Rules', es: 'Reglas Allow', fr: 'Regles Allow', ja: 'Allowルール', pt: 'Regras Allow' },
+      'search.allowRules.desc': { de: 'Automatisch erlaubte Tools', en: 'Automatically allowed tools', es: 'Herramientas permitidas automaticamente', fr: 'Outils automatiquement autorises', ja: '自動的に許可されるツール', pt: 'Ferramentas permitidas automaticamente' },
+      'search.askRules': { de: 'Ask Rules', en: 'Ask Rules', es: 'Reglas Ask', fr: 'Regles Ask', ja: 'Askルール', pt: 'Regras Ask' },
+      'search.askRules.desc': { de: 'Bestaetigung erforderlich', en: 'Confirmation required', es: 'Confirmacion requerida', fr: 'Confirmation requise', ja: '確認が必要', pt: 'Confirmacao necessaria' },
+      'search.denyRules': { de: 'Deny Rules', en: 'Deny Rules', es: 'Reglas Deny', fr: 'Regles Deny', ja: 'Denyルール', pt: 'Regras Deny' },
+      'search.denyRules.desc': { de: 'Immer blockiert', en: 'Always blocked', es: 'Siempre bloqueado', fr: 'Toujours bloque', ja: '常にブロック', pt: 'Sempre bloqueado' },
+      'search.addDirs': { de: 'Additional Directories', en: 'Additional Directories', es: 'Directorios adicionales', fr: 'Repertoires supplementaires', ja: '追加ディレクトリ', pt: 'Diretorios adicionais' },
+      'search.addDirs.desc': { de: 'Zusaetzliche Verzeichnisse', en: 'Additional directories', es: 'Directorios adicionales', fr: 'Repertoires supplementaires', ja: '追加のディレクトリ', pt: 'Diretorios adicionais' },
+      'search.hooks': { de: 'Hooks', en: 'Hooks', es: 'Hooks', fr: 'Hooks', ja: 'フック', pt: 'Hooks' },
+      'search.hooks.desc': { de: 'Automatische Aktionen bei Events', en: 'Automatic actions on events', es: 'Acciones automaticas en eventos', fr: 'Actions automatiques sur evenements', ja: 'イベント時の自動アクション', pt: 'Acoes automaticas em eventos' },
+      'search.mcp': { de: 'MCP Servers', en: 'MCP Servers', es: 'Servidores MCP', fr: 'Serveurs MCP', ja: 'MCPサーバー', pt: 'Servidores MCP' },
+      'search.mcp.desc': { de: 'Model Context Protocol Server', en: 'Model Context Protocol servers', es: 'Servidores Model Context Protocol', fr: 'Serveurs Model Context Protocol', ja: 'モデルコンテキストプロトコルサーバー', pt: 'Servidores Model Context Protocol' },
+      'search.sandboxEnable': { de: 'Sandbox aktivieren', en: 'Enable Sandbox', es: 'Activar sandbox', fr: 'Activer le sandbox', ja: 'サンドボックスを有効化', pt: 'Ativar sandbox' },
+      'search.sandboxEnable.desc': { de: 'Dateisystem und Netzwerk isolieren', en: 'Isolate filesystem and network', es: 'Aislar sistema de archivos y red', fr: 'Isoler le systeme de fichiers et le reseau', ja: 'ファイルシステムとネットワークを分離', pt: 'Isolar sistema de arquivos e rede' },
+      'search.networkDomains': { de: 'Network Domains', en: 'Network Domains', es: 'Dominios de red', fr: 'Domaines reseau', ja: 'ネットワークドメイン', pt: 'Dominios de rede' },
+      'search.networkDomains.desc': { de: 'Erlaubte Domains fuer Netzwerkzugriff', en: 'Allowed domains for network access', es: 'Dominios permitidos para acceso a red', fr: 'Domaines autorises pour l\'acces reseau', ja: 'ネットワークアクセスの許可ドメイン', pt: 'Dominios permitidos para acesso a rede' },
+      'search.localBinding': { de: 'Local Binding', en: 'Local Binding', es: 'Enlace local', fr: 'Liaison locale', ja: 'ローカルバインディング', pt: 'Ligacao local' },
+      'search.localBinding.desc': { de: 'Lokale Port-Bindung erlauben', en: 'Allow local port binding', es: 'Permitir enlace de puerto local', fr: 'Autoriser la liaison de port locale', ja: 'ローカルポートバインディングを許可', pt: 'Permitir ligacao de porta local' },
+      'search.env': { de: 'Environment Variables', en: 'Environment Variables', es: 'Variables de entorno', fr: 'Variables d\'environnement', ja: '環境変数', pt: 'Variaveis de ambiente' },
+      'search.env.desc': { de: 'Umgebungsvariablen fuer Sessions', en: 'Environment variables for sessions', es: 'Variables de entorno para sesiones', fr: 'Variables d\'environnement pour les sessions', ja: 'セッション用の環境変数', pt: 'Variaveis de ambiente para sessoes' },
+      'search.spinnerTips': { de: 'Spinner Tips', en: 'Spinner Tips', es: 'Consejos del spinner', fr: 'Astuces du spinner', ja: 'スピナーヒント', pt: 'Dicas do spinner' },
+      'search.spinnerTips.desc': { de: 'Tipps im Spinner anzeigen', en: 'Show tips in spinner', es: 'Mostrar consejos en el spinner', fr: 'Afficher les astuces dans le spinner', ja: 'スピナーにヒントを表示', pt: 'Mostrar dicas no spinner' },
+      'search.turnDuration': { de: 'Turn-Dauer', en: 'Turn Duration', es: 'Duracion del turno', fr: 'Duree du tour', ja: 'ターン時間', pt: 'Duracao do turno' },
+      'search.turnDuration.desc': { de: 'Dauer nach jeder Antwort anzeigen', en: 'Show duration after each response', es: 'Mostrar duracion despues de cada respuesta', fr: 'Afficher la duree apres chaque reponse', ja: '各回答後に所要時間を表示', pt: 'Mostrar duracao apos cada resposta' },
+      'search.reducedMotion': { de: 'Reduced Motion', en: 'Reduced Motion', es: 'Movimiento reducido', fr: 'Mouvement reduit', ja: 'モーション軽減', pt: 'Movimento reduzido' },
+      'search.reducedMotion.desc': { de: 'Animationen reduzieren', en: 'Reduce animations', es: 'Reducir animaciones', fr: 'Reduire les animations', ja: 'アニメーションを軽減', pt: 'Reduzir animacoes' },
+      'search.statusLine': { de: 'Status Line', en: 'Status Line', es: 'Linea de estado', fr: 'Ligne de statut', ja: 'ステータスライン', pt: 'Linha de status' },
+      'search.statusLine.desc': { de: 'Statuszeile im Terminal', en: 'Status line in terminal', es: 'Linea de estado en el terminal', fr: 'Ligne de statut dans le terminal', ja: 'ターミナルのステータスライン', pt: 'Linha de status no terminal' },
+      'search.spinnerVerbs': { de: 'Spinner Verbs', en: 'Spinner Verbs', es: 'Verbos del spinner', fr: 'Verbes du spinner', ja: 'スピナー動詞', pt: 'Verbos do spinner' },
+      'search.spinnerVerbs.desc': { de: 'Eigene Aktionswoerter fuer den Spinner', en: 'Custom action words for the spinner', es: 'Palabras de accion personalizadas para el spinner', fr: 'Mots d\'action personnalises pour le spinner', ja: 'スピナー用のカスタムアクションワード', pt: 'Palavras de acao personalizadas para o spinner' },
+      'search.commitAttr': { de: 'Commit Attribution', en: 'Commit Attribution', es: 'Atribucion de commits', fr: 'Attribution de commits', ja: 'コミット帰属', pt: 'Atribuicao de commits' },
+      'search.commitAttr.desc': { de: 'Co-Author Text fuer Git Commits', en: 'Co-author text for Git commits', es: 'Texto de coautor para commits Git', fr: 'Texte de co-auteur pour les commits Git', ja: 'Gitコミット用の共著者テキスト', pt: 'Texto de coautor para commits Git' },
+      'search.prAttr': { de: 'PR Attribution', en: 'PR Attribution', es: 'Atribucion de PR', fr: 'Attribution de PR', ja: 'PR帰属', pt: 'Atribuicao de PR' },
+      'search.prAttr.desc': { de: 'Text fuer Pull Requests', en: 'Text for pull requests', es: 'Texto para pull requests', fr: 'Texte pour les pull requests', ja: 'プルリクエスト用のテキスト', pt: 'Texto para pull requests' },
+      'search.cleanup': { de: 'Cleanup Period', en: 'Cleanup Period', es: 'Periodo de limpieza', fr: 'Periode de nettoyage', ja: 'クリーンアップ期間', pt: 'Periodo de limpeza' },
+      'search.cleanup.desc': { de: 'Session-Transkripte Aufbewahrungsdauer', en: 'Session transcript retention period', es: 'Periodo de retencion de transcripciones', fr: 'Duree de conservation des transcriptions', ja: 'セッション記録の保持期間', pt: 'Periodo de retencao de transcricoes' },
+      'search.fastMode': { de: 'Fast Mode', en: 'Fast Mode', es: 'Modo rapido', fr: 'Mode rapide', ja: 'ファストモード', pt: 'Modo rapido' },
+      'search.fastMode.desc': { de: 'Fast Mode per Session Opt-In', en: 'Fast mode per session opt-in', es: 'Modo rapido por sesion', fr: 'Mode rapide par session', ja: 'セッションごとのファストモード', pt: 'Modo rapido por sessao' },
+      'search.allMcp': { de: 'Alle Projekt-MCP-Server', en: 'All Project MCP Servers', es: 'Todos los servidores MCP del proyecto', fr: 'Tous les serveurs MCP du projet', ja: '全プロジェクトMCPサーバー', pt: 'Todos os servidores MCP do projeto' },
+      'search.allMcp.desc': { de: 'MCP-Server automatisch aktivieren', en: 'Automatically enable MCP servers', es: 'Activar servidores MCP automaticamente', fr: 'Activer automatiquement les serveurs MCP', ja: 'MCPサーバーを自動的に有効化', pt: 'Ativar servidores MCP automaticamente' },
+      'search.gitignore': { de: '.gitignore respektieren', en: 'Respect .gitignore', es: 'Respetar .gitignore', fr: 'Respecter .gitignore', ja: '.gitignoreを尊重', pt: 'Respeitar .gitignore' },
+      'search.gitignore.desc': { de: 'Gitignore bei Suche beachten', en: 'Respect gitignore in search', es: 'Respetar gitignore en la busqueda', fr: 'Respecter gitignore lors de la recherche', ja: '検索時にgitignoreを尊重', pt: 'Respeitar gitignore na busca' },
+      'search.teammate': { de: 'Teammate Mode', en: 'Teammate Mode', es: 'Modo companero', fr: 'Mode coequipier', ja: 'チームメイトモード', pt: 'Modo companheiro' },
+      'search.teammate.desc': { de: 'Parallele Agenten orchestrieren', en: 'Orchestrate parallel agents', es: 'Orquestar agentes paralelos', fr: 'Orchestrer des agents paralleles', ja: '並列エージェントのオーケストレーション', pt: 'Orquestrar agentes paralelos' },
+      'search.login': { de: 'Login-Methode', en: 'Login Method', es: 'Metodo de inicio de sesion', fr: 'Methode de connexion', ja: 'ログイン方法', pt: 'Metodo de login' },
+      'search.login.desc': { de: 'Anmeldemethode erzwingen', en: 'Force login method', es: 'Forzar metodo de inicio de sesion', fr: 'Forcer la methode de connexion', ja: 'ログイン方法を強制', pt: 'Forcar metodo de login' },
+      'search.apiKey': { de: 'API Key Helper', en: 'API Key Helper', es: 'Asistente de clave API', fr: 'Assistant de cle API', ja: 'APIキーヘルパー', pt: 'Assistente de chave API' },
+      'search.apiKey.desc': { de: 'Skript fuer API-Key-Rotation', en: 'Script for API key rotation', es: 'Script para rotacion de claves API', fr: 'Script pour la rotation de cles API', ja: 'APIキーローテーション用スクリプト', pt: 'Script para rotacao de chaves API' },
+      'search.plansDir': { de: 'Plans Directory', en: 'Plans Directory', es: 'Directorio de planes', fr: 'Repertoire de plans', ja: 'プランディレクトリ', pt: 'Diretorio de planos' },
+      'search.plansDir.desc': { de: 'Verzeichnis fuer Plaene', en: 'Directory for plans', es: 'Directorio para planes', fr: 'Repertoire pour les plans', ja: 'プラン用のディレクトリ', pt: 'Diretorio para planos' },
+      'search.progressBar': { de: 'Fortschrittsbalken', en: 'Progress Bar', es: 'Barra de progreso', fr: 'Barre de progression', ja: 'プログレスバー', pt: 'Barra de progresso' },
+      'search.progressBar.desc': { de: 'Terminal-Fortschrittsbalken', en: 'Terminal progress bar', es: 'Barra de progreso del terminal', fr: 'Barre de progression du terminal', ja: 'ターミナルプログレスバー', pt: 'Barra de progresso do terminal' },
+      'search.disableHooks': { de: 'Alle Hooks deaktivieren', en: 'Disable All Hooks', es: 'Desactivar todos los hooks', fr: 'Desactiver tous les hooks', ja: '全フックを無効化', pt: 'Desativar todos os hooks' },
+      'search.disableHooks.desc': { de: 'Hooks und Status-Lines deaktivieren', en: 'Disable hooks and status lines', es: 'Desactivar hooks y lineas de estado', fr: 'Desactiver les hooks et lignes de statut', ja: 'フックとステータスラインを無効化', pt: 'Desativar hooks e linhas de status' },
+      'search.availModels': { de: 'Verfuegbare Modelle', en: 'Available Models', es: 'Modelos disponibles', fr: 'Modeles disponibles', ja: '利用可能なモデル', pt: 'Modelos disponiveis' },
+      'search.availModels.desc': { de: 'Modelle einschraenken', en: 'Restrict models', es: 'Restringir modelos', fr: 'Restreindre les modeles', ja: 'モデルを制限', pt: 'Restringir modelos' },
+      // ─── CLAUDE.md Builder Sections ───
+      'builder.header': { de: 'Projekt-Header', en: 'Project Header', es: 'Encabezado del proyecto', fr: 'En-tete du projet', ja: 'プロジェクトヘッダー', pt: 'Cabecalho do projeto' },
+      'builder.header.desc': { de: 'Name und Beschreibung', en: 'Name and description', es: 'Nombre y descripcion', fr: 'Nom et description', ja: '名前と説明', pt: 'Nome e descricao' },
+      'builder.stack': { de: 'Tech Stack', en: 'Tech Stack', es: 'Tech Stack', fr: 'Tech Stack', ja: '技術スタック', pt: 'Tech Stack' },
+      'builder.stack.desc': { de: 'Frameworks und Tools', en: 'Frameworks and tools', es: 'Frameworks y herramientas', fr: 'Frameworks et outils', ja: 'フレームワークとツール', pt: 'Frameworks e ferramentas' },
+      'builder.structure': { de: 'Ordnerstruktur', en: 'Folder Structure', es: 'Estructura de carpetas', fr: 'Structure de dossiers', ja: 'フォルダー構造', pt: 'Estrutura de pastas' },
+      'builder.structure.desc': { de: 'Wichtige Verzeichnisse', en: 'Important directories', es: 'Directorios importantes', fr: 'Repertoires importants', ja: '重要なディレクトリ', pt: 'Diretorios importantes' },
+      'builder.commands': { de: 'Befehle', en: 'Commands', es: 'Comandos', fr: 'Commandes', ja: 'コマンド', pt: 'Comandos' },
+      'builder.commands.desc': { de: 'Build, Test, Deploy', en: 'Build, Test, Deploy', es: 'Build, Test, Deploy', fr: 'Build, Test, Deploy', ja: 'ビルド、テスト、デプロイ', pt: 'Build, Test, Deploy' },
+      'builder.rules': { de: 'Regeln', en: 'Rules', es: 'Reglas', fr: 'Regles', ja: 'ルール', pt: 'Regras' },
+      'builder.rules.desc': { de: 'Dos und Don\'ts', en: 'Dos and Don\'ts', es: 'Lo que se debe y no se debe hacer', fr: 'A faire et a ne pas faire', ja: 'やるべきこととやってはいけないこと', pt: 'O que fazer e nao fazer' },
+      'builder.patterns': { de: 'Patterns', en: 'Patterns', es: 'Patrones', fr: 'Patterns', ja: 'パターン', pt: 'Padroes' },
+      'builder.patterns.desc': { de: 'Architektur-Muster', en: 'Architecture patterns', es: 'Patrones de arquitectura', fr: 'Patterns d\'architecture', ja: 'アーキテクチャパターン', pt: 'Padroes de arquitetura' },
       // ─── Design Prompts & Terminal Prompts ───
       'prompts.hidePrompt': { de: 'Prompt verbergen', en: 'Hide prompt', es: 'Ocultar prompt', fr: 'Masquer le prompt', ja: 'プロンプトを非表示', pt: 'Ocultar prompt' },
       'prompts.showAiPrompt': { de: 'AI Prompt anzeigen', en: 'Show AI prompt', es: 'Mostrar prompt de IA', fr: 'Afficher le prompt IA', ja: 'AIプロンプトを表示', pt: 'Mostrar prompt de IA' },
@@ -2852,43 +2940,43 @@
         searchResults: [],
         searchActiveIndex: -1,
         settingsRegistry: [
-          { tab: 'general', label: 'Model', desc: 'Claude Modell (Opus, Sonnet, Haiku)', keywords: ['model', 'opus', 'sonnet', 'haiku', 'modell'], id: 'setting-model' },
-          { tab: 'general', label: 'Effort Level', desc: 'Denktiefe und Reasoning-Aufwand', keywords: ['effort', 'high', 'medium', 'low', 'denktiefe'], id: 'setting-effort' },
-          { tab: 'general', label: 'Output Style', desc: 'Stil der Antworten', keywords: ['output', 'style', 'explanatory', 'learning', 'concise'], id: 'setting-output-style' },
-          { tab: 'general', label: 'Language', desc: 'Sprache der Antworten', keywords: ['language', 'sprache', 'deutsch', 'english'], id: 'setting-language' },
-          { tab: 'general', label: 'Always Thinking', desc: 'Thinking-Modus permanent aktivieren', keywords: ['thinking', 'denken', 'reasoning'], id: 'setting-thinking' },
-          { tab: 'general', label: 'Auto-Updates Channel', desc: 'Release-Kanal für Updates', keywords: ['updates', 'channel', 'latest', 'stable'], id: 'setting-auto-updates' },
-          { tab: 'permissions', label: 'Permission Presets', desc: 'Schnellstart-Vorlagen für Permissions', keywords: ['presets', 'vorlagen', 'safety', 'produktiv'], id: 'setting-perm-presets' },
-          { tab: 'permissions', label: 'Default Mode', desc: 'Fallback wenn keine Regel greift', keywords: ['default', 'mode', 'bypassPermissions', 'acceptEdits', 'dontAsk', 'auto', 'plan'], id: 'setting-perm-default-mode' },
-          { tab: 'permissions', label: 'Bypass-Modus', desc: 'Bypass-Modus deaktivieren', keywords: ['bypass', 'deaktivieren'], id: 'setting-perm-bypass' },
-          { tab: 'permissions', label: 'Allow Rules', desc: 'Automatisch erlaubte Tools', keywords: ['allow', 'erlaubt', 'permit', 'bash', 'read'], id: 'setting-perm-allow' },
-          { tab: 'permissions', label: 'Ask Rules', desc: 'Bestätigung erforderlich', keywords: ['ask', 'fragen', 'bestätigung'], id: 'setting-perm-ask' },
-          { tab: 'permissions', label: 'Deny Rules', desc: 'Immer blockiert', keywords: ['deny', 'blockiert', 'verboten'], id: 'setting-perm-deny' },
-          { tab: 'permissions', label: 'Additional Directories', desc: 'Zusätzliche Verzeichnisse', keywords: ['directories', 'verzeichnisse', 'pfad'], id: 'setting-perm-dirs' },
-          { tab: 'hooks', label: 'Hooks', desc: 'Automatische Aktionen bei Events', keywords: ['hooks', 'event', 'session', 'tool'], id: 'setting-hooks' },
-          { tab: 'mcp', label: 'MCP Servers', desc: 'Model Context Protocol Server', keywords: ['mcp', 'server', 'stdio', 'http', 'sse'], id: 'setting-mcp' },
-          { tab: 'sandbox', label: 'Sandbox aktivieren', desc: 'Dateisystem und Netzwerk isolieren', keywords: ['sandbox', 'isolieren', 'sicherheit'], id: 'setting-sandbox-enable' },
-          { tab: 'sandbox', label: 'Network Domains', desc: 'Erlaubte Domains für Netzwerkzugriff', keywords: ['network', 'domains', 'netzwerk'], id: 'setting-sandbox-domains' },
-          { tab: 'sandbox', label: 'Local Binding', desc: 'Lokale Port-Bindung erlauben', keywords: ['local', 'binding', 'port'], id: 'setting-sandbox-local-binding' },
-          { tab: 'env', label: 'Environment Variables', desc: 'Umgebungsvariablen für Sessions', keywords: ['env', 'environment', 'variablen', 'NODE_ENV'], id: 'setting-env' },
-          { tab: 'display', label: 'Spinner Tips', desc: 'Tipps im Spinner anzeigen', keywords: ['spinner', 'tips', 'tipps'], id: 'setting-spinner-tips' },
-          { tab: 'display', label: 'Turn-Dauer', desc: 'Dauer nach jeder Antwort anzeigen', keywords: ['turn', 'dauer', 'duration'], id: 'setting-turn-duration' },
-          { tab: 'display', label: 'Reduced Motion', desc: 'Animationen reduzieren', keywords: ['motion', 'animation', 'reduziert'], id: 'setting-reduced-motion' },
-          { tab: 'display', label: 'Status Line', desc: 'Statuszeile im Terminal', keywords: ['status', 'statusline', 'terminal'], id: 'setting-status-line' },
-          { tab: 'display', label: 'Spinner Verbs', desc: 'Eigene Aktionswörter für den Spinner', keywords: ['spinner', 'verbs', 'wörter'], id: 'setting-spinner-verbs' },
-          { tab: 'attribution', label: 'Commit Attribution', desc: 'Co-Author Text für Git Commits', keywords: ['commit', 'attribution', 'co-author', 'git'], id: 'setting-attr-commit' },
-          { tab: 'attribution', label: 'PR Attribution', desc: 'Text für Pull Requests', keywords: ['pr', 'pull-request', 'attribution'], id: 'setting-attr-pr' },
-          { tab: 'advanced', label: 'Cleanup Period', desc: 'Session-Transkripte Aufbewahrungsdauer', keywords: ['cleanup', 'tage', 'aufbewahrung'], id: 'setting-cleanup' },
-          { tab: 'advanced', label: 'Fast Mode', desc: 'Fast Mode per Session Opt-In', keywords: ['fast', 'mode', 'schnell'], id: 'setting-fast-mode' },
-          { tab: 'advanced', label: 'Alle Projekt-MCP-Server', desc: 'MCP-Server automatisch aktivieren', keywords: ['mcp', 'projekt', 'server'], id: 'setting-all-mcp' },
-          { tab: 'advanced', label: '.gitignore respektieren', desc: 'Gitignore bei Suche beachten', keywords: ['gitignore', 'ignore'], id: 'setting-gitignore' },
-          { tab: 'advanced', label: 'Teammate Mode', desc: 'Parallele Agenten orchestrieren', keywords: ['teammate', 'agent', 'tmux'], id: 'setting-teammate' },
-          { tab: 'advanced', label: 'Login-Methode', desc: 'Anmeldemethode erzwingen', keywords: ['login', 'auth', 'anmeldung'], id: 'setting-login' },
-          { tab: 'advanced', label: 'API Key Helper', desc: 'Skript für API-Key-Rotation', keywords: ['api', 'key', 'helper', 'vault'], id: 'setting-api-key' },
-          { tab: 'advanced', label: 'Plans Directory', desc: 'Verzeichnis für Pläne', keywords: ['plans', 'directory', 'pläne'], id: 'setting-plans-dir' },
-          { tab: 'advanced', label: 'Fortschrittsbalken', desc: 'Terminal-Fortschrittsbalken', keywords: ['progress', 'bar', 'fortschritt'], id: 'setting-progress-bar' },
-          { tab: 'advanced', label: 'Alle Hooks deaktivieren', desc: 'Hooks und Status-Lines deaktivieren', keywords: ['hooks', 'deaktivieren', 'disable'], id: 'setting-disable-hooks' },
-          { tab: 'advanced', label: 'Verfügbare Modelle', desc: 'Modelle einschränken', keywords: ['modelle', 'models', 'available'], id: 'setting-available-models' },
+          { tab: 'general', label: 'search.model', desc: 'search.model.desc', keywords: ['model', 'opus', 'sonnet', 'haiku', 'modell'], id: 'setting-model' },
+          { tab: 'general', label: 'search.effort', desc: 'search.effort.desc', keywords: ['effort', 'high', 'medium', 'low', 'denktiefe'], id: 'setting-effort' },
+          { tab: 'general', label: 'search.outputStyle', desc: 'search.outputStyle.desc', keywords: ['output', 'style', 'explanatory', 'learning', 'concise'], id: 'setting-output-style' },
+          { tab: 'general', label: 'search.language', desc: 'search.language.desc', keywords: ['language', 'sprache', 'deutsch', 'english'], id: 'setting-language' },
+          { tab: 'general', label: 'search.thinking', desc: 'search.thinking.desc', keywords: ['thinking', 'denken', 'reasoning'], id: 'setting-thinking' },
+          { tab: 'general', label: 'search.autoUpdates', desc: 'search.autoUpdates.desc', keywords: ['updates', 'channel', 'latest', 'stable'], id: 'setting-auto-updates' },
+          { tab: 'permissions', label: 'search.permPresets', desc: 'search.permPresets.desc', keywords: ['presets', 'vorlagen', 'safety', 'produktiv'], id: 'setting-perm-presets' },
+          { tab: 'permissions', label: 'search.defaultMode', desc: 'search.defaultMode.desc', keywords: ['default', 'mode', 'bypassPermissions', 'acceptEdits', 'dontAsk', 'auto', 'plan'], id: 'setting-perm-default-mode' },
+          { tab: 'permissions', label: 'search.bypass', desc: 'search.bypass.desc', keywords: ['bypass', 'deaktivieren'], id: 'setting-perm-bypass' },
+          { tab: 'permissions', label: 'search.allowRules', desc: 'search.allowRules.desc', keywords: ['allow', 'erlaubt', 'permit', 'bash', 'read'], id: 'setting-perm-allow' },
+          { tab: 'permissions', label: 'search.askRules', desc: 'search.askRules.desc', keywords: ['ask', 'fragen', 'bestätigung'], id: 'setting-perm-ask' },
+          { tab: 'permissions', label: 'search.denyRules', desc: 'search.denyRules.desc', keywords: ['deny', 'blockiert', 'verboten'], id: 'setting-perm-deny' },
+          { tab: 'permissions', label: 'search.addDirs', desc: 'search.addDirs.desc', keywords: ['directories', 'verzeichnisse', 'pfad'], id: 'setting-perm-dirs' },
+          { tab: 'hooks', label: 'search.hooks', desc: 'search.hooks.desc', keywords: ['hooks', 'event', 'session', 'tool'], id: 'setting-hooks' },
+          { tab: 'mcp', label: 'search.mcp', desc: 'search.mcp.desc', keywords: ['mcp', 'server', 'stdio', 'http', 'sse'], id: 'setting-mcp' },
+          { tab: 'sandbox', label: 'search.sandboxEnable', desc: 'search.sandboxEnable.desc', keywords: ['sandbox', 'isolieren', 'sicherheit'], id: 'setting-sandbox-enable' },
+          { tab: 'sandbox', label: 'search.networkDomains', desc: 'search.networkDomains.desc', keywords: ['network', 'domains', 'netzwerk'], id: 'setting-sandbox-domains' },
+          { tab: 'sandbox', label: 'search.localBinding', desc: 'search.localBinding.desc', keywords: ['local', 'binding', 'port'], id: 'setting-sandbox-local-binding' },
+          { tab: 'env', label: 'search.env', desc: 'search.env.desc', keywords: ['env', 'environment', 'variablen', 'NODE_ENV'], id: 'setting-env' },
+          { tab: 'display', label: 'search.spinnerTips', desc: 'search.spinnerTips.desc', keywords: ['spinner', 'tips', 'tipps'], id: 'setting-spinner-tips' },
+          { tab: 'display', label: 'search.turnDuration', desc: 'search.turnDuration.desc', keywords: ['turn', 'dauer', 'duration'], id: 'setting-turn-duration' },
+          { tab: 'display', label: 'search.reducedMotion', desc: 'search.reducedMotion.desc', keywords: ['motion', 'animation', 'reduziert'], id: 'setting-reduced-motion' },
+          { tab: 'display', label: 'search.statusLine', desc: 'search.statusLine.desc', keywords: ['status', 'statusline', 'terminal'], id: 'setting-status-line' },
+          { tab: 'display', label: 'search.spinnerVerbs', desc: 'search.spinnerVerbs.desc', keywords: ['spinner', 'verbs', 'wörter'], id: 'setting-spinner-verbs' },
+          { tab: 'attribution', label: 'search.commitAttr', desc: 'search.commitAttr.desc', keywords: ['commit', 'attribution', 'co-author', 'git'], id: 'setting-attr-commit' },
+          { tab: 'attribution', label: 'search.prAttr', desc: 'search.prAttr.desc', keywords: ['pr', 'pull-request', 'attribution'], id: 'setting-attr-pr' },
+          { tab: 'advanced', label: 'search.cleanup', desc: 'search.cleanup.desc', keywords: ['cleanup', 'tage', 'aufbewahrung'], id: 'setting-cleanup' },
+          { tab: 'advanced', label: 'search.fastMode', desc: 'search.fastMode.desc', keywords: ['fast', 'mode', 'schnell'], id: 'setting-fast-mode' },
+          { tab: 'advanced', label: 'search.allMcp', desc: 'search.allMcp.desc', keywords: ['mcp', 'projekt', 'server'], id: 'setting-all-mcp' },
+          { tab: 'advanced', label: 'search.gitignore', desc: 'search.gitignore.desc', keywords: ['gitignore', 'ignore'], id: 'setting-gitignore' },
+          { tab: 'advanced', label: 'search.teammate', desc: 'search.teammate.desc', keywords: ['teammate', 'agent', 'tmux'], id: 'setting-teammate' },
+          { tab: 'advanced', label: 'search.login', desc: 'search.login.desc', keywords: ['login', 'auth', 'anmeldung'], id: 'setting-login' },
+          { tab: 'advanced', label: 'search.apiKey', desc: 'search.apiKey.desc', keywords: ['api', 'key', 'helper', 'vault'], id: 'setting-api-key' },
+          { tab: 'advanced', label: 'search.plansDir', desc: 'search.plansDir.desc', keywords: ['plans', 'directory', 'pläne'], id: 'setting-plans-dir' },
+          { tab: 'advanced', label: 'search.progressBar', desc: 'search.progressBar.desc', keywords: ['progress', 'bar', 'fortschritt'], id: 'setting-progress-bar' },
+          { tab: 'advanced', label: 'search.disableHooks', desc: 'search.disableHooks.desc', keywords: ['hooks', 'deaktivieren', 'disable'], id: 'setting-disable-hooks' },
+          { tab: 'advanced', label: 'search.availModels', desc: 'search.availModels.desc', keywords: ['modelle', 'models', 'available'], id: 'setting-available-models' },
         ],
 
         // === Settings Diff ===
@@ -2921,12 +3009,12 @@
         claudeMdContent: '',
         claudeMdFileHandle: null,
         claudeMdSections: [
-          { id: 'sec-header', name: 'Projekt-Header', desc: 'Name und Beschreibung', content: '# Projektname\n\nKurze Beschreibung des Projekts.\n' },
-          { id: 'sec-stack', name: 'Tech Stack', desc: 'Frameworks und Tools', content: '## Tech Stack\n- Framework: \n- Styling: \n- Backend: \n- Database: \n' },
-          { id: 'sec-structure', name: 'Ordnerstruktur', desc: 'Wichtige Verzeichnisse', content: '## Ordnerstruktur\n```\nsrc/\n  components/    # UI-Komponenten\n  services/      # Business-Logik\n  utils/         # Hilfsfunktionen\n  types/         # TypeScript-Typen\n```\n' },
-          { id: 'sec-commands', name: 'Befehle', desc: 'Build, Test, Deploy', content: '## Befehle\n```bash\nnpm install       # Dependencies installieren\nnpm run dev       # Development Server\nnpm run build     # Production Build\nnpm test          # Tests ausführen\n```\n' },
-          { id: 'sec-rules', name: 'Regeln', desc: 'Dos und Don\'ts', content: '## Regeln\n- NIE ohne Rückfrage committen\n- NIE .env Dateien committen\n- Immer existierenden Code lesen vor Änderungen\n- Bei Unsicherheit: fragen statt raten\n' },
-          { id: 'sec-patterns', name: 'Patterns', desc: 'Architektur-Muster', content: '## Patterns\n- Feature-basierte Ordnerstruktur\n- Composition over Inheritance\n- Explicit > Implicit\n- Fail fast, fail loud\n' },
+          { id: 'sec-header', name: 'builder.header', desc: 'builder.header.desc', content: '# Projektname\n\nKurze Beschreibung des Projekts.\n' },
+          { id: 'sec-stack', name: 'builder.stack', desc: 'builder.stack.desc', content: '## Tech Stack\n- Framework: \n- Styling: \n- Backend: \n- Database: \n' },
+          { id: 'sec-structure', name: 'builder.structure', desc: 'builder.structure.desc', content: '## Ordnerstruktur\n```\nsrc/\n  components/    # UI-Komponenten\n  services/      # Business-Logik\n  utils/         # Hilfsfunktionen\n  types/         # TypeScript-Typen\n```\n' },
+          { id: 'sec-commands', name: 'builder.commands', desc: 'builder.commands.desc', content: '## Befehle\n```bash\nnpm install       # Dependencies installieren\nnpm run dev       # Development Server\nnpm run build     # Production Build\nnpm test          # Tests ausführen\n```\n' },
+          { id: 'sec-rules', name: 'builder.rules', desc: 'builder.rules.desc', content: '## Regeln\n- NIE ohne Rückfrage committen\n- NIE .env Dateien committen\n- Immer existierenden Code lesen vor Änderungen\n- Bei Unsicherheit: fragen statt raten\n' },
+          { id: 'sec-patterns', name: 'builder.patterns', desc: 'builder.patterns.desc', content: '## Patterns\n- Feature-basierte Ordnerstruktur\n- Composition over Inheritance\n- Explicit > Implicit\n- Fail fast, fail loud\n' },
         ],
         terminalPrompts: [
           // === Debugging ===
@@ -4234,7 +4322,7 @@
           const q = this.searchQuery.trim().toLowerCase();
           if (!q) { this.searchResults = []; this.searchActiveIndex = -1; return; }
           this.searchResults = this.settingsRegistry.filter(e =>
-            e.label.toLowerCase().includes(q) || e.desc.toLowerCase().includes(q) || e.keywords.some(k => k.includes(q))
+            this.t(e.label).toLowerCase().includes(q) || this.t(e.desc).toLowerCase().includes(q) || e.keywords.some(k => k.includes(q))
           );
           this.searchResults.forEach((r, i) => r._index = i);
           this.searchActiveIndex = this.searchResults.length > 0 ? 0 : -1;
