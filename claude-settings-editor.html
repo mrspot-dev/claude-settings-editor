@@ -707,6 +707,19 @@
                 <option value="stable" x-text="t('general.autoUpdatesStable')"></option>
               </select>
             </div>
+
+            <!-- Restart Wizard -->
+            <div class="settings-group !border-dashed !border-accent/15 flex items-center justify-between">
+              <div>
+                <label class="setting-label" x-text="t('general.restartWizard')"></label>
+                <p class="setting-desc" x-text="t('general.restartWizardDesc')"></p>
+              </div>
+              <button @click="wizardStep = 0; showSetupWizard = true; $nextTick(() => trapFocus($refs.wizardModal))"
+                      class="px-4 py-2 rounded-xl text-xs font-display font-medium border border-accent/20 text-accent hover:bg-accent/10 transition-colors flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                <span x-text="t('general.restartWizardBtn')"></span>
+              </button>
+            </div>
           </div>
 
           <!-- ═══ TAB: Permissions ═══ -->
@@ -2001,7 +2014,7 @@
       <!-- Header -->
       <div class="px-8 pt-8 pb-4">
         <div class="flex items-center gap-2 mb-6">
-          <template x-for="i in 5" :key="'wdot-'+i">
+          <template x-for="i in 6" :key="'wdot-'+i">
             <div class="wizard-dot" :class="{ 'active': wizardStep === i-1, 'done': wizardStep > i-1 }"></div>
           </template>
         </div>
@@ -2012,8 +2025,24 @@
           <p class="text-sm text-fg-muted mt-2" x-text="t('wizard.welcomeDesc')"></p>
         </div>
 
-        <!-- Step 1: Model -->
+        <!-- Step 1: Language -->
         <div x-show="wizardStep === 1">
+          <h3 class="font-display font-bold text-xl text-white" x-text="t('wizard.langTitle')"></h3>
+          <p class="text-sm text-fg-muted mt-2" x-text="t('wizard.langDesc')"></p>
+          <div class="mt-4 space-y-2">
+            <template x-for="lc in [{code:'en',flag:'🇬🇧',name:'English'},{code:'de',flag:'🇩🇪',name:'Deutsch'},{code:'es',flag:'🇪🇸',name:'Español'},{code:'fr',flag:'🇫🇷',name:'Français'},{code:'ja',flag:'🇯🇵',name:'日本語'},{code:'pt',flag:'🇧🇷',name:'Português'}]" :key="lc.code">
+              <button @click="setLang(lc.code)"
+                      class="w-full text-left p-3 rounded-xl border transition-all flex items-center gap-3"
+                      :class="lang === lc.code ? 'border-accent/40 bg-accent/5' : 'border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.15)]'">
+                <span class="text-xl" x-text="lc.flag"></span>
+                <span class="font-display font-medium text-sm" :class="lang === lc.code ? 'text-accent' : 'text-fg'" x-text="lc.name"></span>
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <!-- Step 2: Model -->
+        <div x-show="wizardStep === 2">
           <h3 class="font-display font-bold text-xl text-white" x-text="t('wizard.modelTitle')"></h3>
           <p class="text-sm text-fg-muted mt-2" x-text="t('wizard.modelDesc')"></p>
           <div class="mt-4 space-y-2">
@@ -2028,8 +2057,8 @@
           </div>
         </div>
 
-        <!-- Step 2: Permission Mode -->
-        <div x-show="wizardStep === 2">
+        <!-- Step 3: Permission Mode -->
+        <div x-show="wizardStep === 3">
           <h3 class="font-display font-bold text-xl text-white" x-text="t('wizard.permTitle')"></h3>
           <p class="text-sm text-fg-muted mt-2" x-text="t('wizard.permDesc')"></p>
           <div class="mt-4 space-y-2">
@@ -2044,8 +2073,8 @@
           </div>
         </div>
 
-        <!-- Step 3: Quick Plugins -->
-        <div x-show="wizardStep === 3">
+        <!-- Step 4: Quick Plugins -->
+        <div x-show="wizardStep === 4">
           <h3 class="font-display font-bold text-xl text-white" x-text="t('wizard.pluginsTitle')"></h3>
           <p class="text-sm text-fg-muted mt-2" x-text="t('wizard.pluginsDesc')"></p>
           <div class="mt-4 space-y-1.5 max-h-52 overflow-y-auto">
@@ -2063,12 +2092,13 @@
           </div>
         </div>
 
-        <!-- Step 4: Spinner -->
-        <div x-show="wizardStep === 4">
+        <!-- Step 5: Done -->
+        <div x-show="wizardStep === 5">
           <h3 class="font-display font-bold text-xl text-white" x-text="t('wizard.doneTitle')"></h3>
           <p class="text-sm text-fg-muted mt-2" x-text="t('wizard.doneDesc')"></p>
           <div class="mt-4 p-4 rounded-xl bg-accent/5 border border-accent/20">
             <div class="text-xs font-mono text-fg-dim space-y-1">
+              <div>Language: <span class="text-accent" x-text="({en:'English',de:'Deutsch',es:'Español',fr:'Français',ja:'日本語',pt:'Português'})[lang] || lang"></span></div>
               <div>Model: <span class="text-accent" x-text="settings.model || 'default'"></span></div>
               <div>Mode: <span class="text-accent" x-text="settings.permissions.defaultMode"></span></div>
               <div>Skills & Plugins: <span class="text-accent" x-text="Object.values(settings.enabledPlugins).filter(Boolean).length + ' ' + t('wizard.active')"></span></div>
@@ -2087,10 +2117,10 @@
           <button x-show="wizardStep > 0" @click="wizardStep--" class="btn-secondary px-4 py-2 text-xs font-medium rounded-xl border border-[rgba(255,255,255,0.1)] text-fg">
             <span x-text="t('wizard.back')"></span>
           </button>
-          <button x-show="wizardStep < 4" @click="wizardStep++" class="px-5 py-2 text-xs font-display font-semibold rounded-xl bg-accent text-bg hover:bg-accent-hover transition-colors">
+          <button x-show="wizardStep < 5" @click="wizardStep++" class="px-5 py-2 text-xs font-display font-semibold rounded-xl bg-accent text-bg hover:bg-accent-hover transition-colors">
             <span x-text="wizardStep === 0 ? t('wizard.start') : t('wizard.next')"></span>
           </button>
-          <button x-show="wizardStep === 4" @click="releaseFocus($refs.wizardModal); showSetupWizard = false; localStorage.setItem('claude-settings-wizard-done', '1')" class="px-5 py-2 text-xs font-display font-semibold rounded-xl bg-accent text-bg hover:bg-accent-hover transition-colors">
+          <button x-show="wizardStep === 5" @click="releaseFocus($refs.wizardModal); showSetupWizard = false; localStorage.setItem('claude-settings-wizard-done', '1')" class="px-5 py-2 text-xs font-display font-semibold rounded-xl bg-accent text-bg hover:bg-accent-hover transition-colors">
             <span x-text="t('wizard.finish')"></span>
           </button>
         </div>
@@ -2280,6 +2310,9 @@
       'general.autoUpdatesDesc': { de: 'Welchen Release-Kanal Claude Code fuer automatische Updates verwendet.', en: 'Which release channel Claude Code uses for automatic updates.', es: 'Que canal de lanzamiento usa Claude Code para actualizaciones automaticas.', fr: 'Quel canal de publication Claude Code utilise pour les mises a jour automatiques.', ja: 'Claude Codeが自動アップデートに使用するリリースチャンネル。', pt: 'Qual canal de lancamento o Claude Code usa para atualizacoes automaticas.' },
       'general.autoUpdatesLatest': { de: 'Latest — Neueste Features, evtl. instabiler', en: 'Latest — Newest features, potentially less stable', es: 'Latest — Ultimas funciones, potencialmente menos estable', fr: 'Latest — Dernieres fonctionnalites, potentiellement moins stable', ja: 'Latest — 最新機能、やや不安定な可能性あり', pt: 'Latest — Recursos mais recentes, potencialmente menos estavel' },
       'general.autoUpdatesStable': { de: 'Stable — Stabile Releases', en: 'Stable — Stable releases', es: 'Stable — Lanzamientos estables', fr: 'Stable — Versions stables', ja: 'Stable — 安定版リリース', pt: 'Stable — Lancamentos estaveis' },
+      'general.restartWizard': { de: 'Setup-Assistent', en: 'Setup Wizard', es: 'Asistente de configuracion', fr: 'Assistant de configuration', ja: 'セットアップウィザード', pt: 'Assistente de configuracao' },
+      'general.restartWizardDesc': { de: 'Den Einrichtungsassistenten erneut starten.', en: 'Restart the setup wizard.', es: 'Reiniciar el asistente de configuracion.', fr: 'Relancer l\'assistant de configuration.', ja: 'セットアップウィザードを再起動します。', pt: 'Reiniciar o assistente de configuracao.' },
+      'general.restartWizardBtn': { de: 'Wizard starten', en: 'Run Wizard', es: 'Ejecutar', fr: 'Lancer', ja: '実行', pt: 'Executar' },
 
       // ─── Tab: Permissions ───
       'perm.howTitle': { de: 'Wie Permissions funktionieren', en: 'How permissions work', es: 'Como funcionan los permisos', fr: 'Comment fonctionnent les permissions', ja: 'パーミッションの仕組み', pt: 'Como as permissoes funcionam' },
@@ -2794,6 +2827,8 @@
       'wizard.title': { de: 'Setup-Assistent', en: 'Setup Wizard', es: 'Asistente de configuracion', fr: 'Assistant de configuration', ja: 'セットアップウィザード', pt: 'Assistente de configuracao' },
       'wizard.welcome': { de: 'Willkommen beim Setup', en: 'Welcome to Setup', es: 'Bienvenido a la configuracion', fr: 'Bienvenue dans la configuration', ja: 'セットアップへようこそ', pt: 'Bem-vindo a configuracao' },
       'wizard.welcomeDesc': { de: 'In 5 Schritten konfigurierst du Claude Code nach deinen Wuenschen. Du kannst jederzeit abbrechen und manuell anpassen.', en: 'Configure Claude Code to your preferences in 5 steps. You can cancel anytime and adjust manually.', es: 'Configura Claude Code a tu gusto en 5 pasos. Puedes cancelar en cualquier momento y ajustar manualmente.', fr: 'Configurez Claude Code selon vos preferences en 5 etapes. Vous pouvez annuler a tout moment et ajuster manuellement.', ja: '5ステップでClaude Codeを好みに合わせて設定します。いつでもキャンセルして手動で調整できます。', pt: 'Configure o Claude Code ao seu gosto em 5 passos. Pode cancelar a qualquer momento e ajustar manualmente.' },
+      'wizard.langTitle': { de: 'Sprache waehlen', en: 'Choose language', es: 'Elegir idioma', fr: 'Choisir la langue', ja: '言語を選択', pt: 'Escolher idioma' },
+      'wizard.langDesc': { de: 'In welcher Sprache moechtest du den Editor verwenden?', en: 'Which language would you like to use the editor in?', es: 'En que idioma quieres usar el editor?', fr: 'Dans quelle langue souhaitez-vous utiliser l\'editeur?', ja: 'エディタをどの言語で使用しますか？', pt: 'Em qual idioma voce quer usar o editor?' },
       'wizard.modelTitle': { de: 'Modell waehlen', en: 'Choose model', es: 'Elegir modelo', fr: 'Choisir le modele', ja: 'モデルを選択', pt: 'Escolher modelo' },
       'wizard.modelDesc': { de: 'Welches Claude-Modell soll verwendet werden?', en: 'Which Claude model should be used?', es: 'Que modelo de Claude se debe usar?', fr: 'Quel modele Claude utiliser?', ja: 'どのClaudeモデルを使用しますか？', pt: 'Qual modelo Claude deve ser usado?' },
       'wizard.modelOpus': { de: 'Staerkstes Modell, beste Qualitaet', en: 'Strongest model, best quality', es: 'Modelo mas fuerte, mejor calidad', fr: 'Modele le plus puissant, meilleure qualite', ja: '最強モデル、最高品質', pt: 'Modelo mais forte, melhor qualidade' },
@@ -3086,7 +3121,7 @@
       return {
         activeTab: 'general',
         jsonPreviewOpen: false,
-        lang: localStorage.getItem('claude-settings-lang') || 'de',
+        lang: localStorage.getItem('claude-settings-lang') || 'en',
         sidebarCollapsed: localStorage.getItem('claude-settings-sidebar-collapsed') === 'true',
         showOpenDropdown: false,
         lastOpenedFileName: localStorage.getItem('claude-settings-last-file') || '',
