@@ -1,12 +1,21 @@
-# Claude Settings Editor
+<p align="center">
+  <img src="logo.svg" alt="Claude Settings Editor Logo" width="120" height="120">
+</p>
 
-A visual GUI editor for Claude Code `settings.json` files. Single standalone HTML file — no build step, no server, no dependencies to install. Just open and edit.
+<h1 align="center">Claude Settings Editor</h1>
 
-![HTML](https://img.shields.io/badge/HTML-single%20file-orange)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-CDN-06B6D4)
-![Alpine.js](https://img.shields.io/badge/Alpine.js-3.14-8BC0D0)
-![i18n](https://img.shields.io/badge/i18n-6%20languages-blueviolet)
-![License](https://img.shields.io/badge/license-MIT-green)
+<p align="center">
+  A visual GUI editor for Claude Code <code>settings.json</code> files.<br>
+  Single standalone HTML file — no build step, no server, no dependencies to install. Just open and edit.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/HTML-single%20file-orange" alt="HTML">
+  <img src="https://img.shields.io/badge/Tailwind%20CSS-CDN-06B6D4" alt="Tailwind CSS">
+  <img src="https://img.shields.io/badge/Alpine.js-3.14-8BC0D0" alt="Alpine.js">
+  <img src="https://img.shields.io/badge/i18n-6%20languages-blueviolet" alt="i18n">
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
+</p>
 
 ## Quick Start
 
