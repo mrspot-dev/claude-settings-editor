@@ -324,7 +324,7 @@
         <!-- Row 2: Toolbar -->
         <div class="flex items-center flex-wrap gap-2 px-6 pb-3 border-b border-[rgba(255,255,255,0.08)]">
         <!-- Global Search -->
-        <div x-show="!['design-prompts','terminal-prompts'].includes(activeTab)" class="flex-1 min-w-[180px] max-w-sm relative" x-data="{ searchFocused: false }">
+        <div x-show="!['design-prompts','terminal-prompts','companion-tools'].includes(activeTab)" class="flex-1 min-w-[180px] max-w-sm relative" x-data="{ searchFocused: false }">
           <div class="relative">
             <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             <input x-model="searchQuery"
@@ -384,28 +384,28 @@
                    class="w-full pl-9 pr-4 py-1.5 rounded-xl text-sm font-body text-fg placeholder-fg-dim focus:outline-none transition-all border border-[rgba(255,255,255,0.08)] focus:border-accent/40 bg-[rgba(255,255,255,0.04)]" />
           </div>
         </div>
-        <div class="flex items-center gap-2 flex-shrink-0 flex-wrap" x-show="!['design-prompts','terminal-prompts'].includes(activeTab)">
-          <!-- Language Switcher -->
-          <div class="relative" x-data="{ langOpen: false }">
-            <button @click="langOpen = !langOpen" :aria-expanded="langOpen" class="btn-secondary px-2.5 py-1.5 text-xs font-mono font-medium rounded-full border border-[rgba(255,255,255,0.15)] text-fg flex items-center gap-1.5" :title="t('toolbar.language')">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-              <span class="hidden md:inline uppercase" x-text="lang"></span>
-              <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': langOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div x-show="langOpen" @click.outside="langOpen = false" x-transition role="menu"
-                 class="absolute right-0 top-full mt-2 w-44 rounded-xl overflow-hidden z-50 bg-[#12121A] py-1"
-                 style="border: 1px solid #2A2A36; box-shadow: 0 20px 60px #000;">
-              <template x-for="lc in ['de','en','es','fr','ja','pt']" :key="lc">
-                <button @click="setLang(lc); langOpen = false" role="menuitem"
-                        class="w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2.5"
-                        :class="lang === lc ? 'bg-accent/10 text-accent' : 'text-fg-muted hover:bg-[rgba(255,255,255,0.04)] hover:text-fg'">
-                  <span class="font-mono text-[10px] uppercase w-5 text-center font-bold" :class="lang === lc ? 'text-accent' : 'text-fg-dim'" x-text="lc"></span>
-                  <span x-text="({'de':'Deutsch','en':'English','es':'Español','fr':'Français','ja':'日本語','pt':'Português'})[lc]"></span>
-                  <svg x-show="lang === lc" class="w-3 h-3 ml-auto text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                </button>
-              </template>
-            </div>
+        <!-- Language Switcher (always visible) -->
+        <div class="relative flex-shrink-0" x-data="{ langOpen: false }">
+          <button @click="langOpen = !langOpen" :aria-expanded="langOpen" class="btn-secondary px-2.5 py-1.5 text-xs font-mono font-medium rounded-full border border-[rgba(255,255,255,0.15)] text-fg flex items-center gap-1.5" :title="t('toolbar.language')">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+            <span class="hidden md:inline uppercase" x-text="lang"></span>
+            <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': langOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div x-show="langOpen" @click.outside="langOpen = false" x-transition role="menu"
+               class="absolute right-0 top-full mt-2 w-44 rounded-xl overflow-hidden z-50 bg-[#12121A] py-1"
+               style="border: 1px solid #2A2A36; box-shadow: 0 20px 60px #000;">
+            <template x-for="lc in ['de','en','es','fr','ja','pt']" :key="lc">
+              <button @click="setLang(lc); langOpen = false" role="menuitem"
+                      class="w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2.5"
+                      :class="lang === lc ? 'bg-accent/10 text-accent' : 'text-fg-muted hover:bg-[rgba(255,255,255,0.04)] hover:text-fg'">
+                <span class="font-mono text-[10px] uppercase w-5 text-center font-bold" :class="lang === lc ? 'text-accent' : 'text-fg-dim'" x-text="lc"></span>
+                <span x-text="({'de':'Deutsch','en':'English','es':'Español','fr':'Français','ja':'日本語','pt':'Português'})[lc]"></span>
+                <svg x-show="lang === lc" class="w-3 h-3 ml-auto text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              </button>
+            </template>
           </div>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0 flex-wrap" x-show="!['design-prompts','terminal-prompts','companion-tools'].includes(activeTab)">
           <!-- Template Picker -->
           <div class="relative" x-data="{ tplOpen: false }">
             <button @click="tplOpen = !tplOpen" :aria-expanded="tplOpen" class="btn-secondary px-4 py-1.5 text-xs font-mono font-medium rounded-full border border-accent/30 text-accent hover:bg-accent/10 flex items-center gap-1.5">
@@ -634,14 +634,95 @@
             </div>
 
             <div id="setting-effort" class="settings-group">
-              <label for="input-effort" class="setting-label" x-text="t('general.effort')"></label>
+              <label class="setting-label" x-text="t('general.effort')"></label>
               <p class="setting-desc" x-text="t('general.effortDesc')"></p>
-              <select id="input-effort" x-model="settings.effortLevel" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.effortLevel }">
-                <option value="" x-text="t('general.effortDefault')"></option>
-                <option value="low" x-text="t('general.effortLow')"></option>
-                <option value="medium" x-text="t('general.effortMedium')"></option>
-                <option value="high" x-text="t('general.effortHigh')"></option>
-              </select>
+              <div class="grid grid-cols-3 gap-3 mt-2">
+                <!-- Low -->
+                <button @click="settings.effortLevel = 'low'; markUnsaved()"
+                  class="group relative rounded-2xl p-4 text-left transition-all duration-200 border-2"
+                  :class="settings.effortLevel === 'low'
+                    ? 'border-sky-400/60 bg-sky-400/8 shadow-[0_0_20px_rgba(56,189,248,0.1)]'
+                    : 'border-[rgba(255,255,255,0.06)] bg-bg-elevated/50 hover:border-[rgba(255,255,255,0.12)] hover:bg-bg-elevated'">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center text-lg"
+                      :class="settings.effortLevel === 'low' ? 'bg-sky-400/15 text-sky-400' : 'bg-[rgba(255,255,255,0.05)] text-fg-dim'">
+                      <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <span class="font-display font-semibold text-sm" :class="settings.effortLevel === 'low' ? 'text-sky-400' : 'text-fg'">Low</span>
+                  </div>
+                  <p class="text-[11px] leading-relaxed" :class="settings.effortLevel === 'low' ? 'text-sky-300/70' : 'text-fg-dim'" x-text="t('general.effortLowCard')"></p>
+                  <!-- Speed bar -->
+                  <div class="mt-3 flex items-center gap-2">
+                    <span class="text-[10px] font-mono uppercase tracking-wider" :class="settings.effortLevel === 'low' ? 'text-sky-400/60' : 'text-fg-dim/50'" x-text="t('general.effortSpeed')"></span>
+                    <div class="flex-1 h-1 rounded-full bg-[rgba(255,255,255,0.05)] overflow-hidden">
+                      <div class="h-full rounded-full transition-all duration-500" :class="settings.effortLevel === 'low' ? 'w-full bg-sky-400/60' : 'w-full bg-[rgba(255,255,255,0.08)]'"></div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="text-[10px] font-mono uppercase tracking-wider" :class="settings.effortLevel === 'low' ? 'text-sky-400/60' : 'text-fg-dim/50'" x-text="t('general.effortDepth')"></span>
+                    <div class="flex-1 h-1 rounded-full bg-[rgba(255,255,255,0.05)] overflow-hidden">
+                      <div class="h-full rounded-full transition-all duration-500" :class="settings.effortLevel === 'low' ? 'w-1/4 bg-sky-400/40' : 'w-1/4 bg-[rgba(255,255,255,0.08)]'"></div>
+                    </div>
+                  </div>
+                </button>
+                <!-- Medium -->
+                <button @click="settings.effortLevel = 'medium'; markUnsaved()"
+                  class="group relative rounded-2xl p-4 text-left transition-all duration-200 border-2"
+                  :class="settings.effortLevel === 'medium'
+                    ? 'border-violet-400/60 bg-violet-400/8 shadow-[0_0_20px_rgba(167,139,250,0.1)]'
+                    : 'border-[rgba(255,255,255,0.06)] bg-bg-elevated/50 hover:border-[rgba(255,255,255,0.12)] hover:bg-bg-elevated'">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center text-lg"
+                      :class="settings.effortLevel === 'medium' ? 'bg-violet-400/15 text-violet-400' : 'bg-[rgba(255,255,255,0.05)] text-fg-dim'">
+                      <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+                    </div>
+                    <span class="font-display font-semibold text-sm" :class="settings.effortLevel === 'medium' ? 'text-violet-400' : 'text-fg'">Medium</span>
+                  </div>
+                  <p class="text-[11px] leading-relaxed" :class="settings.effortLevel === 'medium' ? 'text-violet-300/70' : 'text-fg-dim'" x-text="t('general.effortMediumCard')"></p>
+                  <!-- Speed bar -->
+                  <div class="mt-3 flex items-center gap-2">
+                    <span class="text-[10px] font-mono uppercase tracking-wider" :class="settings.effortLevel === 'medium' ? 'text-violet-400/60' : 'text-fg-dim/50'" x-text="t('general.effortSpeed')"></span>
+                    <div class="flex-1 h-1 rounded-full bg-[rgba(255,255,255,0.05)] overflow-hidden">
+                      <div class="h-full rounded-full transition-all duration-500" :class="settings.effortLevel === 'medium' ? 'w-2/3 bg-violet-400/50' : 'w-2/3 bg-[rgba(255,255,255,0.08)]'"></div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="text-[10px] font-mono uppercase tracking-wider" :class="settings.effortLevel === 'medium' ? 'text-violet-400/60' : 'text-fg-dim/50'" x-text="t('general.effortDepth')"></span>
+                    <div class="flex-1 h-1 rounded-full bg-[rgba(255,255,255,0.05)] overflow-hidden">
+                      <div class="h-full rounded-full transition-all duration-500" :class="settings.effortLevel === 'medium' ? 'w-2/3 bg-violet-400/50' : 'w-2/3 bg-[rgba(255,255,255,0.08)]'"></div>
+                    </div>
+                  </div>
+                </button>
+                <!-- High -->
+                <button @click="settings.effortLevel = 'high'; markUnsaved()"
+                  class="group relative rounded-2xl p-4 text-left transition-all duration-200 border-2"
+                  :class="(settings.effortLevel === 'high' || !settings.effortLevel)
+                    ? 'border-accent/60 bg-accent/8 shadow-[0_0_20px_rgba(245,158,11,0.1)]'
+                    : 'border-[rgba(255,255,255,0.06)] bg-bg-elevated/50 hover:border-[rgba(255,255,255,0.12)] hover:bg-bg-elevated'">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center text-lg"
+                      :class="(settings.effortLevel === 'high' || !settings.effortLevel) ? 'bg-accent/15 text-accent' : 'bg-[rgba(255,255,255,0.05)] text-fg-dim'">
+                      <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    </div>
+                    <span class="font-display font-semibold text-sm" :class="(settings.effortLevel === 'high' || !settings.effortLevel) ? 'text-accent' : 'text-fg'">High</span>
+                    <span x-show="!settings.effortLevel" class="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-accent/10 text-accent/70" x-text="t('general.effortDefaultBadge')"></span>
+                  </div>
+                  <p class="text-[11px] leading-relaxed" :class="(settings.effortLevel === 'high' || !settings.effortLevel) ? 'text-amber-300/70' : 'text-fg-dim'" x-text="t('general.effortHighCard')"></p>
+                  <!-- Speed bar -->
+                  <div class="mt-3 flex items-center gap-2">
+                    <span class="text-[10px] font-mono uppercase tracking-wider" :class="(settings.effortLevel === 'high' || !settings.effortLevel) ? 'text-accent/60' : 'text-fg-dim/50'" x-text="t('general.effortSpeed')"></span>
+                    <div class="flex-1 h-1 rounded-full bg-[rgba(255,255,255,0.05)] overflow-hidden">
+                      <div class="h-full rounded-full transition-all duration-500" :class="(settings.effortLevel === 'high' || !settings.effortLevel) ? 'w-1/3 bg-accent/40' : 'w-1/3 bg-[rgba(255,255,255,0.08)]'"></div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="text-[10px] font-mono uppercase tracking-wider" :class="(settings.effortLevel === 'high' || !settings.effortLevel) ? 'text-accent/60' : 'text-fg-dim/50'" x-text="t('general.effortDepth')"></span>
+                    <div class="flex-1 h-1 rounded-full bg-[rgba(255,255,255,0.05)] overflow-hidden">
+                      <div class="h-full rounded-full transition-all duration-500" :class="(settings.effortLevel === 'high' || !settings.effortLevel) ? 'w-full bg-accent/60' : 'w-full bg-[rgba(255,255,255,0.08)]'"></div>
+                    </div>
+                  </div>
+                </button>
+              </div>
             </div>
 
             <div id="setting-output-style" class="settings-group">
@@ -1713,6 +1794,21 @@
               <span class="text-[11px] font-mono text-fg-dim ml-2" x-text="filteredDesignStyles.length + ' ' + t('prompts.styles')"></span>
             </div>
 
+            <!-- Design Prompts Website Banner -->
+            <a href="https://www.designprompts.dev/" target="_blank" rel="noopener"
+               class="group flex items-center gap-4 p-4 mb-5 rounded-2xl border border-accent/15 bg-accent/[0.04] hover:border-accent/40 hover:bg-accent/[0.08] transition-all">
+              <div class="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center flex-shrink-0 group-hover:bg-accent/25 transition-colors">
+                <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-display font-semibold text-sm text-accent">designprompts.dev</span>
+                  <svg class="w-3.5 h-3.5 text-accent/50 group-hover:text-accent group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </div>
+                <p class="text-xs text-fg-dim leading-relaxed mt-0.5" x-text="t('design.websiteHint')"></p>
+              </div>
+            </a>
+
             <!-- Style Cards Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <template x-for="style in filteredDesignStyles" :key="style.id">
@@ -1919,11 +2015,476 @@
             </div><!-- /catalog view -->
           </div>
 
+          <!-- ═══ TAB: Companion Tools ═══ -->
+          <div x-show="activeTab === 'companion-tools'" class="tab-content space-y-5" role="tabpanel">
+
+            <!-- Intro -->
+            <p class="text-sm text-fg-dim leading-relaxed" x-text="t('general.companionDesc')"></p>
+
+            <!-- ── Happy Coder ── -->
+            <div class="rounded-2xl border border-emerald-400/20 bg-emerald-400/[0.03] hover:border-emerald-400/40 transition-all overflow-hidden">
+              <!-- Header with image -->
+              <div class="relative h-36 overflow-hidden bg-gradient-to-br from-emerald-900/30 to-emerald-950/60">
+                <img src="https://raw.githubusercontent.com/slopus/happy/main/.github/header.png" alt="Happy Coder" class="w-full h-full object-cover opacity-80" loading="lazy" onerror="this.style.display='none'">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a14] via-transparent to-transparent"></div>
+                <div class="absolute bottom-3 left-5 flex items-center gap-3">
+                  <img src="https://happy.engineering/favicon.svg" alt="" class="w-8 h-8 rounded-lg" onerror="this.style.display='none'">
+                  <span class="font-display font-bold text-xl text-white drop-shadow-lg">Happy Coder</span>
+                  <span class="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-400/20 text-emerald-300 backdrop-blur-sm" x-text="t('general.companionFree')"></span>
+                </div>
+              </div>
+              <!-- Content -->
+              <div class="p-5 space-y-4">
+                <p class="text-sm leading-relaxed text-fg-dim" x-text="t('general.companionHappyDesc')"></p>
+                <ul class="text-xs text-fg-dim space-y-1.5 ml-4 list-disc">
+                  <li x-text="t('companion.happyFeature1')"></li>
+                  <li x-text="t('companion.happyFeature2')"></li>
+                  <li x-text="t('companion.happyFeature3')"></li>
+                </ul>
+                <!-- Install + Link -->
+                <div class="flex items-center justify-between flex-wrap gap-3 pt-2 border-t border-emerald-400/10">
+                  <div class="flex items-center gap-2">
+                    <code class="text-[11px] font-mono px-2.5 py-1.5 rounded-lg bg-[rgba(255,255,255,0.05)] text-emerald-300/80 select-all">npm i -g happy-coder</code>
+                    <button @click="navigator.clipboard.writeText('npm i -g happy-coder'); notify(t('general.companionCopied'), 'success')" class="p-1.5 rounded-lg hover:bg-emerald-400/10 text-fg-dim hover:text-emerald-400 transition-colors" :title="t('general.companionCopy')">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    </button>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <a href="https://happy.engineering/" target="_blank" rel="noopener" class="text-[11px] font-mono text-emerald-400/70 hover:text-emerald-400 transition-colors flex items-center gap-1">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                      happy.engineering
+                    </a>
+                    <a href="https://github.com/slopus/happy" target="_blank" rel="noopener" class="text-[11px] font-mono text-emerald-400/70 hover:text-emerald-400 transition-colors flex items-center gap-1">
+                      <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                      GitHub
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Warp Terminal ── -->
+            <div class="rounded-2xl border border-sky-400/20 bg-sky-400/[0.03] hover:border-sky-400/40 transition-all overflow-hidden">
+              <!-- Header with image -->
+              <div class="relative h-36 overflow-hidden bg-gradient-to-br from-sky-900/30 to-sky-950/60">
+                <img src="https://storage.googleapis.com/warpdotdev-content/Readme.png" alt="Warp Terminal" class="w-full h-full object-cover opacity-70" loading="lazy" onerror="this.style.display='none'">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a14] via-transparent to-transparent"></div>
+                <div class="absolute bottom-3 left-5 flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-sky-500 flex items-center justify-center font-display font-black text-white text-sm">W</div>
+                  <span class="font-display font-bold text-xl text-white drop-shadow-lg">Warp Terminal</span>
+                  <span class="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-sky-400/20 text-sky-300 backdrop-blur-sm" x-text="t('general.companionOptional')"></span>
+                </div>
+              </div>
+              <!-- Content -->
+              <div class="p-5 space-y-4">
+                <p class="text-sm leading-relaxed text-fg-dim" x-text="t('general.companionWarpDesc')"></p>
+                <ul class="text-xs text-fg-dim space-y-1.5 ml-4 list-disc">
+                  <li x-text="t('companion.warpFeature1')"></li>
+                  <li x-text="t('companion.warpFeature2')"></li>
+                  <li x-text="t('companion.warpFeature3')"></li>
+                </ul>
+                <!-- Install + Link -->
+                <div class="flex items-center justify-between flex-wrap gap-3 pt-2 border-t border-sky-400/10">
+                  <div class="flex items-center gap-2">
+                    <code class="text-[11px] font-mono px-2.5 py-1.5 rounded-lg bg-[rgba(255,255,255,0.05)] text-sky-300/80 select-all">winget install Warp.Warp</code>
+                    <button @click="navigator.clipboard.writeText('winget install Warp.Warp'); notify(t('general.companionCopied'), 'success')" class="p-1.5 rounded-lg hover:bg-sky-400/10 text-fg-dim hover:text-sky-400 transition-colors" :title="t('general.companionCopy')">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    </button>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <a href="https://www.warp.dev/" target="_blank" rel="noopener" class="text-[11px] font-mono text-sky-400/70 hover:text-sky-400 transition-colors flex items-center gap-1">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                      warp.dev
+                    </a>
+                    <a href="https://github.com/warpdotdev/claude-code-warp" target="_blank" rel="noopener" class="text-[11px] font-mono text-sky-400/70 hover:text-sky-400 transition-colors flex items-center gap-1">
+                      <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                      claude-code-warp
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Obsidian Vault + IPARAG ── -->
+            <div class="rounded-2xl border border-violet-400/20 bg-violet-400/[0.03] hover:border-violet-400/40 transition-all overflow-hidden">
+              <!-- Header -->
+              <div class="relative h-36 overflow-hidden bg-gradient-to-br from-violet-900/40 to-violet-950/70">
+                <div class="absolute inset-0 flex items-center justify-center opacity-10">
+                  <svg class="w-48 h-48 text-violet-300" viewBox="0 0 100 100" fill="currentColor"><path d="M50 2L88 25v50L50 98 12 75V25L50 2z"/></svg>
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a14] via-transparent to-transparent"></div>
+                <div class="absolute bottom-3 left-5 flex items-center gap-3">
+                  <img src="https://obsidian.md/images/obsidian-logo-gradient.svg" alt="" class="w-8 h-8" onerror="this.style.display='none'">
+                  <span class="font-display font-bold text-xl text-white drop-shadow-lg">Obsidian Vault</span>
+                  <span class="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-violet-400/20 text-violet-300 backdrop-blur-sm" x-text="t('general.companionTip')"></span>
+                </div>
+              </div>
+              <!-- Content -->
+              <div class="p-5 space-y-4">
+                <p class="text-sm leading-relaxed text-fg-dim" x-text="t('general.companionObsidianDesc')"></p>
+                <ul class="text-xs text-fg-dim space-y-1.5 ml-4 list-disc">
+                  <li x-text="t('companion.obsidianFeature1')"></li>
+                  <li x-text="t('companion.obsidianFeature2')"></li>
+                  <li x-text="t('companion.obsidianFeature3')"></li>
+                </ul>
+
+                <!-- IPARAG Vault Structure -->
+                <div class="rounded-xl border border-violet-400/10 bg-[rgba(0,0,0,0.2)] p-4">
+                  <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                    <span class="text-xs font-display font-semibold text-violet-400" x-text="t('companion.vaultStructureTitle')"></span>
+                  </div>
+                  <pre class="text-[11px] font-mono leading-relaxed text-fg-dim/80">My-Vault/
+├── 00 - INBOX/          <span class="text-violet-400/60">← Quick capture, unsorted notes</span>
+├── 01 - PROJECTS/       <span class="text-violet-400/60">← Active work with deadlines</span>
+│   ├── In Progress/
+│   └── Completed/
+├── 02 - AREAS/          <span class="text-violet-400/60">← Ongoing responsibilities</span>
+├── 03 - RESOURCES/      <span class="text-violet-400/60">← Reference material &amp; guides</span>
+├── 04 - ARCHIVES/       <span class="text-violet-400/60">← Completed &amp; inactive items</span>
+├── 05 - GALAXY/         <span class="text-violet-400/60">← Zettelkasten / atomic notes</span>
+└── CLAUDE.md            <span class="text-accent/60">← AI integration config</span></pre>
+                  <div class="mt-3 pt-3 border-t border-violet-400/10 flex items-center gap-2">
+                    <span class="text-[10px] text-fg-dim/60" x-text="t('companion.vaultCredit')"></span>
+                    <a href="https://noahvnct.substack.com/p/steal-my-ai-second-brain-setup-with" target="_blank" rel="noopener" class="text-[10px] font-semibold text-violet-400/70 hover:text-violet-400 transition-colors">Noah Vincent (@noahvnct)</a>
+                    <span class="text-[10px] text-fg-dim/40">·</span>
+                    <a href="https://noahsark.podia.com/noah-s-ark-bank" target="_blank" rel="noopener" class="text-[10px] text-violet-400/50 hover:text-violet-400 transition-colors flex items-center gap-0.5">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                      <span x-text="t('companion.vaultDownload')"></span>
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Setup hint -->
+                <div class="flex items-center justify-between flex-wrap gap-3 pt-2 border-t border-violet-400/10">
+                  <div class="flex items-center gap-2">
+                    <code class="text-[11px] font-mono px-2.5 py-1.5 rounded-lg bg-[rgba(255,255,255,0.05)] text-violet-300/80 select-all">additionalDirectories</code>
+                    <span class="text-[11px] text-fg-dim" x-text="t('general.companionObsidianHint')"></span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <a href="https://obsidian.md/" target="_blank" rel="noopener" class="text-[11px] font-mono text-violet-400/70 hover:text-violet-400 transition-colors flex items-center gap-1">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                      obsidian.md
+                    </a>
+                    <a href="https://www.youtube.com/@noahvnct" target="_blank" rel="noopener" class="text-[11px] font-mono text-violet-400/70 hover:text-violet-400 transition-colors flex items-center gap-1">
+                      <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                      @noahvnct
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Category: Terminal & Workflow ── -->
+            <div class="mt-8">
+              <div class="flex items-center gap-2 mb-4">
+                <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <h3 class="font-display font-bold text-sm text-fg uppercase tracking-wider" x-text="t('companion.catTerminal')"></h3>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                <!-- Claude Squad -->
+                <div class="rounded-xl p-4 border border-sky-400/15 bg-sky-400/[0.03] hover:border-sky-400/35 transition-all">
+                  <div class="flex items-center gap-2.5 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-sky-400/15 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="font-display font-semibold text-sm text-sky-400">Claude Squad</span>
+                        <span class="text-[8px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-400/80">Must-have</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-[11px] text-fg-dim leading-relaxed mb-3" x-text="t('companion.claudeSquadDesc')"></p>
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <code class="text-[10px] font-mono px-2 py-1 rounded-lg bg-[rgba(255,255,255,0.05)] text-sky-300/70 select-all">go install github.com/smtg-ai/claude-squad@latest</code>
+                    <a href="https://github.com/smtg-ai/claude-squad" target="_blank" rel="noopener" class="text-[10px] font-mono text-sky-400/60 hover:text-sky-400 transition-colors flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                      GitHub
+                    </a>
+                  </div>
+                </div>
+
+                <!-- LazyGit -->
+                <div class="rounded-xl p-4 border border-sky-400/15 bg-sky-400/[0.03] hover:border-sky-400/35 transition-all">
+                  <div class="flex items-center gap-2.5 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-sky-400/15 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="font-display font-semibold text-sm text-sky-400">LazyGit</span>
+                        <span class="text-[8px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-400/80">Must-have</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-[11px] text-fg-dim leading-relaxed mb-3" x-text="t('companion.lazygitDesc')"></p>
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <code class="text-[10px] font-mono px-2 py-1 rounded-lg bg-[rgba(255,255,255,0.05)] text-sky-300/70 select-all">winget install lazygit</code>
+                    <a href="https://github.com/jesseduffield/lazygit" target="_blank" rel="noopener" class="text-[10px] font-mono text-sky-400/60 hover:text-sky-400 transition-colors flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                      GitHub
+                    </a>
+                  </div>
+                </div>
+
+                <!-- gh-dash -->
+                <div class="rounded-xl p-4 border border-sky-400/15 bg-sky-400/[0.03] hover:border-sky-400/35 transition-all">
+                  <div class="flex items-center gap-2.5 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-sky-400/15 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-4 h-4 text-sky-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="font-display font-semibold text-sm text-sky-400">gh-dash</span>
+                        <span class="text-[8px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-400/80">Must-have</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-[11px] text-fg-dim leading-relaxed mb-3" x-text="t('companion.ghDashDesc')"></p>
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <code class="text-[10px] font-mono px-2 py-1 rounded-lg bg-[rgba(255,255,255,0.05)] text-sky-300/70 select-all">gh extension install dlvhdr/gh-dash</code>
+                    <a href="https://github.com/dlvhdr/gh-dash" target="_blank" rel="noopener" class="text-[10px] font-mono text-sky-400/60 hover:text-sky-400 transition-colors flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                      GitHub
+                    </a>
+                  </div>
+                </div>
+
+                <!-- IttyBitty -->
+                <div class="rounded-xl p-4 border border-sky-400/15 bg-sky-400/[0.03] hover:border-sky-400/35 transition-all">
+                  <div class="flex items-center gap-2.5 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-sky-400/15 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="font-display font-semibold text-sm text-sky-400">IttyBitty</span>
+                        <span class="text-[8px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-sky-400/15 text-sky-400/70">Nice-to-have</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-[11px] text-fg-dim leading-relaxed mb-3" x-text="t('companion.ittybittyDesc')"></p>
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <code class="text-[10px] font-mono px-2 py-1 rounded-lg bg-[rgba(255,255,255,0.05)] text-sky-300/70 select-all">brew install adamwulf/tap/ittybitty</code>
+                    <a href="https://github.com/adamwulf/ittybitty" target="_blank" rel="noopener" class="text-[10px] font-mono text-sky-400/60 hover:text-sky-400 transition-colors flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                      GitHub
+                    </a>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- ── Category: AI Agents ── -->
+            <div class="mt-8">
+              <div class="flex items-center gap-2 mb-4">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                <h3 class="font-display font-bold text-sm text-fg uppercase tracking-wider" x-text="t('companion.catAI')"></h3>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                <!-- Gemini CLI -->
+                <div class="rounded-xl p-4 border border-emerald-400/15 bg-emerald-400/[0.03] hover:border-emerald-400/35 transition-all">
+                  <div class="flex items-center gap-2.5 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-400/15 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="font-display font-semibold text-sm text-emerald-400">Gemini CLI</span>
+                        <span class="text-[8px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-400/80">Must-have</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-[11px] text-fg-dim leading-relaxed mb-3" x-text="t('companion.geminiDesc')"></p>
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <code class="text-[10px] font-mono px-2 py-1 rounded-lg bg-[rgba(255,255,255,0.05)] text-emerald-300/70 select-all">npx -y @anthropic-ai/gemini-cli</code>
+                    <a href="https://github.com/google-gemini/gemini-cli" target="_blank" rel="noopener" class="text-[10px] font-mono text-emerald-400/60 hover:text-emerald-400 transition-colors flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                      GitHub
+                    </a>
+                  </div>
+                </div>
+
+                <!-- OpenCode -->
+                <div class="rounded-xl p-4 border border-emerald-400/15 bg-emerald-400/[0.03] hover:border-emerald-400/35 transition-all">
+                  <div class="flex items-center gap-2.5 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-400/15 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="font-display font-semibold text-sm text-emerald-400">OpenCode</span>
+                        <span class="text-[8px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-400/15 text-emerald-400/70">Nice-to-have</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-[11px] text-fg-dim leading-relaxed mb-3" x-text="t('companion.opencodeDesc')"></p>
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <code class="text-[10px] font-mono px-2 py-1 rounded-lg bg-[rgba(255,255,255,0.05)] text-emerald-300/70 select-all">curl -fsSL https://opencode.ai/install | bash</code>
+                    <a href="https://opencode.ai" target="_blank" rel="noopener" class="text-[10px] font-mono text-emerald-400/60 hover:text-emerald-400 transition-colors flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                      opencode.ai
+                    </a>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- ── Category: Monitoring ── -->
+            <div class="mt-8">
+              <div class="flex items-center gap-2 mb-4">
+                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                <h3 class="font-display font-bold text-sm text-fg uppercase tracking-wider" x-text="t('companion.catMonitoring')"></h3>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                <!-- ccusage -->
+                <div class="rounded-xl p-4 border border-amber-400/15 bg-amber-400/[0.03] hover:border-amber-400/35 transition-all">
+                  <div class="flex items-center gap-2.5 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-amber-400/15 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="font-display font-semibold text-sm text-amber-400">ccusage</span>
+                        <span class="text-[8px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-400/80">Must-have</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-[11px] text-fg-dim leading-relaxed mb-3" x-text="t('companion.ccusageDesc')"></p>
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <code class="text-[10px] font-mono px-2 py-1 rounded-lg bg-[rgba(255,255,255,0.05)] text-amber-300/70 select-all">npx ccusage</code>
+                    <div class="flex items-center gap-2">
+                      <a href="https://ccusage.com" target="_blank" rel="noopener" class="text-[10px] font-mono text-amber-400/60 hover:text-amber-400 transition-colors flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                        ccusage.com
+                      </a>
+                      <a href="https://github.com/ryoppippi/ccusage" target="_blank" rel="noopener" class="text-[10px] font-mono text-amber-400/60 hover:text-amber-400 transition-colors flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        GitHub
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- awesome-claude-code-toolkit -->
+                <div class="rounded-xl p-4 border border-amber-400/15 bg-amber-400/[0.03] hover:border-amber-400/35 transition-all">
+                  <div class="flex items-center gap-2.5 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-amber-400/15 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="font-display font-semibold text-sm text-amber-400">Awesome Toolkit</span>
+                        <span class="text-[8px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-400/70">Nice-to-have</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-[11px] text-fg-dim leading-relaxed mb-3" x-text="t('companion.awesomeDesc')"></p>
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <span class="text-[10px] font-mono text-amber-300/50">135 Agents · 35+ Skills · 150+ Plugins</span>
+                    <a href="https://github.com/rohitg00/awesome-claude-code-toolkit" target="_blank" rel="noopener" class="text-[10px] font-mono text-amber-400/60 hover:text-amber-400 transition-colors flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                      GitHub
+                    </a>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- ── Category: MCP Servers ── -->
+            <div class="mt-8">
+              <div class="flex items-center gap-2 mb-4">
+                <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/></svg>
+                <h3 class="font-display font-bold text-sm text-fg uppercase tracking-wider" x-text="t('companion.catMCP')"></h3>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                <!-- Playwright MCP -->
+                <div class="rounded-xl p-4 border border-purple-400/15 bg-purple-400/[0.03] hover:border-purple-400/35 transition-all">
+                  <div class="flex items-center gap-2.5 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-purple-400/15 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="font-display font-semibold text-sm text-purple-400">Playwright MCP</span>
+                        <span class="text-[8px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-400/80">Must-have</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-[11px] text-fg-dim leading-relaxed mb-3" x-text="t('companion.playwrightDesc')"></p>
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <code class="text-[10px] font-mono px-2 py-1 rounded-lg bg-[rgba(255,255,255,0.05)] text-purple-300/70 select-all">npx @playwright/mcp@latest</code>
+                    <a href="https://github.com/microsoft/playwright-mcp" target="_blank" rel="noopener" class="text-[10px] font-mono text-purple-400/60 hover:text-purple-400 transition-colors flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                      GitHub
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Figma MCP -->
+                <div class="rounded-xl p-4 border border-purple-400/15 bg-purple-400/[0.03] hover:border-purple-400/35 transition-all">
+                  <div class="flex items-center gap-2.5 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-purple-400/15 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="font-display font-semibold text-sm text-purple-400">Figma MCP</span>
+                        <span class="text-[8px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-purple-400/15 text-purple-400/70">Nice-to-have</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-[11px] text-fg-dim leading-relaxed mb-3" x-text="t('companion.figmaDesc')"></p>
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <code class="text-[10px] font-mono px-2 py-1 rounded-lg bg-[rgba(255,255,255,0.05)] text-purple-300/70 select-all">npx figma-developer-mcp --figma-api-key=KEY</code>
+                    <a href="https://github.com/figma/mcp-server-guide" target="_blank" rel="noopener" class="text-[10px] font-mono text-purple-400/60 hover:text-purple-400 transition-colors flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                      GitHub
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Nano Banana MCP -->
+                <div class="rounded-xl p-4 border border-purple-400/15 bg-purple-400/[0.03] hover:border-purple-400/35 transition-all">
+                  <div class="flex items-center gap-2.5 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-purple-400/15 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="font-display font-semibold text-sm text-purple-400">Nano Banana MCP</span>
+                        <span class="text-[8px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-purple-400/15 text-purple-400/70">Nice-to-have</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-[11px] text-fg-dim leading-relaxed mb-3" x-text="t('companion.nanoBananaDesc')"></p>
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <code class="text-[10px] font-mono px-2 py-1 rounded-lg bg-[rgba(255,255,255,0.05)] text-purple-300/70 select-all">npx nano-banana-mcp</code>
+                    <a href="https://github.com/ConechoAI/Nano-Banana-MCP" target="_blank" rel="noopener" class="text-[10px] font-mono text-purple-400/60 hover:text-purple-400 transition-colors flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                      GitHub
+                    </a>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
         </div>
       </div>
 
       <!-- ═══ JSON Preview Panel ═══ -->
-      <div x-show="!['design-prompts','terminal-prompts'].includes(activeTab)" class="border-t border-[rgba(255,255,255,0.08)] flex-shrink-0">
+      <div x-show="!['design-prompts','terminal-prompts','companion-tools'].includes(activeTab)" class="border-t border-[rgba(255,255,255,0.08)] flex-shrink-0">
         <button @click="jsonPreviewOpen = !jsonPreviewOpen" class="w-full flex items-center justify-between px-6 py-2.5 text-xs font-mono font-medium text-fg-dim hover:text-fg-muted transition-colors" style="background: rgba(18, 18, 26, 0.6);">
           <span>JSON Preview</span>
           <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': jsonPreviewOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 15l7-7 7 7"/></svg>
@@ -2288,6 +2849,12 @@
       'general.effortLow': { de: 'Low — Schnelle, knappe Antworten', en: 'Low — Quick, brief answers', es: 'Low — Respuestas rapidas y breves', fr: 'Low — Reponses rapides et breves', ja: 'Low — 素早く簡潔な回答', pt: 'Low — Respostas rapidas e breves' },
       'general.effortMedium': { de: 'Medium — Ausgewogen', en: 'Medium — Balanced', es: 'Medium — Equilibrado', fr: 'Medium — Equilibre', ja: 'Medium — バランス型', pt: 'Medium — Equilibrado' },
       'general.effortHigh': { de: 'High — Gruendlich und detailliert', en: 'High — Thorough and detailed', es: 'High — Minucioso y detallado', fr: 'High — Approfondi et detaille', ja: 'High — 徹底的で詳細', pt: 'High — Minucioso e detalhado' },
+      'general.effortLowCard': { de: 'Schnelle, knappe Antworten. Ideal fuer einfache Fragen und Routine-Tasks.', en: 'Quick, brief answers. Ideal for simple questions and routine tasks.', es: 'Respuestas rapidas y breves. Ideal para preguntas simples y tareas rutinarias.', fr: 'Reponses rapides et breves. Ideal pour les questions simples et taches routinieres.', ja: '素早く簡潔な回答。簡単な質問やルーティンタスクに最適。', pt: 'Respostas rapidas e breves. Ideal para perguntas simples e tarefas rotineiras.' },
+      'general.effortMediumCard': { de: 'Ausgewogenes Verhaeltnis aus Geschwindigkeit und Gruendlichkeit. Guter Allrounder.', en: 'Balanced speed and thoroughness. A good all-rounder.', es: 'Velocidad y minuciosidad equilibradas. Un buen todoterreno.', fr: 'Equilibre entre rapidite et rigueur. Un bon compromis.', ja: 'スピードと徹底さのバランス。万能型。', pt: 'Velocidade e rigor equilibrados. Um bom tudo-em-um.' },
+      'general.effortHighCard': { de: 'Maximales Reasoning und Denktiefe. Beste Ergebnisse bei komplexen Aufgaben.', en: 'Maximum reasoning and thinking depth. Best results for complex tasks.', es: 'Razonamiento y profundidad maximos. Mejores resultados para tareas complejas.', fr: 'Raisonnement et profondeur maximaux. Meilleurs resultats pour taches complexes.', ja: '最大限の推論と思考深度。複雑なタスクに最適な結果。', pt: 'Raciocinio e profundidade maximos. Melhores resultados para tarefas complexas.' },
+      'general.effortSpeed': { de: 'Speed', en: 'Speed', es: 'Velocidad', fr: 'Vitesse', ja: 'スピード', pt: 'Velocidade' },
+      'general.effortDepth': { de: 'Tiefe', en: 'Depth', es: 'Profundidad', fr: 'Profondeur', ja: '深度', pt: 'Profundidade' },
+      'general.effortDefaultBadge': { de: 'Standard', en: 'Default', es: 'Predeterminado', fr: 'Par defaut', ja: 'デフォルト', pt: 'Padrao' },
       'general.outputStyle': { de: 'Output Style', en: 'Output Style', es: 'Estilo de salida', fr: 'Style de sortie', ja: '出力スタイル', pt: 'Estilo de saida' },
       'general.outputStyleDesc': { de: 'Steuert den Stil der Antworten. Plugins registrieren eigene Styles.', en: 'Controls the style of responses. Plugins register their own styles.', es: 'Controla el estilo de las respuestas. Los plugins registran sus propios estilos.', fr: 'Controle le style des reponses. Les plugins enregistrent leurs propres styles.', ja: '回答のスタイルを制御します。プラグインが独自のスタイルを登録できます。', pt: 'Controla o estilo das respostas. Os plugins registram seus proprios estilos.' },
       'general.outputStyleDefault': { de: 'Standard (kein Style)', en: 'Default (no style)', es: 'Predeterminado (sin estilo)', fr: 'Par defaut (pas de style)', ja: 'デフォルト（スタイルなし）', pt: 'Padrao (sem estilo)' },
@@ -2313,6 +2880,44 @@
       'general.restartWizard': { de: 'Setup-Assistent', en: 'Setup Wizard', es: 'Asistente de configuracion', fr: 'Assistant de configuration', ja: 'セットアップウィザード', pt: 'Assistente de configuracao' },
       'general.restartWizardDesc': { de: 'Den Einrichtungsassistenten erneut starten.', en: 'Restart the setup wizard.', es: 'Reiniciar el asistente de configuracion.', fr: 'Relancer l\'assistant de configuration.', ja: 'セットアップウィザードを再起動します。', pt: 'Reiniciar o assistente de configuracao.' },
       'general.restartWizardBtn': { de: 'Wizard starten', en: 'Run Wizard', es: 'Ejecutar', fr: 'Lancer', ja: '実行', pt: 'Executar' },
+      'general.companionTitle': { de: 'Companion Tools', en: 'Companion Tools', es: 'Herramientas complementarias', fr: 'Outils complementaires', ja: 'コンパニオンツール', pt: 'Ferramentas complementares' },
+      'general.companionDesc': { de: 'Empfohlene Erweiterungen fuer deinen Claude Code Workflow.', en: 'Recommended extensions for your Claude Code workflow.', es: 'Extensiones recomendadas para tu flujo de trabajo con Claude Code.', fr: 'Extensions recommandees pour votre workflow Claude Code.', ja: 'Claude Codeワークフローにおすすめの拡張ツール。', pt: 'Extensoes recomendadas para seu fluxo de trabalho com Claude Code.' },
+      'general.companionFree': { de: 'Kostenlos', en: 'Free', es: 'Gratis', fr: 'Gratuit', ja: '無料', pt: 'Gratis' },
+      'general.companionOptional': { de: 'Optional', en: 'Optional', es: 'Opcional', fr: 'Optionnel', ja: 'オプション', pt: 'Opcional' },
+      'general.companionTip': { de: 'Tipp', en: 'Tip', es: 'Consejo', fr: 'Astuce', ja: 'ヒント', pt: 'Dica' },
+      'general.companionCopied': { de: 'In Zwischenablage kopiert', en: 'Copied to clipboard', es: 'Copiado al portapapeles', fr: 'Copie dans le presse-papiers', ja: 'クリップボードにコピーしました', pt: 'Copiado para a area de transferencia' },
+      'general.companionCopy': { de: 'Befehl kopieren', en: 'Copy command', es: 'Copiar comando', fr: 'Copier la commande', ja: 'コマンドをコピー', pt: 'Copiar comando' },
+      'general.companionHappyDesc': { de: 'Mobile-Client fuer Claude Code. Steuere Sessions vom Handy, bekomme Push-Notifications bei Approvals. Open Source.', en: 'Mobile client for Claude Code. Control sessions from your phone, get push notifications for approvals. Open source.', es: 'Cliente movil para Claude Code. Controla sesiones desde el telefono, recibe notificaciones push para aprobaciones.', fr: 'Client mobile pour Claude Code. Controlez les sessions depuis le telephone, recevez des notifications push pour les approbations.', ja: 'Claude Codeのモバイルクライアント。スマホからセッションを操作、承認時にプッシュ通知を受信。', pt: 'Cliente movel para Claude Code. Controle sessoes pelo celular, receba notificacoes push para aprovacoes.' },
+      'general.companionWarpDesc': { de: 'GPU-beschleunigter Terminal-Emulator in Rust. Block-Navigation, Syntax Highlighting. AI-Features optional (Claude Code ist maaechtiger).', en: 'GPU-accelerated terminal emulator in Rust. Block navigation, syntax highlighting. AI features optional (Claude Code is more powerful).', es: 'Emulador de terminal acelerado por GPU en Rust. Navegacion por bloques, resaltado de sintaxis. Funciones de IA opcionales.', fr: 'Emulateur de terminal accelere par GPU en Rust. Navigation par blocs, coloration syntaxique. Fonctions IA optionnelles.', ja: 'Rust製GPU高速ターミナル。ブロックナビゲーション、シンタックスハイライト。AI機能はオプション。', pt: 'Emulador de terminal acelerado por GPU em Rust. Navegacao por blocos, destaque de sintaxe. Recursos de IA opcionais.' },
+      'general.companionObsidianDesc': { de: 'Nutze einen Obsidian Vault als Projekt-Wissensbasis. Claude kann Notes lesen/schreiben und Projektstatus tracken.', en: 'Use an Obsidian vault as project knowledge base. Claude can read/write notes and track project status.', es: 'Usa un vault de Obsidian como base de conocimiento. Claude puede leer/escribir notas y rastrear el estado del proyecto.', fr: 'Utilisez un vault Obsidian comme base de connaissances. Claude peut lire/ecrire des notes et suivre le statut du projet.', ja: 'Obsidian Vaultをプロジェクトのナレッジベースとして活用。Claudeがノートの読み書きとプロジェクト状況の追跡を実行。', pt: 'Use um vault Obsidian como base de conhecimento. O Claude pode ler/escrever notas e acompanhar o status do projeto.' },
+      'general.companionObsidianHint': { de: '→ Vault-Pfad in Permissions-Tab eintragen', en: '→ Add vault path in Permissions tab', es: '→ Agregar ruta del vault en la pestana Permisos', fr: '→ Ajouter le chemin du vault dans l\'onglet Permissions', ja: '→ Permissionsタブにvaultパスを追加', pt: '→ Adicionar caminho do vault na aba Permissoes' },
+      'companion.happyFeature1': { de: 'Push-Notifications bei Approvals und fertigen Tasks', en: 'Push notifications for approvals and completed tasks', es: 'Notificaciones push para aprobaciones y tareas completadas', fr: 'Notifications push pour approbations et taches terminees', ja: '承認や完了タスクのプッシュ通知', pt: 'Notificacoes push para aprovacoes e tarefas concluidas' },
+      'companion.happyFeature2': { de: 'Mehrere Sessions parallel vom Handy steuern', en: 'Control multiple sessions in parallel from your phone', es: 'Controlar varias sesiones en paralelo desde el telefono', fr: 'Controler plusieurs sessions en parallele depuis le telephone', ja: 'スマホから複数セッションを並行操作', pt: 'Controlar varias sessoes em paralelo pelo celular' },
+      'companion.happyFeature3': { de: 'Nutzt dein bestehendes Setup (Settings, Skills, MCP)', en: 'Uses your existing setup (settings, skills, MCP)', es: 'Usa tu configuracion existente (settings, skills, MCP)', fr: 'Utilise votre configuration existante (settings, skills, MCP)', ja: '既存のセットアップをそのまま使用（Settings、Skills、MCP）', pt: 'Usa sua configuracao existente (settings, skills, MCP)' },
+      'companion.warpFeature1': { de: 'GPU-beschleunigte Block-Navigation und Syntax Highlighting', en: 'GPU-accelerated block navigation and syntax highlighting', es: 'Navegacion por bloques acelerada por GPU y resaltado de sintaxis', fr: 'Navigation par blocs acceleree par GPU et coloration syntaxique', ja: 'GPU高速ブロックナビゲーションとシンタックスハイライト', pt: 'Navegacao por blocos acelerada por GPU e destaque de sintaxe' },
+      'companion.warpFeature2': { de: 'Eingebauter File Tree und Code Editor', en: 'Built-in file tree and code editor', es: 'Arbol de archivos y editor de codigo integrados', fr: 'Arborescence de fichiers et editeur de code integres', ja: '内蔵ファイルツリーとコードエディター', pt: 'Arvore de arquivos e editor de codigo integrados' },
+      'companion.warpFeature3': { de: 'Claude Code Notifications via claude-code-warp Plugin', en: 'Claude Code notifications via claude-code-warp plugin', es: 'Notificaciones de Claude Code via plugin claude-code-warp', fr: 'Notifications Claude Code via plugin claude-code-warp', ja: 'claude-code-warpプラグインによるClaude Code通知', pt: 'Notificacoes do Claude Code via plugin claude-code-warp' },
+      'companion.obsidianFeature1': { de: 'Claude liest/schreibt Projekt-Notes automatisch', en: 'Claude reads/writes project notes automatically', es: 'Claude lee/escribe notas de proyecto automaticamente', fr: 'Claude lit/ecrit les notes de projet automatiquement', ja: 'Claudeがプロジェクトノートを自動的に読み書き', pt: 'O Claude le/escreve notas de projeto automaticamente' },
+      'companion.obsidianFeature2': { de: 'Projektstatus, Checklisten und Session-Logs tracken', en: 'Track project status, checklists and session logs', es: 'Rastrear estado del proyecto, listas de verificacion y registros de sesion', fr: 'Suivre le statut du projet, les checklists et les journaux de session', ja: 'プロジェクト状況、チェックリスト、セッションログを追跡', pt: 'Acompanhar status do projeto, checklists e registros de sessao' },
+      'companion.obsidianFeature3': { de: 'Tech Learnings in die Inbox schreiben (Zettelkasten)', en: 'Write tech learnings to inbox (Zettelkasten)', es: 'Escribir aprendizajes tecnicos en la bandeja de entrada (Zettelkasten)', fr: 'Ecrire les apprentissages tech dans la boite de reception (Zettelkasten)', ja: 'テック学習をInboxに記録（Zettelkasten）', pt: 'Escrever aprendizados tecnicos na caixa de entrada (Zettelkasten)' },
+      'companion.vaultStructureTitle': { de: 'IPARAG Vault-Struktur (Beispiel)', en: 'IPARAG Vault Structure (Example)', es: 'Estructura del Vault IPARAG (Ejemplo)', fr: 'Structure du Vault IPARAG (Exemple)', ja: 'IPARAG Vault構造（例）', pt: 'Estrutura do Vault IPARAG (Exemplo)' },
+      'companion.vaultCredit': { de: 'Basiert auf dem LIFE OS Vault von', en: 'Based on the LIFE OS Vault by', es: 'Basado en el LIFE OS Vault de', fr: 'Base sur le LIFE OS Vault de', ja: 'LIFE OS Vaultに基づく、作者:', pt: 'Baseado no LIFE OS Vault de' },
+      'companion.vaultDownload': { de: 'Vault-Template', en: 'Vault Template', es: 'Plantilla del Vault', fr: 'Modele du Vault', ja: 'Vaultテンプレート', pt: 'Modelo do Vault' },
+      'companion.catTerminal': { de: 'Terminal & Workflow', en: 'Terminal & Workflow', es: 'Terminal y flujo de trabajo', fr: 'Terminal et workflow', ja: 'ターミナル＆ワークフロー', pt: 'Terminal e fluxo de trabalho' },
+      'companion.catAI': { de: 'AI Agents', en: 'AI Agents', es: 'Agentes de IA', fr: 'Agents IA', ja: 'AIエージェント', pt: 'Agentes de IA' },
+      'companion.catMonitoring': { de: 'Monitoring & Referenz', en: 'Monitoring & Reference', es: 'Monitoreo y referencia', fr: 'Monitoring et reference', ja: 'モニタリング＆リファレンス', pt: 'Monitoramento e referencia' },
+      'companion.catMCP': { de: 'MCP Server', en: 'MCP Servers', es: 'Servidores MCP', fr: 'Serveurs MCP', ja: 'MCPサーバー', pt: 'Servidores MCP' },
+      'companion.claudeSquadDesc': { de: 'Mehrere Claude Code Instanzen parallel in eigenen tmux-Sessions und Git Worktrees. Auto-Accept, Merge per Kommando.', en: 'Run multiple Claude Code instances in parallel with separate tmux sessions and git worktrees. Auto-accept, merge via command.', es: 'Ejecutar multiples instancias de Claude Code en paralelo con sesiones tmux y worktrees git separados.', fr: 'Executer plusieurs instances Claude Code en parallele avec des sessions tmux et worktrees git separes.', ja: '複数のClaude Codeインスタンスをtmuxセッションとgit worktreeで並行実行。', pt: 'Executar multiplas instancias do Claude Code em paralelo com sessoes tmux e worktrees git separados.' },
+      'companion.lazygitDesc': { de: 'Visuelle Git-UI im Terminal. Diffs, Staging, Merge Conflicts, Branching — alles interaktiv. Perfekt fuer Code-Review nach Claude-Aenderungen.', en: 'Visual Git UI in the terminal. Diffs, staging, merge conflicts, branching — all interactive. Perfect for reviewing Claude changes.', es: 'UI visual de Git en la terminal. Diffs, staging, conflictos — todo interactivo. Perfecto para revisar cambios de Claude.', fr: 'Interface Git visuelle dans le terminal. Diffs, staging, conflits — tout interactif. Parfait pour revoir les changements de Claude.', ja: 'ターミナルでビジュアルGit UI。Diff、ステージング、コンフリクト解決 — すべてインタラクティブ。', pt: 'UI visual do Git no terminal. Diffs, staging, conflitos — tudo interativo. Perfeito para revisar mudancas do Claude.' },
+      'companion.ghDashDesc': { de: 'GitHub-Dashboard im Terminal. PRs, Issues, Review-Requests auf einen Blick. Passt perfekt zum CLI-First Workflow.', en: 'GitHub dashboard in the terminal. PRs, issues, review requests at a glance. Perfect for CLI-first workflow.', es: 'Dashboard de GitHub en la terminal. PRs, issues, solicitudes de revision de un vistazo.', fr: 'Tableau de bord GitHub dans le terminal. PRs, issues, demandes de review en un coup d\'oeil.', ja: 'ターミナルでGitHubダッシュボード。PR、Issue、レビューリクエストを一覧表示。', pt: 'Dashboard do GitHub no terminal. PRs, issues, solicitacoes de revisao de relance.' },
+      'companion.ittybittyDesc': { de: 'Multi-Agent-Orchestrator mit Manager/Worker-Hierarchie. Claude Code Instanzen die weitere spawnen koennen. "Oops Button" stoppt alles sofort.', en: 'Multi-agent orchestrator with manager/worker hierarchy. Claude Code instances that can spawn more. "Oops button" stops everything instantly.', es: 'Orquestador multi-agente con jerarquia gerente/trabajador. Las instancias pueden generar mas instancias.', fr: 'Orchestrateur multi-agent avec hierarchie manager/worker. Les instances peuvent en engendrer d\'autres.', ja: 'マネージャー/ワーカー階層のマルチエージェントオーケストレーター。インスタンスが他をスポーン可能。', pt: 'Orquestrador multi-agente com hierarquia gerente/trabalhador. Instancias que podem gerar mais instancias.' },
+      'companion.geminiDesc': { de: 'Googles Terminal-AI-Agent. 1000 Requests/Tag kostenlos, 1M Token Context, Web Search eingebaut. Perfekte Second Opinion neben Claude.', en: 'Google\'s terminal AI agent. 1000 requests/day free, 1M token context, web search built in. Perfect second opinion alongside Claude.', es: 'Agente de IA de Google para terminal. 1000 solicitudes/dia gratis, contexto de 1M tokens, busqueda web integrada.', fr: 'Agent IA terminal de Google. 1000 requetes/jour gratuit, contexte 1M tokens, recherche web integree.', ja: 'GoogleのターミナルAIエージェント。毎日1000リクエスト無料、1Mトークンコンテキスト、Web検索内蔵。', pt: 'Agente de IA do Google para terminal. 1000 solicitacoes/dia gratis, contexto de 1M tokens, busca web integrada.' },
+      'companion.opencodeDesc': { de: 'Open-Source AI Agent mit 75+ LLM-Providern. Kann lokale Modelle via Ollama nutzen — fuer Offline-Arbeit oder zum Credits sparen.', en: 'Open-source AI agent with 75+ LLM providers. Can use local models via Ollama — for offline work or saving credits.', es: 'Agente de IA open source con 75+ proveedores de LLM. Puede usar modelos locales via Ollama.', fr: 'Agent IA open-source avec 75+ fournisseurs LLM. Peut utiliser des modeles locaux via Ollama.', ja: 'オープンソースAIエージェント。75以上のLLMプロバイダー。Ollamaでローカルモデルも利用可能。', pt: 'Agente de IA open-source com 75+ provedores de LLM. Pode usar modelos locais via Ollama.' },
+      'companion.ccusageDesc': { de: 'Token-Verbrauch und Kosten pro Tag/Projekt aus Claude Code JSONL-Logs. Dashboard-Aufbereitung im Terminal. Ohne das fliegst du blind.', en: 'Token usage and costs per day/project from Claude Code JSONL logs. Dashboard view in the terminal. Without it you\'re flying blind.', es: 'Uso de tokens y costos por dia/proyecto desde logs JSONL de Claude Code. Vista de dashboard en terminal.', fr: 'Utilisation des tokens et couts par jour/projet depuis les logs JSONL Claude Code. Vue dashboard dans le terminal.', ja: 'Claude CodeのJSONLログからトークン消費量とコストを日別/プロジェクト別に表示。', pt: 'Uso de tokens e custos por dia/projeto dos logs JSONL do Claude Code. Visualizacao de dashboard no terminal.' },
+      'companion.awesomeDesc': { de: 'Umfassendstes Toolkit mit 135 Agents, 35+ Skills, 150+ Plugins, Hooks und Templates. Referenz und Inspirationsquelle.', en: 'Most comprehensive toolkit with 135 agents, 35+ skills, 150+ plugins, hooks and templates. Reference and inspiration source.', es: 'Kit de herramientas mas completo: 135 agentes, 35+ habilidades, 150+ plugins, hooks y plantillas.', fr: 'Boite a outils la plus complete: 135 agents, 35+ skills, 150+ plugins, hooks et templates.', ja: '最も包括的なツールキット。135エージェント、35以上のスキル、150以上のプラグイン、フックとテンプレート。', pt: 'Kit de ferramentas mais completo: 135 agentes, 35+ habilidades, 150+ plugins, hooks e templates.' },
+      'companion.playwrightDesc': { de: 'Browser-Automation und E2E-Testing direkt aus Claude Code. Nutzt Accessibility Trees statt Screenshots fuer praezise Interaktion.', en: 'Browser automation and E2E testing directly from Claude Code. Uses accessibility trees instead of screenshots for precise interaction.', es: 'Automatizacion de navegador y pruebas E2E directamente desde Claude Code. Usa arboles de accesibilidad.', fr: 'Automatisation navigateur et tests E2E directement depuis Claude Code. Utilise les arbres d\'accessibilite.', ja: 'Claude Codeから直接ブラウザ自動化とE2Eテスト。スクリーンショットではなくアクセシビリティツリーを使用。', pt: 'Automacao de navegador e testes E2E diretamente do Claude Code. Usa arvores de acessibilidade.' },
+      'companion.figmaDesc': { de: 'Claude liest Figma-Designs direkt: Layout-Daten, Komponenten, Design Tokens. Generiert Code der 1:1 dem Design entspricht.', en: 'Claude reads Figma designs directly: layout data, components, design tokens. Generates code that matches the design 1:1.', es: 'Claude lee disenos de Figma directamente: datos de layout, componentes, tokens de diseno.', fr: 'Claude lit les designs Figma directement: donnees de layout, composants, design tokens.', ja: 'ClaudeがFigmaデザインを直接読み取り：レイアウトデータ、コンポーネント、デザイントークン。', pt: 'O Claude le designs do Figma diretamente: dados de layout, componentes, design tokens.' },
+      'companion.nanoBananaDesc': { de: 'Bild-Generierung via Gemini in Claude Code. Thumbnails, Placeholder, Icons direkt erzeugen. Nutzt Gemini API Free Tier.', en: 'Image generation via Gemini in Claude Code. Create thumbnails, placeholders, icons directly. Uses Gemini API free tier.', es: 'Generacion de imagenes via Gemini en Claude Code. Crear miniaturas, placeholders, iconos directamente.', fr: 'Generation d\'images via Gemini dans Claude Code. Creer des miniatures, placeholders, icones directement.', ja: 'Claude Code内でGemini経由の画像生成。サムネイル、プレースホルダー、アイコンを直接作成。', pt: 'Geracao de imagens via Gemini no Claude Code. Criar miniaturas, placeholders, icones diretamente.' },
 
       // ─── Tab: Permissions ───
       'perm.howTitle': { de: 'Wie Permissions funktionieren', en: 'How permissions work', es: 'Como funcionan los permisos', fr: 'Comment fonctionnent les permissions', ja: 'パーミッションの仕組み', pt: 'Como as permissoes funcionam' },
@@ -2620,6 +3225,7 @@
 
       // ─── Design Prompts Tab ───
       'design.all': { de: 'Alle', en: 'All', es: 'Todos', fr: 'Tous', ja: 'すべて', pt: 'Todos' },
+      'design.websiteHint': { de: 'Schau dir die Designs in Aktion an — mit Live-Previews und noch mehr Styles zum Entdecken.', en: 'See the designs in action — with live previews and even more styles to discover.', es: 'Mira los disenos en accion — con vistas previas en vivo y mas estilos por descubrir.', fr: 'Decouvrez les designs en action — avec des aperçus en direct et encore plus de styles a explorer.', ja: 'デザインを実際に確認 — ライブプレビューとさらに多くのスタイルを発見。', pt: 'Veja os designs em acao — com previews ao vivo e ainda mais estilos para descobrir.' },
 
       // ─── Permission Presets ───
       'data.preset.pp-safety.name': { de: 'Safety First', en: 'Safety First', es: 'Seguridad primero', fr: 'Securite d\'abord', ja: 'セーフティファースト', pt: 'Seguranca primeiro' },
@@ -2755,6 +3361,14 @@
       'data.plugin.minimalist-skill.provides': { de: 'Warm Monochrome Palette, Typographic Contrast, Flat Bento Grids, Keystroke Micro-UIs, Faux-OS Chrome', en: 'Warm monochrome palette, typographic contrast, flat bento grids, keystroke micro-UIs, faux-OS chrome', es: 'Paleta monocromatica calida, contraste tipografico, grids bento planos, micro-UIs de teclas, chrome pseudo-OS', fr: 'Palette monochrome chaude, contraste typographique, grilles bento plates, micro-UIs clavier, chrome faux-OS', ja: 'ウォームモノクロームパレット、タイポグラフィックコントラスト、フラット弁当グリッド、キーストロークマイクロUI、擬似OSクローム', pt: 'Paleta monocromatica quente, contraste tipografico, grids bento planos, micro-UIs de teclas, chrome pseudo-OS' },
       'data.plugin.output-skill.provides': { de: 'Anti-Truncation, Banned-Pattern-Detection, Token-Limit-Splits mit sauberem Resume', en: 'Anti-truncation, banned pattern detection, token limit splits with clean resume', es: 'Anti-truncamiento, deteccion de patrones prohibidos, division por limite de tokens con reanudacion limpia', fr: 'Anti-troncature, detection de motifs interdits, divisions de limite de tokens avec reprise propre', ja: 'アンチトランケーション、禁止パターン検出、クリーンな再開でのトークンリミット分割', pt: 'Anti-truncamento, detecao de padroes proibidos, divisao por limite de tokens com retomada limpa' },
       'data.plugin.redesign-skill.provides': { de: 'Typografie-Audit, Farb-Cleanup, Layout-Fixes, Motion-Upgrades, Component-Pattern-Ersetzung', en: 'Typography audit, color cleanup, layout fixes, motion upgrades, component pattern replacement', es: 'Auditoria tipografica, limpieza de colores, correcciones de layout, mejoras de movimiento, reemplazo de patrones de componentes', fr: 'Audit typographique, nettoyage couleurs, corrections layout, ameliorations motion, remplacement de motifs composants', ja: 'タイポグラフィ監査、カラークリーンアップ、レイアウト修正、モーションアップグレード、コンポーネントパターン置換', pt: 'Auditoria tipografica, limpeza de cores, correcoes de layout, melhorias de movimento, substituicao de padroes de componentes' },
+      'data.plugin.project-kickstart.desc': { de: 'Standardisierter Projektstart — Scaffold, Obsidian-Note, CLAUDE.md, Design Tokens, Auth, Git Init', en: 'Standardized project bootstrap — scaffold, Obsidian note, CLAUDE.md, design tokens, auth, git init', es: 'Inicio estandarizado de proyecto — scaffold, nota Obsidian, CLAUDE.md, tokens de diseno, auth, git init', fr: 'Demarrage standardise de projet — scaffold, note Obsidian, CLAUDE.md, tokens de design, auth, git init', ja: '標準化されたプロジェクトブートストラップ — スキャフォールド、Obsidianノート、CLAUDE.md、デザイントークン、認証、git init', pt: 'Inicializacao padronizada de projeto — scaffold, nota Obsidian, CLAUDE.md, tokens de design, auth, git init' },
+      'data.plugin.project-kickstart.provides': { de: 'Angular+Firebase+Tailwind Scaffold, Tauri+Svelte Scaffold, Obsidian-Note, CLAUDE.md, @theme Tokens, Start Script', en: 'Angular+Firebase+Tailwind scaffold, Tauri+Svelte scaffold, Obsidian note, CLAUDE.md, @theme tokens, start script', es: 'Scaffold Angular+Firebase+Tailwind, scaffold Tauri+Svelte, nota Obsidian, CLAUDE.md, tokens @theme, script de inicio', fr: 'Scaffold Angular+Firebase+Tailwind, scaffold Tauri+Svelte, note Obsidian, CLAUDE.md, tokens @theme, script de demarrage', ja: 'Angular+Firebase+Tailwindスキャフォールド、Tauri+Svelteスキャフォールド、Obsidianノート、CLAUDE.md、@themeトークン、スタートスクリプト', pt: 'Scaffold Angular+Firebase+Tailwind, scaffold Tauri+Svelte, nota Obsidian, CLAUDE.md, tokens @theme, script de inicio' },
+      'data.plugin.firebase-architect.desc': { de: 'Firestore Schema-Design, Security Rules, Cloud Functions v2 — denormalisiert statt SQL-Denken', en: 'Firestore schema design, Security Rules, Cloud Functions v2 — denormalized, not SQL thinking', es: 'Diseno de esquema Firestore, Security Rules, Cloud Functions v2 — desnormalizado, no pensamiento SQL', fr: 'Conception de schema Firestore, Security Rules, Cloud Functions v2 — denormalise, pas de pensee SQL', ja: 'Firestoreスキーマ設計、セキュリティルール、Cloud Functions v2 — 非正規化、SQLの考え方ではない', pt: 'Design de esquema Firestore, Security Rules, Cloud Functions v2 — desnormalizado, nao pensamento SQL' },
+      'data.plugin.firebase-architect.provides': { de: 'Schema Denormalisierung, Security Rules Templates, Cloud Functions v2, Batch-Write 500er-Chunking, Index-Strategie', en: 'Schema denormalization, Security Rules templates, Cloud Functions v2, batch write 500-chunking, index strategy', es: 'Desnormalizacion de esquema, plantillas de Security Rules, Cloud Functions v2, escritura por lotes con chunking de 500, estrategia de indices', fr: 'Denormalisation de schema, templates Security Rules, Cloud Functions v2, ecriture par lots chunking 500, strategie d\'index', ja: 'スキーマ非正規化、セキュリティルールテンプレート、Cloud Functions v2、バッチ書き込み500チャンキング、インデックス戦略', pt: 'Desnormalizacao de esquema, templates de Security Rules, Cloud Functions v2, escrita em lote com chunking de 500, estrategia de indices' },
+      'data.plugin.resilient-api.desc': { de: 'Retry+Backoff, shareReplay Poison Fix, CORS Proxy, Fallback Chains — APIs die nicht um 2 Uhr nachts brechen', en: 'Retry+backoff, shareReplay poison fix, CORS proxy, fallback chains — APIs that don\'t break at 2 AM', es: 'Retry+backoff, correccion de envenenamiento shareReplay, proxy CORS, cadenas de fallback — APIs que no fallan a las 2 AM', fr: 'Retry+backoff, correction du poison shareReplay, proxy CORS, chaines de fallback — APIs qui ne cassent pas a 2h du matin', ja: 'リトライ+バックオフ、shareReplayポイズン修正、CORSプロキシ、フォールバックチェーン — 午前2時に壊れないAPI', pt: 'Retry+backoff, correcao de envenenamento shareReplay, proxy CORS, cadeias de fallback — APIs que nao quebram as 2 da manha' },
+      'data.plugin.resilient-api.provides': { de: 'Exponential Backoff, shareReplay Poison Prevention, Cloudflare Worker CORS Proxy, Auto-Logout 401, Graceful Degradation', en: 'Exponential backoff, shareReplay poison prevention, Cloudflare Worker CORS proxy, auto-logout 401, graceful degradation', es: 'Backoff exponencial, prevencion de envenenamiento shareReplay, proxy CORS Cloudflare Worker, auto-logout 401, degradacion elegante', fr: 'Backoff exponentiel, prevention du poison shareReplay, proxy CORS Cloudflare Worker, auto-logout 401, degradation elegante', ja: 'エクスポネンシャルバックオフ、shareReplayポイズン防止、Cloudflare Worker CORSプロキシ、自動ログアウト401、グレースフルデグラデーション', pt: 'Backoff exponencial, prevencao de envenenamento shareReplay, proxy CORS Cloudflare Worker, auto-logout 401, degradacao elegante' },
+      'data.plugin.security-audit.desc': { de: '8-Punkt Sicherheits-Checkliste — XSS, SSRF, Secrets, Firebase Rules, CORS, Dependencies, Auth Guards', en: '8-point security checklist — XSS, SSRF, secrets, Firebase Rules, CORS, dependencies, auth guards', es: 'Lista de verificacion de seguridad de 8 puntos — XSS, SSRF, secretos, Firebase Rules, CORS, dependencias, guards de auth', fr: 'Checklist securite en 8 points — XSS, SSRF, secrets, Firebase Rules, CORS, dependances, guards d\'auth', ja: '8項目セキュリティチェックリスト — XSS、SSRF、シークレット、Firebase Rules、CORS、依存関係、認証ガード', pt: 'Checklist de seguranca de 8 pontos — XSS, SSRF, segredos, Firebase Rules, CORS, dependencias, guards de auth' },
+      'data.plugin.security-audit.provides': { de: 'XSS-Scan, SSRF-Validation, Secret-Detection, Firebase Rules Audit, Dependency-Check, CORS-Pruefung, Input-Validation', en: 'XSS scan, SSRF validation, secret detection, Firebase Rules audit, dependency check, CORS review, input validation', es: 'Escaneo XSS, validacion SSRF, deteccion de secretos, auditoria de Firebase Rules, verificacion de dependencias, revision CORS, validacion de entrada', fr: 'Scan XSS, validation SSRF, detection de secrets, audit Firebase Rules, verification des dependances, revue CORS, validation des entrees', ja: 'XSSスキャン、SSRF検証、シークレット検出、Firebase Rulesの監査、依存関係チェック、CORSレビュー、入力検証', pt: 'Scan XSS, validacao SSRF, detecao de segredos, auditoria de Firebase Rules, verificacao de dependencias, revisao CORS, validacao de entrada' },
 
       // ─── Hook Info Box ───
       'hooks.infoTitle': { de: 'Hooks — Event-basierte Automatisierung', en: 'Hooks — Event-based automation', es: 'Hooks — Automatizacion basada en eventos', fr: 'Hooks — Automatisation basee sur les evenements', ja: 'Hooks — イベントベースの自動化', pt: 'Hooks — Automatizacao baseada em eventos' },
@@ -2880,6 +3494,8 @@
       'search.language.desc': { de: 'Sprache der Antworten', en: 'Response language', es: 'Idioma de las respuestas', fr: 'Langue des reponses', ja: '回答の言語', pt: 'Idioma das respostas' },
       'search.thinking': { de: 'Always Thinking', en: 'Always Thinking', es: 'Pensamiento permanente', fr: 'Reflexion permanente', ja: '常時思考モード', pt: 'Pensamento permanente' },
       'search.thinking.desc': { de: 'Thinking-Modus permanent aktivieren', en: 'Permanently enable thinking mode', es: 'Activar modo de pensamiento permanente', fr: 'Activer le mode reflexion permanent', ja: '思考モードを常時有効にする', pt: 'Ativar modo de pensamento permanente' },
+      'search.companion': { de: 'Companion Tools', en: 'Companion Tools', es: 'Herramientas complementarias', fr: 'Outils complementaires', ja: 'コンパニオンツール', pt: 'Ferramentas complementares' },
+      'search.companion.desc': { de: 'Happy Coder, Warp Terminal, Obsidian Vault', en: 'Happy Coder, Warp Terminal, Obsidian Vault', es: 'Happy Coder, Warp Terminal, Obsidian Vault', fr: 'Happy Coder, Warp Terminal, Obsidian Vault', ja: 'Happy Coder, Warp Terminal, Obsidian Vault', pt: 'Happy Coder, Warp Terminal, Obsidian Vault' },
       'search.autoUpdates': { de: 'Auto-Updates Channel', en: 'Auto-Updates Channel', es: 'Canal de actualizaciones', fr: 'Canal de mises a jour', ja: '自動更新チャンネル', pt: 'Canal de atualizacoes' },
       'search.autoUpdates.desc': { de: 'Release-Kanal fuer Updates', en: 'Release channel for updates', es: 'Canal de lanzamiento para actualizaciones', fr: 'Canal de publication pour les mises a jour', ja: 'アップデートのリリースチャンネル', pt: 'Canal de lancamento para atualizacoes' },
       'search.permPresets': { de: 'Permission Presets', en: 'Permission Presets', es: 'Presets de permisos', fr: 'Presets de permissions', ja: 'パーミッションプリセット', pt: 'Presets de permissoes' },
@@ -3158,6 +3774,7 @@
           { tab: 'general', label: 'search.language', desc: 'search.language.desc', keywords: ['language', 'sprache', 'deutsch', 'english'], id: 'setting-language' },
           { tab: 'general', label: 'search.thinking', desc: 'search.thinking.desc', keywords: ['thinking', 'denken', 'reasoning'], id: 'setting-thinking' },
           { tab: 'general', label: 'search.autoUpdates', desc: 'search.autoUpdates.desc', keywords: ['updates', 'channel', 'latest', 'stable'], id: 'setting-auto-updates' },
+          { tab: 'companion-tools', label: 'search.companion', desc: 'search.companion.desc', keywords: ['companion', 'tools', 'happy', 'warp', 'obsidian', 'mobile', 'terminal', 'vault'], id: 'setting-companion-tools' },
           { tab: 'permissions', label: 'search.permPresets', desc: 'search.permPresets.desc', keywords: ['presets', 'vorlagen', 'safety', 'produktiv'], id: 'setting-perm-presets' },
           { tab: 'permissions', label: 'search.defaultMode', desc: 'search.defaultMode.desc', keywords: ['default', 'mode', 'bypassPermissions', 'acceptEdits', 'dontAsk', 'auto', 'plan'], id: 'setting-perm-default-mode' },
           { tab: 'permissions', label: 'search.bypass', desc: 'search.bypass.desc', keywords: ['bypass', 'deaktivieren'], id: 'setting-perm-bypass' },
@@ -3274,6 +3891,8 @@
           { name: 'puppeteer', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-puppeteer'] },
           { name: 'brave-search', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-brave-search'], env: { BRAVE_API_KEY: '' } },
           { name: 'memory', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-memory'] },
+          { name: 'sequential-thinking', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-sequential-thinking'] },
+          { name: 'context7', type: 'stdio', command: 'npx', args: ['-y', '@upstash/context7-mcp'] },
         ],
         activeSpinnerPack: null,
         hoverSpinnerPack: null,
@@ -3470,6 +4089,7 @@
           { id: 'separator' },
           { id: 'design-prompts', label: 'Design Prompts', desc: '30 kuratierte Design-Aesthetiken mit AI-ready Prompts', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>' },
           { id: 'terminal-prompts', label: 'Terminal Prompts', desc: 'Prompts für Claude Code CLI und CLAUDE.md Snippets', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>' },
+          { id: 'companion-tools', label: 'Companion Tools', desc: 'Empfohlene Erweiterungen für den Claude Code Workflow', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"/></svg>' },
         ],
 
         hookEvents: [
@@ -3579,6 +4199,10 @@
               { id: 'minimalist-skill@local-skills', name: 'Minimalist Skill', desc: 'Notion/Linear-inspirierte Interfaces — Editorial Serif + Sans-Serif, Bento Grids, Muted Pastels', skills: ['/minimalist-skill'], provides: 'Warm Monochrome Palette, Typographic Contrast, Flat Bento Grids, Keystroke Micro-UIs, Faux-OS Chrome', availability: 'ready' },
               { id: 'output-skill@local-skills', name: 'Output Skill', desc: 'Erzwingt vollständige Code-Ausgabe — keine Platzhalter, keine Abkürzungen, keine Auslassungen', skills: ['/output-skill'], provides: 'Anti-Truncation, Banned-Pattern-Detection, Token-Limit-Splits mit sauberem Resume', availability: 'ready' },
               { id: 'redesign-skill@local-skills', name: 'Redesign Skill', desc: 'Bestehende Projekte auf Premium upgraden — Design-Audit, Anti-Pattern-Erkennung, Fix-Prioritäten', skills: ['/redesign-skill'], provides: 'Typografie-Audit, Farb-Cleanup, Layout-Fixes, Motion-Upgrades, Component-Pattern-Ersetzung', availability: 'ready' },
+              { id: 'project-kickstart@local-skills', name: 'Project Kickstart', desc: 'Standardisierter Projektstart — Scaffold, Obsidian-Note, CLAUDE.md, Design Tokens, Auth, Git Init', skills: ['/project-kickstart'], provides: 'Angular+Firebase+Tailwind Scaffold, Tauri+Svelte Scaffold, Obsidian-Note, CLAUDE.md, @theme Tokens, Start Script', availability: 'ready' },
+              { id: 'firebase-architect@local-skills', name: 'Firebase Architect', desc: 'Firestore Schema-Design, Security Rules, Cloud Functions v2 — denormalisiert statt SQL-Denken', skills: ['/firebase-architect'], provides: 'Schema Denormalisierung, Security Rules Templates, Cloud Functions v2, Batch-Write 500er-Chunking, Index-Strategie', availability: 'ready' },
+              { id: 'resilient-api@local-skills', name: 'Resilient API', desc: 'Retry+Backoff, shareReplay Poison Fix, CORS Proxy, Fallback Chains — APIs die nicht um 2 Uhr nachts brechen', skills: ['/resilient-api'], provides: 'Exponential Backoff, shareReplay Poison Prevention, Cloudflare Worker CORS Proxy, Auto-Logout 401, Graceful Degradation', availability: 'ready' },
+              { id: 'security-audit@local-skills', name: 'Security Audit', desc: '8-Punkt Sicherheits-Checkliste — XSS, SSRF, Secrets, Firebase Rules, CORS, Dependencies, Auth Guards', skills: ['/security-audit'], provides: 'XSS-Scan, SSRF-Validation, Secret-Detection, Firebase Rules Audit, Dependency-Check, CORS-Prüfung, Input-Validation', availability: 'ready' },
             ]
           }
         ],

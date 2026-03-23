@@ -29,7 +29,7 @@
 ## Features
 
 ### Core
-- **12 Tabs** covering every `settings.json` option
+- **14 Tabs** covering every `settings.json` option
 - **6 Languages** — full i18n support (Deutsch, English, Español, Français, 日本語, Português)
 - **Live JSON Preview** — see the output as you edit
 - **File System Access API** — open and save `settings.json` directly (no copy-paste)
@@ -38,24 +38,25 @@
 - **Templates** — built-in presets + save/load your own custom templates
 - **Import/Export Bundles** — backup settings + templates + spinner packs as a single JSON file
 - **Share via URL** — Base64-encoded settings in the URL hash for easy sharing
-- **Guided Setup Wizard** — 5-step onboarding for first-time users
+- **Guided Setup Wizard** — 6-step onboarding for first-time users (includes language selection)
 - **Roundtrip-safe** — unknown properties are preserved on import/export
 
 ### Tabs
 
 | Tab | What it covers |
 |-----|----------------|
-| General | Model, effort level, output style, language, thinking mode |
+| General | Model, effort level (visual card selector), output style, language, thinking mode |
 | Permissions | Allow/Ask/Deny rules, default mode, presets, conflict detection |
-| Skills & Plugins | Toggle plugins with categories, search, availability badges, setup hints |
+| Skills & Plugins | Toggle 40+ plugins with categories, search, availability badges, 11 custom skills |
 | Hooks | Event-based automation (PreToolUse, PostToolUse, SessionStart, etc.) |
-| MCP Servers | stdio/http/sse config, env vars, headers, quick-add presets, status check |
+| MCP Servers | stdio/http/sse config, env vars, headers, 9 quick-add presets, status check |
 | Sandbox | Filesystem allow/deny paths, network domains |
 | Environment | Custom environment variables |
 | Display & UI | Spinner verbs (8 themed packs + custom), status line, motion preferences |
 | Attribution | Commit and PR attribution strings |
 | Advanced | API key helper, plans directory, cleanup period, available models |
-| Design Prompts | 30 curated design styles with AI prompts and color palettes |
+| Companion Tools | 14 recommended tools for the Claude Code workflow (Happy Coder, Warp, LazyGit, etc.) |
+| Design Prompts | 30 curated design styles with AI prompts and color palettes + [designprompts.dev](https://www.designprompts.dev/) |
 | Terminal Prompts | 26 prompts in 9 categories + CLAUDE.md Builder |
 
 ### Editing Tools
