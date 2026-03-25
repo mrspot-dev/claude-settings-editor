@@ -324,7 +324,7 @@
         <!-- Row 2: Toolbar -->
         <div class="flex items-center flex-wrap gap-2 px-6 pb-3 border-b border-[rgba(255,255,255,0.08)]">
         <!-- Global Search -->
-        <div x-show="!['design-prompts','terminal-prompts','companion-tools'].includes(activeTab)" class="flex-1 min-w-[180px] max-w-sm relative" x-data="{ searchFocused: false }">
+        <div x-show="!['design-prompts','terminal-prompts','companion-tools','memory'].includes(activeTab)" class="flex-1 min-w-[180px] max-w-sm relative" x-data="{ searchFocused: false }">
           <div class="relative">
             <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             <input x-model="searchQuery"
@@ -405,7 +405,7 @@
             </template>
           </div>
         </div>
-        <div class="flex items-center gap-2 flex-shrink-0 flex-wrap" x-show="!['design-prompts','terminal-prompts','companion-tools'].includes(activeTab)">
+        <div class="flex items-center gap-2 flex-shrink-0 flex-wrap" x-show="!['design-prompts','terminal-prompts','companion-tools','memory'].includes(activeTab)">
           <!-- Template Picker -->
           <div class="relative" x-data="{ tplOpen: false }">
             <button @click="tplOpen = !tplOpen" :aria-expanded="tplOpen" class="btn-secondary px-4 py-1.5 text-xs font-mono font-medium rounded-full border border-accent/30 text-accent hover:bg-accent/10 flex items-center gap-1.5">
@@ -2480,11 +2480,195 @@
 
           </div>
 
+          <!-- ═══ TAB: Memory ═══ -->
+          <div x-show="activeTab === 'memory'" class="tab-content space-y-6" role="tabpanel">
+
+            <!-- Section 1: Auto Memory -->
+            <div class="settings-group space-y-4" id="setting-auto-memory">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                </div>
+                <div>
+                  <h3 class="font-display font-semibold text-sm text-fg" x-text="t('memory.autoMemoryTitle')"></h3>
+                  <p class="text-xs text-fg-dim" x-text="t('memory.autoMemoryDesc')"></p>
+                </div>
+              </div>
+
+              <!-- Toggle: autoMemoryEnabled -->
+              <div class="flex items-center justify-between py-3 px-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)]">
+                <div>
+                  <span class="setting-label" x-text="t('memory.enabledLabel')"></span>
+                  <p class="text-xs text-fg-dim mt-0.5" x-text="t('memory.enabledDesc')"></p>
+                </div>
+                <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.autoMemoryEnabled }" @click="settings.autoMemoryEnabled = !settings.autoMemoryEnabled; markUnsaved()" tabindex="0" role="switch" :aria-checked="settings.autoMemoryEnabled" @keydown.enter="settings.autoMemoryEnabled = !settings.autoMemoryEnabled; markUnsaved()" @keydown.space.prevent="settings.autoMemoryEnabled = !settings.autoMemoryEnabled; markUnsaved()"></div>
+              </div>
+
+              <!-- Input: autoMemoryDirectory -->
+              <div class="py-3 px-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)]">
+                <span class="setting-label" x-text="t('memory.directoryLabel')"></span>
+                <p class="text-xs text-fg-dim mt-0.5 mb-2" x-text="t('memory.directoryDesc')"></p>
+                <input type="text" class="setting-input w-full" x-model="settings.autoMemoryDirectory" @input="markUnsaved()" :placeholder="t('memory.directoryPlaceholder')">
+              </div>
+
+              <!-- Info: Environment Override -->
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-violet-500/5 border border-violet-500/10">
+                <svg class="w-4 h-4 text-violet-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div>
+                  <p class="text-xs font-semibold text-violet-300" x-text="t('memory.envOverrideTitle')"></p>
+                  <p class="text-xs text-fg-dim mt-0.5" x-text="t('memory.envOverrideDesc')"></p>
+                  <code class="text-[10px] font-mono mt-1.5 inline-block px-2 py-1 rounded bg-[rgba(255,255,255,0.05)] text-violet-300/80 select-all">CLAUDE_CODE_DISABLE_AUTO_MEMORY=1</code>
+                </div>
+              </div>
+
+              <!-- Collapsible: What gets saved -->
+              <details class="rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)] overflow-hidden">
+                <summary class="px-4 py-3 cursor-pointer text-xs font-semibold text-fg-dim hover:text-fg transition-colors" x-text="t('memory.whatIsSaved')"></summary>
+                <ul class="px-4 pb-3 text-xs text-fg-dim space-y-1.5 ml-4 list-disc">
+                  <li x-text="t('memory.savedItem1')"></li>
+                  <li x-text="t('memory.savedItem2')"></li>
+                  <li x-text="t('memory.savedItem3')"></li>
+                  <li x-text="t('memory.savedItem4')"></li>
+                </ul>
+              </details>
+            </div>
+
+            <!-- Section 2: Auto Dream -->
+            <div class="settings-group space-y-4" id="setting-auto-dream">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <h3 class="font-display font-semibold text-sm text-fg" x-text="t('memory.dreamTitle')"></h3>
+                    <span class="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-400/15 text-indigo-300 border border-indigo-400/20" x-text="t('memory.dreamExperimental')"></span>
+                  </div>
+                  <p class="text-xs text-fg-dim mt-0.5" x-text="t('memory.dreamDesc')"></p>
+                </div>
+              </div>
+
+              <!-- Trigger Conditions -->
+              <div class="p-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)]">
+                <p class="text-xs font-semibold text-fg mb-3" x-text="t('memory.dreamTriggerTitle')"></p>
+                <div class="flex gap-3 mb-2">
+                  <div class="flex-1 p-3 rounded-lg bg-indigo-500/5 border border-indigo-500/10 text-center">
+                    <div class="text-2xl font-display font-bold text-indigo-400">24h</div>
+                    <p class="text-[10px] text-fg-dim mt-1" x-text="t('memory.dreamTrigger1')"></p>
+                  </div>
+                  <div class="flex items-center text-fg-dim text-lg font-bold">+</div>
+                  <div class="flex-1 p-3 rounded-lg bg-indigo-500/5 border border-indigo-500/10 text-center">
+                    <div class="text-2xl font-display font-bold text-indigo-400">5+</div>
+                    <p class="text-[10px] text-fg-dim mt-1" x-text="t('memory.dreamTrigger2')"></p>
+                  </div>
+                </div>
+                <p class="text-[10px] text-fg-dim text-center italic" x-text="t('memory.dreamTriggerBoth')"></p>
+              </div>
+
+              <!-- 4 Phases -->
+              <div class="p-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)]">
+                <p class="text-xs font-semibold text-fg mb-3" x-text="t('memory.dreamPhasesTitle')"></p>
+                <div class="space-y-2">
+                  <div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-indigo-500/15 text-indigo-400 text-[10px] font-bold flex items-center justify-center flex-shrink-0">1</span><span class="text-xs text-fg-dim" x-text="t('memory.dreamPhase1')"></span></div>
+                  <div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-indigo-500/15 text-indigo-400 text-[10px] font-bold flex items-center justify-center flex-shrink-0">2</span><span class="text-xs text-fg-dim" x-text="t('memory.dreamPhase2')"></span></div>
+                  <div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-indigo-500/15 text-indigo-400 text-[10px] font-bold flex items-center justify-center flex-shrink-0">3</span><span class="text-xs text-fg-dim" x-text="t('memory.dreamPhase3')"></span></div>
+                  <div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-indigo-500/15 text-indigo-400 text-[10px] font-bold flex items-center justify-center flex-shrink-0">4</span><span class="text-xs text-fg-dim" x-text="t('memory.dreamPhase4')"></span></div>
+                </div>
+              </div>
+
+              <!-- Manual Trigger + Safety -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
+                  <p class="text-xs font-semibold text-indigo-300 mb-1" x-text="t('memory.dreamManualTitle')"></p>
+                  <p class="text-[11px] text-fg-dim" x-text="t('memory.dreamManualDesc')"></p>
+                </div>
+                <div class="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                  <p class="text-xs font-semibold text-emerald-300 mb-1">Safety</p>
+                  <p class="text-[11px] text-fg-dim" x-text="t('memory.dreamSafety')"></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 3: Session Memory -->
+            <div class="settings-group space-y-4" id="setting-session-memory">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                </div>
+                <div>
+                  <h3 class="font-display font-semibold text-sm text-fg" x-text="t('memory.sessionTitle')"></h3>
+                  <p class="text-xs text-fg-dim" x-text="t('memory.sessionDesc')"></p>
+                </div>
+              </div>
+
+              <div class="p-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)] space-y-3">
+                <p class="text-xs text-fg-dim" x-text="t('memory.sessionCadence')"></p>
+                <div>
+                  <p class="text-[10px] font-semibold text-fg-dim mb-1" x-text="t('memory.sessionPath')"></p>
+                  <code class="text-[10px] font-mono px-2.5 py-1.5 rounded-lg bg-[rgba(255,255,255,0.05)] text-sky-300/80 block select-all">~/.claude/projects/&lt;project&gt;/&lt;session&gt;/session-memory/summary.md</code>
+                </div>
+              </div>
+
+              <!-- Availability Warning -->
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                <svg class="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.072 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                <p class="text-xs text-fg-dim" x-text="t('memory.sessionAvailability')"></p>
+              </div>
+            </div>
+
+            <!-- Section 4: CLAUDE.md Overview -->
+            <div class="settings-group space-y-4" id="setting-claudemd-overview">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </div>
+                <div>
+                  <h3 class="font-display font-semibold text-sm text-fg" x-text="t('memory.claudeMdTitle')"></h3>
+                  <p class="text-xs text-fg-dim" x-text="t('memory.claudeMdDesc')"></p>
+                </div>
+              </div>
+
+              <!-- Priority Hierarchy -->
+              <div class="p-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)]">
+                <p class="text-xs font-semibold text-fg mb-3" x-text="t('memory.hierarchyTitle')"></p>
+                <div class="space-y-2">
+                  <div class="flex items-center gap-3"><span class="w-5 h-5 rounded bg-amber-500/20 text-amber-400 text-[9px] font-bold flex items-center justify-center flex-shrink-0">1</span><span class="text-xs text-fg-dim" x-text="t('memory.hierarchy1')"></span></div>
+                  <div class="flex items-center gap-3"><span class="w-5 h-5 rounded bg-amber-500/15 text-amber-400/80 text-[9px] font-bold flex items-center justify-center flex-shrink-0">2</span><span class="text-xs text-fg-dim" x-text="t('memory.hierarchy2')"></span></div>
+                  <div class="flex items-center gap-3"><span class="w-5 h-5 rounded bg-violet-500/15 text-violet-400/80 text-[9px] font-bold flex items-center justify-center flex-shrink-0">3</span><span class="text-xs text-fg-dim" x-text="t('memory.hierarchy3')"></span></div>
+                  <div class="flex items-center gap-3"><span class="w-5 h-5 rounded bg-sky-500/15 text-sky-400/80 text-[9px] font-bold flex items-center justify-center flex-shrink-0">4</span><span class="text-xs text-fg-dim" x-text="t('memory.hierarchy4')"></span></div>
+                </div>
+              </div>
+
+              <!-- Link to CLAUDE.md Builder -->
+              <button @click="activeTab = 'terminal-prompts'" class="w-full p-3 rounded-xl bg-amber-500/5 border border-amber-500/10 hover:border-amber-500/30 transition-colors text-left">
+                <span class="text-xs font-semibold text-amber-300" x-text="t('memory.builderLink')"></span>
+              </button>
+            </div>
+
+            <!-- Section 5: Health Tips -->
+            <details class="settings-group overflow-hidden" id="setting-memory-health">
+              <summary class="flex items-center gap-3 cursor-pointer p-4 -m-4 hover:bg-[rgba(255,255,255,0.02)] transition-colors rounded-2xl">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h3 class="font-display font-semibold text-sm text-fg" x-text="t('memory.healthTitle')"></h3>
+              </summary>
+              <ul class="mt-4 space-y-2.5 text-xs text-fg-dim">
+                <li class="flex items-start gap-2"><span class="text-emerald-400 mt-0.5">•</span><span x-text="t('memory.healthTip1')"></span></li>
+                <li class="flex items-start gap-2"><span class="text-emerald-400 mt-0.5">•</span><span x-text="t('memory.healthTip2')"></span></li>
+                <li class="flex items-start gap-2"><span class="text-emerald-400 mt-0.5">•</span><span x-text="t('memory.healthTip3')"></span></li>
+                <li class="flex items-start gap-2"><span class="text-emerald-400 mt-0.5">•</span><span x-text="t('memory.healthTip4')"></span></li>
+                <li class="flex items-start gap-2"><span class="text-emerald-400 mt-0.5">•</span><span x-text="t('memory.healthTip5')"></span></li>
+              </ul>
+            </details>
+
+          </div>
+
         </div>
       </div>
 
       <!-- ═══ JSON Preview Panel ═══ -->
-      <div x-show="!['design-prompts','terminal-prompts','companion-tools'].includes(activeTab)" class="border-t border-[rgba(255,255,255,0.08)] flex-shrink-0">
+      <div x-show="!['design-prompts','terminal-prompts','companion-tools','memory'].includes(activeTab)" class="border-t border-[rgba(255,255,255,0.08)] flex-shrink-0">
         <button @click="jsonPreviewOpen = !jsonPreviewOpen" class="w-full flex items-center justify-between px-6 py-2.5 text-xs font-mono font-medium text-fg-dim hover:text-fg-muted transition-colors" style="background: rgba(18, 18, 26, 0.6);">
           <span>JSON Preview</span>
           <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': jsonPreviewOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 15l7-7 7 7"/></svg>
@@ -2772,7 +2956,9 @@
         cleanupPeriodDays: 30, fastModePerSessionOptIn: false, enableAllProjectMcpServers: false,
         respectGitignore: true, teamateMode: 'auto', forceLoginMethod: '',
         apiKeyHelper: '', plansDirectory: '', terminalProgressBarEnabled: true,
-        disableAllHooks: false, availableModels: []
+        disableAllHooks: false, availableModels: [],
+        autoMemoryEnabled: true,
+        autoMemoryDirectory: '',
       };
     }
 
@@ -3334,7 +3520,7 @@
       'data.plugin.frontend-design.desc': { de: 'Distinctive, production-grade Frontend-Interfaces', en: 'Distinctive, production-grade frontend interfaces', es: 'Interfaces frontend distintivos de nivel produccion', fr: 'Interfaces frontend distinctifs de qualite production', ja: '本格的で個性的なフロントエンドインターフェース', pt: 'Interfaces frontend distintos de nivel producao' },
       'data.plugin.playground.desc': { de: 'Interaktive HTML-Playgrounds erstellen', en: 'Create interactive HTML playgrounds', es: 'Crear playgrounds HTML interactivos', fr: 'Creer des playgrounds HTML interactifs', ja: 'インタラクティブなHTMLプレイグラウンドの作成', pt: 'Criar playgrounds HTML interativos' },
       'data.plugin.security-guidance.desc': { de: 'Sicherheitsrichtlinien und Best Practices', en: 'Security guidelines and best practices', es: 'Directrices de seguridad y mejores practicas', fr: 'Directives de securite et bonnes pratiques', ja: 'セキュリティガイドラインとベストプラクティス', pt: 'Diretrizes de seguranca e melhores praticas' },
-      'data.plugin.superpowers.desc': { de: 'Erweiterte Workflows: Brainstorming, TDD, Debugging, Planung', en: 'Advanced workflows: brainstorming, TDD, debugging, planning', es: 'Flujos avanzados: lluvia de ideas, TDD, depuracion, planificacion', fr: 'Workflows avances: brainstorming, TDD, debogage, planification', ja: '高度なワークフロー：ブレインストーミング、TDD、デバッグ、計画', pt: 'Workflows avancados: brainstorming, TDD, depuracao, planejamento' },
+      'data.plugin.superpowers.desc': { de: 'Erweiterte Workflows: Brainstorming, TDD, Debugging, Planung, Code Review, Git Worktrees', en: 'Advanced workflows: brainstorming, TDD, debugging, planning, code review, git worktrees', es: 'Flujos avanzados: brainstorming, TDD, depuracion, planificacion, revision de codigo, git worktrees', fr: 'Workflows avances: brainstorming, TDD, debogage, planification, revue de code, git worktrees', ja: '高度なワークフロー：ブレインストーミング、TDD、デバッグ、計画、コードレビュー、Gitワークツリー', pt: 'Workflows avancados: brainstorming, TDD, depuracao, planejamento, revisao de codigo, git worktrees' },
 
       // ─── Plugin Provides (feature descriptions) ───
       'data.plugin.commit-commands.provides': { de: 'Automatische Commit-Messages, Push + PR in einem Schritt', en: 'Automatic commit messages, push + PR in one step', es: 'Mensajes de commit automaticos, push + PR en un paso', fr: 'Messages de commit automatiques, push + PR en une etape', ja: '自動コミットメッセージ、プッシュ+PRを一括実行', pt: 'Mensagens de commit automaticas, push + PR em um passo' },
@@ -3354,21 +3540,85 @@
       'data.plugin.learning-output-style.provides': { de: 'Setzt outputStyle auf "learning", fordert User-Code-Beitraege ein', en: 'Sets outputStyle to "learning", requests user code contributions', es: 'Establece outputStyle en "learning", solicita contribuciones de codigo del usuario', fr: 'Definit outputStyle sur "learning", demande des contributions de code de l\'utilisateur', ja: 'outputStyleを"learning"に設定、ユーザーコード貢献を要求', pt: 'Define outputStyle como "learning", solicita contribuicoes de codigo do utilizador' },
       'data.plugin.frontend-design.provides': { de: 'Kreative UI-Generierung mit Anti-AI-Aesthetik', en: 'Creative UI generation with anti-AI aesthetics', es: 'Generacion creativa de UI con estetica anti-IA', fr: 'Generation creative d\'UI avec esthetique anti-IA', ja: 'アンチAI美学によるクリエイティブなUI生成', pt: 'Geracao criativa de UI com estetica anti-IA' },
       'data.plugin.playground.provides': { de: 'Single-file HTML Explorer mit Controls + Live Preview', en: 'Single-file HTML explorer with controls + live preview', es: 'Explorador HTML de un solo archivo con controles + vista previa en vivo', fr: 'Explorateur HTML mono-fichier avec controles + apercu en direct', ja: 'コントロール+ライブプレビュー付きシングルファイルHTMLエクスプローラー', pt: 'Explorador HTML de arquivo unico com controles + visualizacao ao vivo' },
-      'data.plugin.superpowers.provides': { de: 'Strukturierte Workflows fuer Feature-Entwicklung, Testing und Debugging', en: 'Structured workflows for feature development, testing and debugging', es: 'Flujos estructurados para desarrollo de funciones, testing y depuracion', fr: 'Workflows structures pour le developpement de fonctionnalites, le testing et le debogage', ja: '機能開発、テスト、デバッグのための構造化ワークフロー', pt: 'Workflows estruturados para desenvolvimento de funcionalidades, testes e depuracao' },
+      'data.plugin.superpowers.provides': { de: 'Brainstorming, TDD, Debugging, Planung, Code Review, Git Worktrees, Parallel Agents, Verification, Skill Development', en: 'Brainstorming, TDD, debugging, planning, code review, git worktrees, parallel agents, verification, skill development', es: 'Brainstorming, TDD, depuracion, planificacion, revision de codigo, git worktrees, agentes paralelos, verificacion, desarrollo de skills', fr: 'Brainstorming, TDD, debogage, planification, revue de code, git worktrees, agents paralleles, verification, developpement de skills', ja: 'ブレインストーミング、TDD、デバッグ、計画、コードレビュー、Gitワークツリー、並列エージェント、検証、スキル開発', pt: 'Brainstorming, TDD, depuracao, planejamento, revisao de codigo, git worktrees, agentes paralelos, verificacao, desenvolvimento de skills' },
       'data.plugin.obsidian-vault.provides': { de: 'Vault-Navigation, Projekt-Notes lesen/updaten, Inbox-Captures, Galaxy/Zettelkasten-Suche', en: 'Vault navigation, read/update project notes, inbox captures, Galaxy/Zettelkasten search', es: 'Navegacion del vault, leer/actualizar notas de proyecto, capturas de inbox, busqueda Galaxy/Zettelkasten', fr: 'Navigation du vault, lecture/maj des notes projet, captures inbox, recherche Galaxy/Zettelkasten', ja: 'Vault操作、プロジェクトノート読み書き、Inboxキャプチャ、Galaxy/Zettelkasten検索', pt: 'Navegacao do vault, ler/atualizar notas de projeto, capturas de inbox, busca Galaxy/Zettelkasten' },
       'data.plugin.taste-skill.provides': { de: 'Premium-Typografie, Farbkalibrierung, Layout-Diversifizierung, Motion-Engine, Bento-Paradigma, Anti-Slop-Filter', en: 'Premium typography, color calibration, layout diversification, motion engine, bento paradigm, anti-slop filter', es: 'Tipografia premium, calibracion de color, diversificacion de layout, motor de movimiento, paradigma bento, filtro anti-slop', fr: 'Typographie premium, calibration couleur, diversification layout, moteur motion, paradigme bento, filtre anti-slop', ja: 'プレミアムタイポグラフィ、カラーキャリブレーション、レイアウト多様化、モーションエンジン、弁当パラダイム、アンチスロップフィルター', pt: 'Tipografia premium, calibracao de cor, diversificacao de layout, motor de movimento, paradigma bento, filtro anti-slop' },
       'data.plugin.soft-skill.provides': { de: 'Ethereal Glass / Editorial Luxury / Soft Structuralism Archetypes, Magnetic Buttons, Staggered Reveals', en: 'Ethereal glass / editorial luxury / soft structuralism archetypes, magnetic buttons, staggered reveals', es: 'Arquetipos de cristal etereo / lujo editorial / estructuralismo suave, botones magneticos, revelaciones escalonadas', fr: 'Archetypes verre etheree / luxe editorial / structuralisme doux, boutons magnetiques, revelations echelonnees', ja: 'エーテリアルグラス / エディトリアルラグジュアリー / ソフト構造主義、マグネティックボタン、スタガードリビール', pt: 'Arquetipos de vidro etereo / luxo editorial / estruturalismo suave, botoes magneticos, revelacoes escalonadas' },
       'data.plugin.minimalist-skill.provides': { de: 'Warm Monochrome Palette, Typographic Contrast, Flat Bento Grids, Keystroke Micro-UIs, Faux-OS Chrome', en: 'Warm monochrome palette, typographic contrast, flat bento grids, keystroke micro-UIs, faux-OS chrome', es: 'Paleta monocromatica calida, contraste tipografico, grids bento planos, micro-UIs de teclas, chrome pseudo-OS', fr: 'Palette monochrome chaude, contraste typographique, grilles bento plates, micro-UIs clavier, chrome faux-OS', ja: 'ウォームモノクロームパレット、タイポグラフィックコントラスト、フラット弁当グリッド、キーストロークマイクロUI、擬似OSクローム', pt: 'Paleta monocromatica quente, contraste tipografico, grids bento planos, micro-UIs de teclas, chrome pseudo-OS' },
       'data.plugin.output-skill.provides': { de: 'Anti-Truncation, Banned-Pattern-Detection, Token-Limit-Splits mit sauberem Resume', en: 'Anti-truncation, banned pattern detection, token limit splits with clean resume', es: 'Anti-truncamiento, deteccion de patrones prohibidos, division por limite de tokens con reanudacion limpia', fr: 'Anti-troncature, detection de motifs interdits, divisions de limite de tokens avec reprise propre', ja: 'アンチトランケーション、禁止パターン検出、クリーンな再開でのトークンリミット分割', pt: 'Anti-truncamento, detecao de padroes proibidos, divisao por limite de tokens com retomada limpa' },
       'data.plugin.redesign-skill.provides': { de: 'Typografie-Audit, Farb-Cleanup, Layout-Fixes, Motion-Upgrades, Component-Pattern-Ersetzung', en: 'Typography audit, color cleanup, layout fixes, motion upgrades, component pattern replacement', es: 'Auditoria tipografica, limpieza de colores, correcciones de layout, mejoras de movimiento, reemplazo de patrones de componentes', fr: 'Audit typographique, nettoyage couleurs, corrections layout, ameliorations motion, remplacement de motifs composants', ja: 'タイポグラフィ監査、カラークリーンアップ、レイアウト修正、モーションアップグレード、コンポーネントパターン置換', pt: 'Auditoria tipografica, limpeza de cores, correcoes de layout, melhorias de movimento, substituicao de padroes de componentes' },
-      'data.plugin.project-kickstart.desc': { de: 'Standardisierter Projektstart — Scaffold, Obsidian-Note, CLAUDE.md, Design Tokens, Auth, Git Init', en: 'Standardized project bootstrap — scaffold, Obsidian note, CLAUDE.md, design tokens, auth, git init', es: 'Inicio estandarizado de proyecto — scaffold, nota Obsidian, CLAUDE.md, tokens de diseno, auth, git init', fr: 'Demarrage standardise de projet — scaffold, note Obsidian, CLAUDE.md, tokens de design, auth, git init', ja: '標準化されたプロジェクトブートストラップ — スキャフォールド、Obsidianノート、CLAUDE.md、デザイントークン、認証、git init', pt: 'Inicializacao padronizada de projeto — scaffold, nota Obsidian, CLAUDE.md, tokens de design, auth, git init' },
-      'data.plugin.project-kickstart.provides': { de: 'Angular+Firebase+Tailwind Scaffold, Tauri+Svelte Scaffold, Obsidian-Note, CLAUDE.md, @theme Tokens, Start Script', en: 'Angular+Firebase+Tailwind scaffold, Tauri+Svelte scaffold, Obsidian note, CLAUDE.md, @theme tokens, start script', es: 'Scaffold Angular+Firebase+Tailwind, scaffold Tauri+Svelte, nota Obsidian, CLAUDE.md, tokens @theme, script de inicio', fr: 'Scaffold Angular+Firebase+Tailwind, scaffold Tauri+Svelte, note Obsidian, CLAUDE.md, tokens @theme, script de demarrage', ja: 'Angular+Firebase+Tailwindスキャフォールド、Tauri+Svelteスキャフォールド、Obsidianノート、CLAUDE.md、@themeトークン、スタートスクリプト', pt: 'Scaffold Angular+Firebase+Tailwind, scaffold Tauri+Svelte, nota Obsidian, CLAUDE.md, tokens @theme, script de inicio' },
+      'data.plugin.project-launch.desc': { de: 'Strukturierter 6-Phasen Projektstart — von Idee bis Implementierungsplan', en: 'Structured 6-phase project launch — from idea to implementation plan', es: 'Lanzamiento de proyecto estructurado en 6 fases — de la idea al plan de implementacion', fr: "Lancement de projet structure en 6 phases — de l'idee au plan d'implementation", ja: '構造化された6フェーズのプロジェクト開始 — アイデアから実装計画まで', pt: 'Lancamento de projeto estruturado em 6 fases — da ideia ao plano de implementacao' },
+      'data.plugin.project-launch.provides': { de: 'Ideen-Validierung, Scope-Definition, Stack-Wahl (Angular/Tauri/HTML), Obsidian-Note, CLAUDE.md, Implementierungsplan', en: 'Idea validation, scope definition, stack choice (Angular/Tauri/HTML), Obsidian note, CLAUDE.md, implementation plan', es: 'Validacion de ideas, definicion de alcance, eleccion de stack (Angular/Tauri/HTML), nota Obsidian, CLAUDE.md, plan de implementacion', fr: "Validation d'idee, definition du scope, choix de stack (Angular/Tauri/HTML), note Obsidian, CLAUDE.md, plan d'implementation", ja: 'アイデア検証、スコープ定義、スタック選択（Angular/Tauri/HTML）、Obsidianノート、CLAUDE.md、実装計画', pt: 'Validacao de ideias, definicao de escopo, escolha de stack (Angular/Tauri/HTML), nota Obsidian, CLAUDE.md, plano de implementacao' },
       'data.plugin.firebase-architect.desc': { de: 'Firestore Schema-Design, Security Rules, Cloud Functions v2 — denormalisiert statt SQL-Denken', en: 'Firestore schema design, Security Rules, Cloud Functions v2 — denormalized, not SQL thinking', es: 'Diseno de esquema Firestore, Security Rules, Cloud Functions v2 — desnormalizado, no pensamiento SQL', fr: 'Conception de schema Firestore, Security Rules, Cloud Functions v2 — denormalise, pas de pensee SQL', ja: 'Firestoreスキーマ設計、セキュリティルール、Cloud Functions v2 — 非正規化、SQLの考え方ではない', pt: 'Design de esquema Firestore, Security Rules, Cloud Functions v2 — desnormalizado, nao pensamento SQL' },
       'data.plugin.firebase-architect.provides': { de: 'Schema Denormalisierung, Security Rules Templates, Cloud Functions v2, Batch-Write 500er-Chunking, Index-Strategie', en: 'Schema denormalization, Security Rules templates, Cloud Functions v2, batch write 500-chunking, index strategy', es: 'Desnormalizacion de esquema, plantillas de Security Rules, Cloud Functions v2, escritura por lotes con chunking de 500, estrategia de indices', fr: 'Denormalisation de schema, templates Security Rules, Cloud Functions v2, ecriture par lots chunking 500, strategie d\'index', ja: 'スキーマ非正規化、セキュリティルールテンプレート、Cloud Functions v2、バッチ書き込み500チャンキング、インデックス戦略', pt: 'Desnormalizacao de esquema, templates de Security Rules, Cloud Functions v2, escrita em lote com chunking de 500, estrategia de indices' },
       'data.plugin.resilient-api.desc': { de: 'Retry+Backoff, shareReplay Poison Fix, CORS Proxy, Fallback Chains — APIs die nicht um 2 Uhr nachts brechen', en: 'Retry+backoff, shareReplay poison fix, CORS proxy, fallback chains — APIs that don\'t break at 2 AM', es: 'Retry+backoff, correccion de envenenamiento shareReplay, proxy CORS, cadenas de fallback — APIs que no fallan a las 2 AM', fr: 'Retry+backoff, correction du poison shareReplay, proxy CORS, chaines de fallback — APIs qui ne cassent pas a 2h du matin', ja: 'リトライ+バックオフ、shareReplayポイズン修正、CORSプロキシ、フォールバックチェーン — 午前2時に壊れないAPI', pt: 'Retry+backoff, correcao de envenenamento shareReplay, proxy CORS, cadeias de fallback — APIs que nao quebram as 2 da manha' },
       'data.plugin.resilient-api.provides': { de: 'Exponential Backoff, shareReplay Poison Prevention, Cloudflare Worker CORS Proxy, Auto-Logout 401, Graceful Degradation', en: 'Exponential backoff, shareReplay poison prevention, Cloudflare Worker CORS proxy, auto-logout 401, graceful degradation', es: 'Backoff exponencial, prevencion de envenenamiento shareReplay, proxy CORS Cloudflare Worker, auto-logout 401, degradacion elegante', fr: 'Backoff exponentiel, prevention du poison shareReplay, proxy CORS Cloudflare Worker, auto-logout 401, degradation elegante', ja: 'エクスポネンシャルバックオフ、shareReplayポイズン防止、Cloudflare Worker CORSプロキシ、自動ログアウト401、グレースフルデグラデーション', pt: 'Backoff exponencial, prevencao de envenenamento shareReplay, proxy CORS Cloudflare Worker, auto-logout 401, degradacao elegante' },
       'data.plugin.security-audit.desc': { de: '8-Punkt Sicherheits-Checkliste — XSS, SSRF, Secrets, Firebase Rules, CORS, Dependencies, Auth Guards', en: '8-point security checklist — XSS, SSRF, secrets, Firebase Rules, CORS, dependencies, auth guards', es: 'Lista de verificacion de seguridad de 8 puntos — XSS, SSRF, secretos, Firebase Rules, CORS, dependencias, guards de auth', fr: 'Checklist securite en 8 points — XSS, SSRF, secrets, Firebase Rules, CORS, dependances, guards d\'auth', ja: '8項目セキュリティチェックリスト — XSS、SSRF、シークレット、Firebase Rules、CORS、依存関係、認証ガード', pt: 'Checklist de seguranca de 8 pontos — XSS, SSRF, segredos, Firebase Rules, CORS, dependencias, guards de auth' },
       'data.plugin.security-audit.provides': { de: 'XSS-Scan, SSRF-Validation, Secret-Detection, Firebase Rules Audit, Dependency-Check, CORS-Pruefung, Input-Validation', en: 'XSS scan, SSRF validation, secret detection, Firebase Rules audit, dependency check, CORS review, input validation', es: 'Escaneo XSS, validacion SSRF, deteccion de secretos, auditoria de Firebase Rules, verificacion de dependencias, revision CORS, validacion de entrada', fr: 'Scan XSS, validation SSRF, detection de secrets, audit Firebase Rules, verification des dependances, revue CORS, validation des entrees', ja: 'XSSスキャン、SSRF検証、シークレット検出、Firebase Rulesの監査、依存関係チェック、CORSレビュー、入力検証', pt: 'Scan XSS, validacao SSRF, detecao de segredos, auditoria de Firebase Rules, verificacao de dependencias, revisao CORS, validacao de entrada' },
+
+      'data.plugin.decision-review.desc': { de: 'Stress-Test fuer technische Entscheidungen — 5 Lenses: Assumptions, Worst Case, Alternativen, Hidden Costs, Reversibility', en: 'Stress-test for technical decisions — 5 lenses: assumptions, worst case, alternatives, hidden costs, reversibility', es: 'Prueba de estres para decisiones tecnicas — 5 lentes: suposiciones, peor caso, alternativas, costos ocultos, reversibilidad', fr: 'Test de resistance pour decisions techniques — 5 lentilles: hypotheses, pire cas, alternatives, couts caches, reversibilite', ja: '技術的決定のストレステスト — 5つのレンズ: 仮定、最悪のケース、代替案、隠れたコスト、可逆性', pt: 'Teste de estresse para decisoes tecnicas — 5 lentes: suposicoes, pior caso, alternativas, custos ocultos, reversibilidade' },
+      'data.plugin.decision-review.provides': { de: 'Assumption Autopsy, Worst-Case Szenarien, Road Not Taken, Hidden Cost Analysis, Reversibility Score (1-5)', en: 'Assumption autopsy, worst-case scenarios, road not taken, hidden cost analysis, reversibility score (1-5)', es: 'Autopsia de suposiciones, escenarios de peor caso, camino no tomado, analisis de costos ocultos, puntuacion de reversibilidad (1-5)', fr: 'Autopsie des hypotheses, scenarios du pire cas, chemin non emprunte, analyse des couts caches, score de reversibilite (1-5)', ja: '仮定の解剖、最悪のシナリオ、選ばなかった道、隠れたコスト分析、可逆性スコア（1-5）', pt: 'Autopsia de suposicoes, cenarios de pior caso, caminho nao tomado, analise de custos ocultos, pontuacao de reversibilidade (1-5)' },
+
+      // ─── Memory Tab ───
+      'memory.title': { de: 'Memory', en: 'Memory', es: 'Memoria', fr: 'Memoire', ja: 'メモリ', pt: 'Memoria' },
+      'memory.desc': { de: 'Auto Memory, Auto Dream und Session Memory verwalten', en: 'Manage Auto Memory, Auto Dream and Session Memory', es: 'Gestionar Auto Memory, Auto Dream y Session Memory', fr: 'Gerer Auto Memory, Auto Dream et Session Memory', ja: 'Auto Memory、Auto Dream、Session Memoryを管理', pt: 'Gerenciar Auto Memory, Auto Dream e Session Memory' },
+      'memory.autoMemoryTitle': { de: 'Auto Memory', en: 'Auto Memory', es: 'Auto Memory', fr: 'Auto Memory', ja: 'Auto Memory', pt: 'Auto Memory' },
+      'memory.autoMemoryDesc': { de: 'Claude notiert sich automatisch Patterns, Build-Commands und Debugging-Insights waehrend der Arbeit.', en: 'Claude automatically notes patterns, build commands and debugging insights while working.', es: 'Claude anota automaticamente patrones, comandos de build e insights de depuracion durante el trabajo.', fr: 'Claude note automatiquement les patterns, commandes de build et insights de debogage pendant le travail.', ja: 'Claudeは作業中にパターン、ビルドコマンド、デバッグの知見を自動的にメモします。', pt: 'Claude anota automaticamente padroes, comandos de build e insights de depuracao durante o trabalho.' },
+      'memory.enabledLabel': { de: 'Auto Memory aktiviert', en: 'Auto Memory enabled', es: 'Auto Memory activado', fr: 'Auto Memory active', ja: 'Auto Memory有効', pt: 'Auto Memory ativado' },
+      'memory.enabledDesc': { de: 'Claude schreibt automatisch Notizen ueber Projekt-Patterns und Erkenntnisse.', en: 'Claude automatically writes notes about project patterns and insights.', es: 'Claude escribe automaticamente notas sobre patrones del proyecto y descubrimientos.', fr: 'Claude ecrit automatiquement des notes sur les patterns du projet et les decouvertes.', ja: 'Claudeがプロジェクトのパターンや知見について自動的にメモを書きます。', pt: 'Claude escreve automaticamente notas sobre padroes do projeto e descobertas.' },
+      'memory.directoryLabel': { de: 'Memory-Verzeichnis', en: 'Memory directory', es: 'Directorio de memoria', fr: 'Repertoire de memoire', ja: 'メモリディレクトリ', pt: 'Diretorio de memoria' },
+      'memory.directoryDesc': { de: 'Benutzerdefinierter Pfad fuer Auto Memory Dateien. Standard: ~/.claude/projects/<project>/memory/', en: 'Custom path for Auto Memory files. Default: ~/.claude/projects/<project>/memory/', es: 'Ruta personalizada para archivos de Auto Memory. Por defecto: ~/.claude/projects/<project>/memory/', fr: 'Chemin personnalise pour les fichiers Auto Memory. Par defaut: ~/.claude/projects/<project>/memory/', ja: 'Auto Memoryファイルのカスタムパス。デフォルト: ~/.claude/projects/<project>/memory/', pt: 'Caminho personalizado para arquivos de Auto Memory. Padrao: ~/.claude/projects/<project>/memory/' },
+      'memory.directoryPlaceholder': { de: '~/my-memory-dir', en: '~/my-memory-dir', es: '~/my-memory-dir', fr: '~/my-memory-dir', ja: '~/my-memory-dir', pt: '~/my-memory-dir' },
+      'memory.envOverrideTitle': { de: 'Environment Variable', en: 'Environment Variable', es: 'Variable de entorno', fr: "Variable d'environnement", ja: '環境変数', pt: 'Variavel de ambiente' },
+      'memory.envOverrideDesc': { de: 'CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 ueberschreibt alle Settings (fuer CI/CD Pipelines).', en: 'CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 overrides all settings (for CI/CD pipelines).', es: 'CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 anula todos los ajustes (para pipelines CI/CD).', fr: 'CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 remplace tous les parametres (pour les pipelines CI/CD).', ja: 'CLAUDE_CODE_DISABLE_AUTO_MEMORY=1はすべての設定を上書きします（CI/CDパイプライン用）。', pt: 'CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 sobrescreve todas as configuracoes (para pipelines CI/CD).' },
+      'memory.whatIsSaved': { de: 'Was wird gespeichert?', en: 'What gets saved?', es: 'Que se guarda?', fr: "Qu'est-ce qui est sauvegarde?", ja: '何が保存されますか？', pt: 'O que e salvo?' },
+      'memory.savedItem1': { de: 'Debugging-Insights und Fehlerloesungen', en: 'Debugging insights and error resolutions', es: 'Insights de depuracion y resoluciones de errores', fr: "Insights de debogage et resolutions d'erreurs", ja: 'デバッグの知見とエラー解決策', pt: 'Insights de depuracao e resolucoes de erros' },
+      'memory.savedItem2': { de: 'Build-Commands und Test-Konventionen', en: 'Build commands and test conventions', es: 'Comandos de build y convenciones de testing', fr: 'Commandes de build et conventions de test', ja: 'ビルドコマンドとテスト規約', pt: 'Comandos de build e convencoes de teste' },
+      'memory.savedItem3': { de: 'Architektur-Notizen und Datei-Beziehungen', en: 'Architecture notes and file relationships', es: 'Notas de arquitectura y relaciones entre archivos', fr: 'Notes d\'architecture et relations entre fichiers', ja: 'アーキテクチャメモとファイルの関係性', pt: 'Notas de arquitetura e relacoes entre arquivos' },
+      'memory.savedItem4': { de: 'Coding-Preferences und Korrekturen', en: 'Coding preferences and corrections', es: 'Preferencias de codigo y correcciones', fr: 'Preferences de codage et corrections', ja: 'コーディング設定と修正', pt: 'Preferencias de codigo e correcoes' },
+      'memory.dreamTitle': { de: 'Auto Dream', en: 'Auto Dream', es: 'Auto Dream', fr: 'Auto Dream', ja: 'Auto Dream', pt: 'Auto Dream' },
+      'memory.dreamDesc': { de: 'Periodische Konsolidierung — wie REM-Schlaf fuer Claudes Memory. Entfernt Widersprueche, mergt Duplikate, konvertiert relative Daten.', en: "Periodic consolidation — like REM sleep for Claude's memory. Removes contradictions, merges duplicates, converts relative dates.", es: 'Consolidacion periodica — como sueno REM para la memoria de Claude. Elimina contradicciones, fusiona duplicados, convierte fechas relativas.', fr: 'Consolidation periodique — comme le sommeil paradoxal pour la memoire de Claude. Supprime les contradictions, fusionne les doublons, convertit les dates relatives.', ja: '定期的な統合 — ClaudeのメモリのためのREMスリープ。矛盾を除去し、重複をマージし、相対日付を変換します。', pt: 'Consolidacao periodica — como sono REM para a memoria do Claude. Remove contradicoes, mescla duplicatas, converte datas relativas.' },
+      'memory.dreamExperimental': { de: 'Experimentell', en: 'Experimental', es: 'Experimental', fr: 'Experimental', ja: '実験的', pt: 'Experimental' },
+      'memory.dreamTriggerTitle': { de: 'Trigger-Bedingungen', en: 'Trigger conditions', es: 'Condiciones de activacion', fr: 'Conditions de declenchement', ja: 'トリガー条件', pt: 'Condicoes de ativacao' },
+      'memory.dreamTrigger1': { de: '24 Stunden seit letzter Konsolidierung', en: '24 hours since last consolidation', es: '24 horas desde la ultima consolidacion', fr: '24 heures depuis la derniere consolidation', ja: '最後の統合から24時間経過', pt: '24 horas desde a ultima consolidacao' },
+      'memory.dreamTrigger2': { de: 'Mehr als 5 Sessions seit letzter Konsolidierung', en: 'More than 5 sessions since last consolidation', es: 'Mas de 5 sesiones desde la ultima consolidacion', fr: 'Plus de 5 sessions depuis la derniere consolidation', ja: '最後の統合から5セッション以上経過', pt: 'Mais de 5 sessoes desde a ultima consolidacao' },
+      'memory.dreamTriggerBoth': { de: 'Beide Bedingungen muessen erfuellt sein.', en: 'Both conditions must be met.', es: 'Ambas condiciones deben cumplirse.', fr: 'Les deux conditions doivent etre remplies.', ja: '両方の条件を満たす必要があります。', pt: 'Ambas as condicoes devem ser atendidas.' },
+      'memory.dreamPhasesTitle': { de: '4 Phasen', en: '4 Phases', es: '4 Fases', fr: '4 Phases', ja: '4つのフェーズ', pt: '4 Fases' },
+      'memory.dreamPhase1': { de: 'Orient — Memory-Verzeichnis scannen', en: 'Orient — Scan memory directory', es: 'Orient — Escanear directorio de memoria', fr: 'Orient — Scanner le repertoire de memoire', ja: 'Orient — メモリディレクトリをスキャン', pt: 'Orient — Escanear diretorio de memoria' },
+      'memory.dreamPhase2': { de: 'Gather — Signal aus Session-Transkripten', en: 'Gather — Extract signals from session transcripts', es: 'Gather — Extraer senales de transcripciones de sesion', fr: 'Gather — Extraire les signaux des transcriptions de session', ja: 'Gather — セッショントランスクリプトからシグナルを抽出', pt: 'Gather — Extrair sinais das transcricoes de sessao' },
+      'memory.dreamPhase3': { de: 'Consolidate — Mergen, Prunen, Daten absolutieren', en: 'Consolidate — Merge, prune, convert dates to absolute', es: 'Consolidate — Fusionar, podar, absolutizar fechas', fr: 'Consolidate — Fusionner, elaguer, absolutiser les dates', ja: 'Consolidate — マージ、剪定、日付を絶対化', pt: 'Consolidate — Mesclar, podar, absolutizar datas' },
+      'memory.dreamPhase4': { de: 'Index — MEMORY.md unter 200 Zeilen halten', en: 'Index — Keep MEMORY.md under 200 lines', es: 'Index — Mantener MEMORY.md bajo 200 lineas', fr: 'Index — Maintenir MEMORY.md sous 200 lignes', ja: 'Index — MEMORY.mdを200行以内に保つ', pt: 'Index — Manter MEMORY.md abaixo de 200 linhas' },
+      'memory.dreamManualTitle': { de: 'Manuell triggern', en: 'Trigger manually', es: 'Activar manualmente', fr: 'Declencher manuellement', ja: '手動でトリガー', pt: 'Ativar manualmente' },
+      'memory.dreamManualDesc': { de: 'Tippe /dream oder "consolidate my memory files" in Claude Code.', en: 'Type /dream or "consolidate my memory files" in Claude Code.', es: 'Escribe /dream o "consolidate my memory files" en Claude Code.', fr: 'Tapez /dream ou "consolidate my memory files" dans Claude Code.', ja: 'Claude Codeで /dream または "consolidate my memory files" と入力してください。', pt: 'Digite /dream ou "consolidate my memory files" no Claude Code.' },
+      'memory.dreamSafety': { de: 'Sicherheit: Read-only auf Code, Lock-File verhindert parallele Runs, laeuft im Hintergrund.', en: 'Safety: Read-only on code, lock file prevents parallel runs, runs in background.', es: 'Seguridad: Solo lectura en codigo, archivo lock previene ejecuciones paralelas, se ejecuta en segundo plano.', fr: "Securite: Lecture seule sur le code, fichier lock empeche les executions paralleles, s'execute en arriere-plan.", ja: '安全性: コードは読み取り専用、ロックファイルで並列実行を防止、バックグラウンドで実行。', pt: 'Seguranca: Somente leitura no codigo, arquivo lock previne execucoes paralelas, executa em segundo plano.' },
+      'memory.sessionTitle': { de: 'Session Memory', en: 'Session Memory', es: 'Session Memory', fr: 'Session Memory', ja: 'Session Memory', pt: 'Session Memory' },
+      'memory.sessionDesc': { de: 'Automatische Zusammenfassungen im Hintergrund — macht /compact instant.', en: 'Automatic background summaries — makes /compact instant.', es: 'Resumenes automaticos en segundo plano — hace /compact instantaneo.', fr: 'Resumes automatiques en arriere-plan — rend /compact instantane.', ja: 'バックグラウンドでの自動要約 — /compactを即座に実行可能にします。', pt: 'Resumos automaticos em segundo plano — torna /compact instantaneo.' },
+      'memory.sessionCadence': { de: 'Erste Extraktion nach ~10.000 Tokens, dann alle ~5.000 Tokens oder 3 Tool-Calls.', en: 'First extraction after ~10,000 tokens, then every ~5,000 tokens or 3 tool calls.', es: 'Primera extraccion despues de ~10.000 tokens, luego cada ~5.000 tokens o 3 llamadas de herramientas.', fr: "Premiere extraction apres ~10 000 tokens, puis tous les ~5 000 tokens ou 3 appels d'outils.", ja: '最初の抽出は約10,000トークン後、以降は約5,000トークンまたは3ツールコールごと。', pt: 'Primeira extracao apos ~10.000 tokens, depois a cada ~5.000 tokens ou 3 chamadas de ferramentas.' },
+      'memory.sessionPath': { de: 'Speicherort', en: 'Storage location', es: 'Ubicacion de almacenamiento', fr: 'Emplacement de stockage', ja: '保存場所', pt: 'Local de armazenamento' },
+      'memory.sessionAvailability': { de: 'Nur ueber Anthropic API verfuegbar (nicht Bedrock/Vertex/Foundry).', en: 'Only available via Anthropic API (not Bedrock/Vertex/Foundry).', es: 'Solo disponible a traves de la API de Anthropic (no Bedrock/Vertex/Foundry).', fr: "Disponible uniquement via l'API Anthropic (pas Bedrock/Vertex/Foundry).", ja: 'Anthropic APIでのみ利用可能（Bedrock/Vertex/Foundryでは不可）。', pt: 'Disponivel apenas pela API da Anthropic (nao Bedrock/Vertex/Foundry).' },
+      'memory.claudeMdTitle': { de: 'CLAUDE.md Uebersicht', en: 'CLAUDE.md Overview', es: 'Vision general de CLAUDE.md', fr: 'Apercu de CLAUDE.md', ja: 'CLAUDE.md概要', pt: 'Visao geral do CLAUDE.md' },
+      'memory.claudeMdDesc': { de: 'Deine manuellen Instruktionen — hoechste Prioritaet im Context Window.', en: 'Your manual instructions — highest priority in the context window.', es: 'Tus instrucciones manuales — maxima prioridad en la ventana de contexto.', fr: 'Vos instructions manuelles — priorite maximale dans la fenetre de contexte.', ja: '手動の指示 — コンテキストウィンドウで最高優先度。', pt: 'Suas instrucoes manuais — prioridade maxima na janela de contexto.' },
+      'memory.hierarchyTitle': { de: 'Memory-Hierarchie (Prioritaet)', en: 'Memory hierarchy (priority)', es: 'Jerarquia de memoria (prioridad)', fr: 'Hierarchie de memoire (priorite)', ja: 'メモリ階層（優先度）', pt: 'Hierarquia de memoria (prioridade)' },
+      'memory.hierarchy1': { de: 'CLAUDE.md — Deine Regeln (hoechste Prioritaet)', en: 'CLAUDE.md — Your rules (highest priority)', es: 'CLAUDE.md — Tus reglas (maxima prioridad)', fr: 'CLAUDE.md — Vos regles (priorite maximale)', ja: 'CLAUDE.md — あなたのルール（最高優先度）', pt: 'CLAUDE.md — Suas regras (prioridade maxima)' },
+      'memory.hierarchy2': { de: '.claude/rules/ — Pfad-spezifische Regeln', en: '.claude/rules/ — Path-specific rules', es: '.claude/rules/ — Reglas especificas por ruta', fr: '.claude/rules/ — Regles specifiques au chemin', ja: '.claude/rules/ — パス固有のルール', pt: '.claude/rules/ — Regras especificas por caminho' },
+      'memory.hierarchy3': { de: 'Auto Memory — Claudes Notizen (MEMORY.md)', en: "Auto Memory — Claude's notes (MEMORY.md)", es: 'Auto Memory — Notas de Claude (MEMORY.md)', fr: 'Auto Memory — Notes de Claude (MEMORY.md)', ja: 'Auto Memory — Claudeのメモ（MEMORY.md）', pt: 'Auto Memory — Notas do Claude (MEMORY.md)' },
+      'memory.hierarchy4': { de: 'Session Memory — Gespraechskontinuitaet', en: 'Session Memory — Conversation continuity', es: 'Session Memory — Continuidad de conversacion', fr: 'Session Memory — Continuite de conversation', ja: 'Session Memory — 会話の継続性', pt: 'Session Memory — Continuidade de conversacao' },
+      'memory.builderLink': { de: '→ CLAUDE.md Builder oeffnen', en: '→ Open CLAUDE.md Builder', es: '→ Abrir CLAUDE.md Builder', fr: '→ Ouvrir le CLAUDE.md Builder', ja: '→ CLAUDE.md Builderを開く', pt: '→ Abrir CLAUDE.md Builder' },
+      'memory.healthTitle': { de: 'Memory Health Tipps', en: 'Memory Health Tips', es: 'Consejos de salud de memoria', fr: 'Conseils de sante memoire', ja: 'メモリヘルスのヒント', pt: 'Dicas de saude da memoria' },
+      'memory.healthTip1': { de: 'MEMORY.md unter 200 Zeilen halten — darueber wird abgeschnitten', en: 'Keep MEMORY.md under 200 lines — content above that gets truncated', es: 'Mantener MEMORY.md bajo 200 lineas — por encima se trunca', fr: 'Maintenir MEMORY.md sous 200 lignes — au-dela, le contenu est tronque', ja: 'MEMORY.mdを200行以内に保つ — 超過分は切り捨てられます', pt: 'Manter MEMORY.md abaixo de 200 linhas — acima disso e truncado' },
+      'memory.healthTip2': { de: 'Relative Daten vermeiden ("gestern" → konkretes Datum)', en: 'Avoid relative dates ("yesterday" → specific date)', es: 'Evitar fechas relativas ("ayer" → fecha concreta)', fr: 'Eviter les dates relatives ("hier" → date concrete)', ja: '相対日付を避ける（「昨日」→ 具体的な日付）', pt: 'Evitar datas relativas ("ontem" → data concreta)' },
+      'memory.healthTip3': { de: 'Nach grossen Refactors: /dream manuell triggern', en: 'After major refactors: trigger /dream manually', es: 'Despues de grandes refactors: activar /dream manualmente', fr: 'Apres de gros refactors: declencher /dream manuellement', ja: '大規模なリファクタリング後: /dreamを手動でトリガー', pt: 'Apos grandes refatoracoes: ativar /dream manualmente' },
+      'memory.healthTip4': { de: 'CI/CD: CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 setzen', en: 'CI/CD: set CLAUDE_CODE_DISABLE_AUTO_MEMORY=1', es: 'CI/CD: establecer CLAUDE_CODE_DISABLE_AUTO_MEMORY=1', fr: 'CI/CD: definir CLAUDE_CODE_DISABLE_AUTO_MEMORY=1', ja: 'CI/CD: CLAUDE_CODE_DISABLE_AUTO_MEMORY=1を設定', pt: 'CI/CD: definir CLAUDE_CODE_DISABLE_AUTO_MEMORY=1' },
+      'memory.healthTip5': { de: '/memory oeffnet das Memory-Dashboard in Claude Code', en: '/memory opens the Memory Dashboard in Claude Code', es: '/memory abre el panel de memoria en Claude Code', fr: '/memory ouvre le tableau de bord memoire dans Claude Code', ja: '/memoryでClaude Codeのメモリダッシュボードを開く', pt: '/memory abre o painel de memoria no Claude Code' },
+      // ─── Memory Search Registry ───
+      'search.autoMemory': { de: 'Auto Memory', en: 'Auto Memory', es: 'Auto Memory', fr: 'Auto Memory', ja: 'Auto Memory', pt: 'Auto Memory' },
+      'search.autoMemory.desc': { de: 'Automatische Notizen aktivieren/deaktivieren', en: 'Enable/disable automatic notes', es: 'Activar/desactivar notas automaticas', fr: 'Activer/desactiver les notes automatiques', ja: '自動メモの有効化/無効化', pt: 'Ativar/desativar notas automaticas' },
+      'search.autoDream': { de: 'Auto Dream', en: 'Auto Dream', es: 'Auto Dream', fr: 'Auto Dream', ja: 'Auto Dream', pt: 'Auto Dream' },
+      'search.autoDream.desc': { de: 'Memory-Konsolidierung (experimentell)', en: 'Memory consolidation (experimental)', es: 'Consolidacion de memoria (experimental)', fr: 'Consolidation de memoire (experimental)', ja: 'メモリ統合（実験的）', pt: 'Consolidacao de memoria (experimental)' },
+      'search.sessionMemory': { de: 'Session Memory', en: 'Session Memory', es: 'Session Memory', fr: 'Session Memory', ja: 'Session Memory', pt: 'Session Memory' },
+      'search.sessionMemory.desc': { de: 'Automatische Session-Zusammenfassungen', en: 'Automatic session summaries', es: 'Resumenes automaticos de sesion', fr: 'Resumes automatiques de session', ja: '自動セッション要約', pt: 'Resumos automaticos de sessao' },
+      'search.claudeMd': { de: 'CLAUDE.md', en: 'CLAUDE.md', es: 'CLAUDE.md', fr: 'CLAUDE.md', ja: 'CLAUDE.md', pt: 'CLAUDE.md' },
+      'search.claudeMd.desc': { de: 'Instruktionen und Memory-Hierarchie', en: 'Instructions and memory hierarchy', es: 'Instrucciones y jerarquia de memoria', fr: 'Instructions et hierarchie de memoire', ja: '指示とメモリ階層', pt: 'Instrucoes e hierarquia de memoria' },
 
       // ─── Hook Info Box ───
       'hooks.infoTitle': { de: 'Hooks — Event-basierte Automatisierung', en: 'Hooks — Event-based automation', es: 'Hooks — Automatizacion basada en eventos', fr: 'Hooks — Automatisation basee sur les evenements', ja: 'Hooks — イベントベースの自動化', pt: 'Hooks — Automatizacao baseada em eventos' },
@@ -3806,6 +4056,10 @@
           { tab: 'advanced', label: 'search.progressBar', desc: 'search.progressBar.desc', keywords: ['progress', 'bar', 'fortschritt'], id: 'setting-progress-bar' },
           { tab: 'advanced', label: 'search.disableHooks', desc: 'search.disableHooks.desc', keywords: ['hooks', 'deaktivieren', 'disable'], id: 'setting-disable-hooks' },
           { tab: 'advanced', label: 'search.availModels', desc: 'search.availModels.desc', keywords: ['modelle', 'models', 'available'], id: 'setting-available-models' },
+          { tab: 'memory', label: 'search.autoMemory', desc: 'search.autoMemory.desc', keywords: ['memory', 'auto', 'speicher', 'notizen', 'remember'], id: 'setting-auto-memory' },
+          { tab: 'memory', label: 'search.autoDream', desc: 'search.autoDream.desc', keywords: ['dream', 'traum', 'consolidate', 'konsolidierung', 'rem', 'sleep'], id: 'setting-auto-dream' },
+          { tab: 'memory', label: 'search.sessionMemory', desc: 'search.sessionMemory.desc', keywords: ['session', 'compact', 'summary', 'zusammenfassung'], id: 'setting-session-memory' },
+          { tab: 'memory', label: 'search.claudeMd', desc: 'search.claudeMd.desc', keywords: ['claude.md', 'instructions', 'regeln', 'rules', 'hierarchy'], id: 'setting-claudemd-overview' },
         ],
 
         // === Settings Diff ===
@@ -4086,6 +4340,7 @@
           { id: 'display', label: 'Display & UI', desc: 'Spinner, Status Line und visuelle Einstellungen', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>' },
           { id: 'attribution', label: 'Attribution', desc: 'Commit- und PR-Attribution konfigurieren', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>' },
           { id: 'advanced', label: 'Advanced', desc: 'Auth, Performance und erweiterte Optionen', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>' },
+          { id: 'memory', label: 'Memory', desc: 'Auto Memory, Auto Dream und Session Memory', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>' },
           { id: 'separator' },
           { id: 'design-prompts', label: 'Design Prompts', desc: '30 kuratierte Design-Aesthetiken mit AI-ready Prompts', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>' },
           { id: 'terminal-prompts', label: 'Terminal Prompts', desc: 'Prompts für Claude Code CLI und CLAUDE.md Snippets', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>' },
@@ -4192,17 +4447,18 @@
           {
             name: 'Local / Custom',
             plugins: [
-              { id: 'superpowers@local-desktop-app-uploads', name: 'Superpowers', desc: 'Erweiterte Workflows: Brainstorming, TDD, Debugging, Planung', skills: ['/brainstorming', '/tdd', '/debugging', '/planning'], provides: 'Strukturierte Workflows für Feature-Entwicklung, Testing und Debugging', availability: 'ready' },
+              { id: 'superpowers@local-desktop-app-uploads', name: 'Superpowers', desc: 'Erweiterte Workflows: Brainstorming, TDD, Debugging, Planung, Code Review, Git Worktrees', skills: ['/brainstorming', '/tdd', '/systematic-debugging', '/writing-plans', '/executing-plans', '/decision-review', '/verification-before-completion', '/requesting-code-review', '/receiving-code-review', '/using-git-worktrees', '/dispatching-parallel-agents', '/subagent-driven-development', '/finishing-a-development-branch', '/writing-skills'], provides: 'Brainstorming, TDD, Debugging, Planung, Code Review, Git Worktrees, Parallel Agents, Verification, Skill Development', availability: 'ready' },
               { id: 'obsidian-vault@local-skills', name: 'Obsidian Vault Navigator', desc: 'Sucht automatisch im Obsidian Vault bei Erwähnung von Obsidian, Notes, IPARAG oder Zettelkasten', skills: ['/obsidian-vault'], provides: 'Vault-Navigation, Projekt-Notes lesen/updaten, Inbox-Captures, Galaxy/Zettelkasten-Suche', availability: 'ready' },
               { id: 'taste-skill@local-skills', name: 'Taste Skill', desc: 'Senior UI/UX Engineer — Anti-AI-Slop Design mit Variance-Metriken (Design 8, Motion 6, Density 4)', skills: ['/taste-skill'], provides: 'Premium-Typografie, Farbkalibrierung, Layout-Diversifizierung, Motion-Engine, Bento-Paradigma, Anti-Slop-Filter', availability: 'ready' },
               { id: 'soft-skill@local-skills', name: 'Soft Skill', desc: '$150k Agency-Level Design — Double-Bezel, Spring Physics, Haptic Micro-Aesthetics', skills: ['/soft-skill'], provides: 'Ethereal Glass / Editorial Luxury / Soft Structuralism Archetypes, Magnetic Buttons, Staggered Reveals', availability: 'ready' },
               { id: 'minimalist-skill@local-skills', name: 'Minimalist Skill', desc: 'Notion/Linear-inspirierte Interfaces — Editorial Serif + Sans-Serif, Bento Grids, Muted Pastels', skills: ['/minimalist-skill'], provides: 'Warm Monochrome Palette, Typographic Contrast, Flat Bento Grids, Keystroke Micro-UIs, Faux-OS Chrome', availability: 'ready' },
               { id: 'output-skill@local-skills', name: 'Output Skill', desc: 'Erzwingt vollständige Code-Ausgabe — keine Platzhalter, keine Abkürzungen, keine Auslassungen', skills: ['/output-skill'], provides: 'Anti-Truncation, Banned-Pattern-Detection, Token-Limit-Splits mit sauberem Resume', availability: 'ready' },
               { id: 'redesign-skill@local-skills', name: 'Redesign Skill', desc: 'Bestehende Projekte auf Premium upgraden — Design-Audit, Anti-Pattern-Erkennung, Fix-Prioritäten', skills: ['/redesign-skill'], provides: 'Typografie-Audit, Farb-Cleanup, Layout-Fixes, Motion-Upgrades, Component-Pattern-Ersetzung', availability: 'ready' },
-              { id: 'project-kickstart@local-skills', name: 'Project Kickstart', desc: 'Standardisierter Projektstart — Scaffold, Obsidian-Note, CLAUDE.md, Design Tokens, Auth, Git Init', skills: ['/project-kickstart'], provides: 'Angular+Firebase+Tailwind Scaffold, Tauri+Svelte Scaffold, Obsidian-Note, CLAUDE.md, @theme Tokens, Start Script', availability: 'ready' },
+              { id: 'project-launch@local-skills', name: 'Project Launch', desc: 'Strukturierter 6-Phasen Projektstart — von Idee bis Implementierungsplan', skills: ['/project-launch'], provides: 'Ideen-Validierung, Scope-Definition, Stack-Wahl (Angular/Tauri/HTML), Obsidian-Note, CLAUDE.md, Implementierungsplan', availability: 'ready' },
               { id: 'firebase-architect@local-skills', name: 'Firebase Architect', desc: 'Firestore Schema-Design, Security Rules, Cloud Functions v2 — denormalisiert statt SQL-Denken', skills: ['/firebase-architect'], provides: 'Schema Denormalisierung, Security Rules Templates, Cloud Functions v2, Batch-Write 500er-Chunking, Index-Strategie', availability: 'ready' },
               { id: 'resilient-api@local-skills', name: 'Resilient API', desc: 'Retry+Backoff, shareReplay Poison Fix, CORS Proxy, Fallback Chains — APIs die nicht um 2 Uhr nachts brechen', skills: ['/resilient-api'], provides: 'Exponential Backoff, shareReplay Poison Prevention, Cloudflare Worker CORS Proxy, Auto-Logout 401, Graceful Degradation', availability: 'ready' },
               { id: 'security-audit@local-skills', name: 'Security Audit', desc: '8-Punkt Sicherheits-Checkliste — XSS, SSRF, Secrets, Firebase Rules, CORS, Dependencies, Auth Guards', skills: ['/security-audit'], provides: 'XSS-Scan, SSRF-Validation, Secret-Detection, Firebase Rules Audit, Dependency-Check, CORS-Prüfung, Input-Validation', availability: 'ready' },
+              { id: 'decision-review@local-skills', name: 'Decision Review', desc: 'Stress-Test fuer technische Entscheidungen — 5 Lenses: Assumptions, Worst Case, Alternativen, Hidden Costs, Reversibility', skills: ['/decision-review'], provides: 'Assumption Autopsy, Worst-Case Szenarien, Road Not Taken, Hidden Cost Analysis, Reversibility Score (1-5)', availability: 'ready' },
             ]
           }
         ],
@@ -4234,7 +4490,7 @@
             'general': 'tab.general.desc', 'permissions': 'tab.permissions.desc', 'plugins': 'tab.plugins.desc',
             'hooks': 'tab.hooks.desc', 'mcp': 'tab.mcp.desc', 'sandbox': 'tab.sandbox.desc',
             'env': 'tab.env.desc', 'display': 'tab.display.desc', 'attribution': 'tab.attribution.desc',
-            'advanced': 'tab.advanced.desc', 'design-prompts': 'tab.designPrompts.desc', 'terminal-prompts': 'tab.terminalPrompts.desc'
+            'advanced': 'tab.advanced.desc', 'memory': 'memory.desc', 'design-prompts': 'tab.designPrompts.desc', 'terminal-prompts': 'tab.terminalPrompts.desc'
           };
           return map[tabId] ? this.t(map[tabId]) : '';
         },
@@ -4617,6 +4873,8 @@
             if (data.terminalProgressBarEnabled !== undefined) s.terminalProgressBarEnabled = data.terminalProgressBarEnabled;
             if (data.disableAllHooks !== undefined) s.disableAllHooks = data.disableAllHooks;
             if (data.availableModels) s.availableModels = [...data.availableModels];
+            if (data.autoMemoryEnabled !== undefined) this.settings.autoMemoryEnabled = data.autoMemoryEnabled;
+            if (data.autoMemoryDirectory) this.settings.autoMemoryDirectory = data.autoMemoryDirectory;
             // Preserve unknown properties for roundtrip fidelity
             const knownKeys = new Set([
               'model', 'effortLevel', 'outputStyle', 'language', 'alwaysThinkingEnabled',
@@ -4625,7 +4883,8 @@
               'prefersReducedMotion', 'statusLine', 'attribution', 'cleanupPeriodDays',
               'fastModePerSessionOptIn', 'enableAllProjectMcpServers', 'respectGitignore',
               'teamateMode', 'forceLoginMethod', 'mcpServers', 'apiKeyHelper',
-              'plansDirectory', 'terminalProgressBarEnabled', 'disableAllHooks', 'availableModels'
+              'plansDirectory', 'terminalProgressBarEnabled', 'disableAllHooks', 'availableModels',
+              'autoMemoryEnabled', 'autoMemoryDirectory'
             ]);
             this._extraProps = {};
             for (const [key, value] of Object.entries(data)) {
@@ -4710,6 +4969,8 @@
           if (!s.terminalProgressBarEnabled) out.terminalProgressBarEnabled = false;
           if (s.disableAllHooks) out.disableAllHooks = true;
           if (s.availableModels.length) out.availableModels = [...s.availableModels];
+          if (s.autoMemoryEnabled === false) out.autoMemoryEnabled = false;
+          if (s.autoMemoryDirectory) out.autoMemoryDirectory = s.autoMemoryDirectory;
           // Re-attach unknown properties preserved from import
           if (!settingsOverride && this._extraProps) {
             for (const [key, value] of Object.entries(this._extraProps)) {
