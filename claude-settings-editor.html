@@ -4147,6 +4147,7 @@
           { name: 'memory', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-memory'] },
           { name: 'sequential-thinking', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-sequential-thinking'] },
           { name: 'context7', type: 'stdio', command: 'npx', args: ['-y', '@upstash/context7-mcp'] },
+          { name: 'tavily', type: 'http', url: 'https://mcp.tavily.com/mcp/?tavilyApiKey=YOUR_API_KEY', headers: { 'Accept': 'application/json, text/event-stream' } },
         ],
         activeSpinnerPack: null,
         hoverSpinnerPack: null,
@@ -5130,7 +5131,9 @@
           if (this.settings.mcpServers[preset.name]) {
             this.notify(this.t('notify.mcpExists') + ': "' + preset.name + '"', 'error'); return;
           }
-          const server = { type: preset.type, command: preset.command, args: [...(preset.args || [])], env: { ...(preset.env || {}) } };
+          const server = preset.type === 'stdio'
+            ? { type: 'stdio', command: preset.command, args: [...(preset.args || [])], env: { ...(preset.env || {}) } }
+            : { type: preset.type, url: preset.url, headers: { ...(preset.headers || {}) } };
           this.settings.mcpServers = { ...this.settings.mcpServers, [preset.name]: server };
           this.markUnsaved();
           this.notify(this.t('notify.mcpAdded') + ' ' + preset.name);
