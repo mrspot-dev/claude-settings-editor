@@ -29,7 +29,7 @@
 ## Features
 
 ### Core
-- **14 Tabs** covering every `settings.json` option
+- **15 Tabs** covering every `settings.json` option
 - **6 Languages** — full i18n support (Deutsch, English, Español, Français, 日本語, Português)
 - **Live JSON Preview** — see the output as you edit
 - **File System Access API** — open and save `settings.json` directly (no copy-paste)
@@ -47,9 +47,9 @@
 |-----|----------------|
 | General | Model, effort level (visual card selector), output style, language, thinking mode |
 | Permissions | Allow/Ask/Deny rules, default mode, presets, conflict detection |
-| Skills & Plugins | Toggle 40+ plugins with categories, search, availability badges, 11 custom skills |
+| Skills & Plugins | Toggle 80+ plugins with categories, search, availability badges, 35+ custom skills |
 | Hooks | Event-based automation (PreToolUse, PostToolUse, SessionStart, etc.) |
-| MCP Servers | stdio/http/sse config, env vars, headers, 9 quick-add presets, status check |
+| MCP Servers | stdio/http/sse config, env vars, headers, 14 quick-add presets, status check |
 | Sandbox | Filesystem allow/deny paths, network domains |
 | Environment | Custom environment variables |
 | Display & UI | Spinner verbs (8 themed packs + custom), status line, motion preferences |

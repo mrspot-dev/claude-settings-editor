@@ -242,7 +242,7 @@
         </h1>
         <div class="overflow-hidden transition-all duration-300"
              :class="sidebarCollapsed ? 'max-h-0 opacity-0' : 'max-h-12 opacity-100'">
-          <p class="text-[10px] text-fg-dim/40 mt-1.5 font-mono whitespace-nowrap">v1.0 · made with 💛</p>
+          <p class="text-[10px] text-fg-dim/40 mt-1.5 font-mono whitespace-nowrap">v1.1 · made with 💛</p>
           <p class="text-[10px] text-fg-dim/40 mt-0.5 font-mono whitespace-nowrap">by <a href="https://github.com/mrspot-dev" target="_blank" class="text-fg-muted hover:text-accent transition-colors">mrspot-dev</a></p>
         </div>
       </div>
@@ -1773,6 +1773,22 @@
                 <button @click="addAvailableModel()" :disabled="!newAvailableModel" class="px-3 py-2 rounded-xl text-xs font-mono bg-accent/15 text-accent hover:bg-accent/25 transition-colors disabled:opacity-30">+</button>
               </div>
             </div>
+
+            <!-- Toggle: skipDangerousModePermissionPrompt -->
+            <div id="setting-skip-dangerous" class="settings-group flex items-center justify-between">
+              <div class="flex-1">
+                <label id="label-skip-dangerous" class="setting-label" x-text="t('adv.skipDangerousPrompt')"></label>
+                <p class="setting-desc" x-text="t('adv.skipDangerousPromptDesc')"></p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.skipDangerousModePermissionPrompt }" @click="settings.skipDangerousModePermissionPrompt = !settings.skipDangerousModePermissionPrompt; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-skip-dangerous" :aria-checked="settings.skipDangerousModePermissionPrompt" @keydown.enter="settings.skipDangerousModePermissionPrompt = !settings.skipDangerousModePermissionPrompt; markUnsaved()" @keydown.space.prevent="settings.skipDangerousModePermissionPrompt = !settings.skipDangerousModePermissionPrompt; markUnsaved()"></div>
+            </div>
+
+            <!-- JSON Editor: extraKnownMarketplaces -->
+            <div id="setting-extra-marketplaces" class="settings-group">
+              <label class="setting-label" x-text="t('adv.extraMarketplaces')"></label>
+              <p class="setting-desc" x-text="t('adv.extraMarketplacesDesc')"></p>
+              <textarea class="setting-input w-full font-mono text-xs" rows="4" :value="JSON.stringify(settings.extraKnownMarketplaces, null, 2)" @input="try { settings.extraKnownMarketplaces = JSON.parse($event.target.value); markUnsaved(); } catch(e) {}" placeholder='{ "my-marketplace": { "owner": "github-user", "repo": "repo-name" } }'></textarea>
+            </div>
           </div>
 
           <!-- ═══════════════ DESIGN PROMPTS TAB ═══════════════ -->
@@ -2548,6 +2564,15 @@
                 </div>
               </div>
 
+              <!-- Toggle: autoDreamEnabled -->
+              <div class="flex items-center justify-between py-3 px-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)]">
+                <div>
+                  <span class="setting-label" id="label-auto-dream" x-text="t('adv.autoDream')"></span>
+                  <p class="text-xs text-fg-dim mt-0.5" x-text="t('adv.autoDreamDesc')"></p>
+                </div>
+                <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.autoDreamEnabled }" @click="settings.autoDreamEnabled = !settings.autoDreamEnabled; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-auto-dream" :aria-checked="settings.autoDreamEnabled" @keydown.enter="settings.autoDreamEnabled = !settings.autoDreamEnabled; markUnsaved()" @keydown.space.prevent="settings.autoDreamEnabled = !settings.autoDreamEnabled; markUnsaved()"></div>
+              </div>
+
               <!-- Trigger Conditions -->
               <div class="p-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)]">
                 <p class="text-xs font-semibold text-fg mb-3" x-text="t('memory.dreamTriggerTitle')"></p>
@@ -2959,6 +2984,9 @@
         disableAllHooks: false, availableModels: [],
         autoMemoryEnabled: true,
         autoMemoryDirectory: '',
+        autoDreamEnabled: false,
+        skipDangerousModePermissionPrompt: false,
+        extraKnownMarketplaces: {},
       };
     }
 
@@ -2969,7 +2997,7 @@
 
     const T = {
       // ─── App Shell ───
-      'app.version': { de: 'v1.0 · made with <3', en: 'v1.0 · made with <3', es: 'v1.0 · hecho con <3', fr: 'v1.0 · fait avec <3', ja: 'v1.0 · made with <3', pt: 'v1.0 · feito com <3' },
+      'app.version': { de: 'v1.1 · made with <3', en: 'v1.1 · made with <3', es: 'v1.1 · hecho con <3', fr: 'v1.1 · fait avec <3', ja: 'v1.1 · made with <3', pt: 'v1.1 · feito com <3' },
       'app.by': { de: 'von', en: 'by', es: 'por', fr: 'par', ja: '作成者', pt: 'por' },
       'sidebar.collapse': { de: 'Sidebar einklappen', en: 'Collapse sidebar', es: 'Contraer barra lateral', fr: 'Replier la barre laterale', ja: 'サイドバーを折りたたむ', pt: 'Recolher barra lateral' },
       'sidebar.expand': { de: 'Sidebar ausklappen', en: 'Expand sidebar', es: 'Expandir barra lateral', fr: 'Deplier la barre laterale', ja: 'サイドバーを展開する', pt: 'Expandir barra lateral' },
@@ -3024,11 +3052,11 @@
       // ─── Tab: General ───
       'general.model': { de: 'Model', en: 'Model', es: 'Modelo', fr: 'Modele', ja: 'モデル', pt: 'Modelo' },
       'general.modelDesc': { de: 'Das Standard-Modell fuer Claude Code. Aliases zeigen immer auf die neueste Version. Leer = Opus (staerkstes Modell).', en: 'The default model for Claude Code. Aliases always point to the latest version. Empty = Opus (strongest model).', es: 'El modelo predeterminado para Claude Code. Los alias siempre apuntan a la ultima version. Vacio = Opus (modelo mas fuerte).', fr: 'Le modele par defaut pour Claude Code. Les alias pointent toujours vers la derniere version. Vide = Opus (modele le plus puissant).', ja: 'Claude Codeのデフォルトモデル。エイリアスは常に最新バージョンを指します。空欄 = Opus（最強モデル）。', pt: 'O modelo padrao para Claude Code. Os alias sempre apontam para a versao mais recente. Vazio = Opus (modelo mais forte).' },
-      'general.modelOpusDefault': { de: 'Opus (Standard — staerkstes Reasoning)', en: 'Opus (Default — strongest reasoning)', es: 'Opus (Predeterminado — razonamiento mas fuerte)', fr: 'Opus (Par defaut — raisonnement le plus puissant)', ja: 'Opus（デフォルト — 最強の推論）', pt: 'Opus (Padrao — raciocinio mais forte)' },
-      'general.modelOpus': { de: 'Opus — Staerkstes Reasoning, ideal fuer Architektur & komplexe Probleme', en: 'Opus — Strongest reasoning, ideal for architecture & complex problems', es: 'Opus — Razonamiento mas fuerte, ideal para arquitectura y problemas complejos', fr: 'Opus — Raisonnement le plus puissant, ideal pour l\'architecture et les problemes complexes', ja: 'Opus — 最強の推論、アーキテクチャや複雑な問題に最適', pt: 'Opus — Raciocinio mais forte, ideal para arquitetura e problemas complexos' },
-      'general.modelSonnet': { de: 'Sonnet — Schneller & guenstiger, fuer die meisten taeglichen Coding-Tasks', en: 'Sonnet — Faster & cheaper, sufficient for most daily coding tasks', es: 'Sonnet — Mas rapido y economico, suficiente para la mayoria de las tareas diarias', fr: 'Sonnet — Plus rapide et moins cher, suffisant pour la plupart des taches quotidiennes', ja: 'Sonnet — 高速で低コスト、日常のコーディングタスクに最適', pt: 'Sonnet — Mais rapido e barato, suficiente para a maioria das tarefas diarias' },
-      'general.modelHaiku': { de: 'Haiku — Am schnellsten und guenstigsten, fuer einfache Aufgaben', en: 'Haiku — Fastest and cheapest, for simple tasks', es: 'Haiku — El mas rapido y economico, para tareas simples', fr: 'Haiku — Le plus rapide et le moins cher, pour les taches simples', ja: 'Haiku — 最速で最安、シンプルなタスク向け', pt: 'Haiku — Mais rapido e barato, para tarefas simples' },
-      'general.modelOpusPlan': { de: 'OpusPlan — Opus denkt & plant, Sonnet schreibt den Code', en: 'OpusPlan — Opus thinks & plans, Sonnet writes code', es: 'OpusPlan — Opus piensa y planifica, Sonnet escribe el codigo', fr: 'OpusPlan — Opus reflechit et planifie, Sonnet ecrit le code', ja: 'OpusPlan — Opusが思考・計画、Sonnetがコードを記述', pt: 'OpusPlan — Opus pensa e planeja, Sonnet escreve o codigo' },
+      'general.modelOpusDefault': { de: 'Opus 4.6 (Standard — staerkstes Reasoning, 1M Kontext)', en: 'Opus 4.6 (Default — strongest reasoning, 1M context)', es: 'Opus 4.6 (Predeterminado — razonamiento mas fuerte, 1M contexto)', fr: 'Opus 4.6 (Par defaut — raisonnement le plus puissant, 1M contexte)', ja: 'Opus 4.6（デフォルト — 最強の推論、1Mコンテキスト）', pt: 'Opus 4.6 (Padrao — raciocinio mais forte, 1M contexto)' },
+      'general.modelOpus': { de: 'Opus 4.6 — Staerkstes Reasoning, ideal fuer Architektur & komplexe Probleme', en: 'Opus 4.6 — Strongest reasoning, ideal for architecture & complex problems', es: 'Opus 4.6 — Razonamiento mas fuerte, ideal para arquitectura y problemas complejos', fr: 'Opus 4.6 — Raisonnement le plus puissant, ideal pour l\'architecture et les problemes complexes', ja: 'Opus 4.6 — 最強の推論、アーキテクチャや複雑な問題に最適', pt: 'Opus 4.6 — Raciocinio mais forte, ideal para arquitetura e problemas complexos' },
+      'general.modelSonnet': { de: 'Sonnet 4.6 — Schnell und ausgewogen, fuer die meisten taeglichen Coding-Tasks', en: 'Sonnet 4.6 — Fast and balanced, sufficient for most daily coding tasks', es: 'Sonnet 4.6 — Rapido y equilibrado, suficiente para la mayoria de las tareas diarias', fr: 'Sonnet 4.6 — Rapide et equilibre, suffisant pour la plupart des taches quotidiennes', ja: 'Sonnet 4.6 — 高速でバランス型、日常のコーディングタスクに最適', pt: 'Sonnet 4.6 — Rapido e equilibrado, suficiente para a maioria das tarefas diarias' },
+      'general.modelHaiku': { de: 'Haiku 4.5 — Am schnellsten und guenstigsten, fuer einfache Aufgaben', en: 'Haiku 4.5 — Fastest and cheapest, for simple tasks', es: 'Haiku 4.5 — El mas rapido y economico, para tareas simples', fr: 'Haiku 4.5 — Le plus rapide et le moins cher, pour les taches simples', ja: 'Haiku 4.5 — 最速で最安、シンプルなタスク向け', pt: 'Haiku 4.5 — Mais rapido e barato, para tarefas simples' },
+      'general.modelOpusPlan': { de: 'OpusPlan — Opus 4.6 denkt & plant, Sonnet 4.6 schreibt den Code', en: 'OpusPlan — Opus 4.6 thinks & plans, Sonnet 4.6 writes code', es: 'OpusPlan — Opus 4.6 piensa y planifica, Sonnet 4.6 escribe el codigo', fr: 'OpusPlan — Opus 4.6 reflechit et planifie, Sonnet 4.6 ecrit le code', ja: 'OpusPlan — Opus 4.6が思考・計画、Sonnet 4.6がコードを記述', pt: 'OpusPlan — Opus 4.6 pensa e planeja, Sonnet 4.6 escreve o codigo' },
       'general.effort': { de: 'Effort Level', en: 'Effort Level', es: 'Nivel de esfuerzo', fr: 'Niveau d\'effort', ja: 'エフォートレベル', pt: 'Nivel de esforco' },
       'general.effortDesc': { de: 'Wie viel Denkaufwand Claude in Antworten steckt. "low" = knapp und schnell. "high" = tieferes Reasoning.', en: 'How much thinking effort Claude puts into answers. "low" = brief and fast. "high" = deeper reasoning.', es: 'Cuanto esfuerzo de razonamiento pone Claude en las respuestas. "low" = breve y rapido. "high" = razonamiento mas profundo.', fr: 'Combien d\'effort de reflexion Claude met dans les reponses. "low" = bref et rapide. "high" = raisonnement approfondi.', ja: 'Claudeが回答にかける思考量。「low」= 簡潔で高速。「high」= より深い推論。', pt: 'Quanto esforco de raciocinio o Claude coloca nas respostas. "low" = breve e rapido. "high" = raciocinio mais profundo.' },
       'general.effortDefault': { de: 'Standard (high)', en: 'Default (high)', es: 'Predeterminado (high)', fr: 'Par defaut (high)', ja: 'デフォルト（high）', pt: 'Padrao (high)' },
@@ -3369,7 +3397,13 @@
       'adv.progressBarDescLong': { de: 'Zeigt einen Fortschrittsbalken im Terminal waehrend Claude arbeitet.', en: 'Shows a progress bar in the terminal while Claude is working.', es: 'Muestra una barra de progreso en la terminal mientras Claude trabaja.', fr: 'Affiche une barre de progression dans le terminal pendant que Claude travaille.', ja: 'Claude作業中にターミナルにプログレスバーを表示します。', pt: 'Mostra uma barra de progresso no terminal enquanto o Claude trabalha.' },
       'adv.disableHooksDescLong': { de: 'Deaktiviert alle Hooks und Custom-Status-Lines. Nuetzlich zum Debugging.', en: 'Disables all hooks and custom status lines. Useful for debugging.', es: 'Desactiva todos los hooks y lineas de estado personalizadas. Util para depuracion.', fr: 'Desactive tous les hooks et les lignes de statut personnalisees. Utile pour le debogage.', ja: 'すべてのHooksとカスタムステータスラインを無効化。デバッグに便利。', pt: 'Desativa todos os hooks e linhas de status personalizadas. Util para depuracao.' },
       'adv.availableModelsDescLong': { de: 'Liste von Modell-IDs die dem User zur Auswahl stehen. Leer = alle.', en: 'List of model IDs available to the user. Empty = all models.', es: 'Lista de IDs de modelos disponibles para el usuario. Vacio = todos.', fr: 'Liste des IDs de modeles disponibles pour l\'utilisateur. Vide = tous.', ja: 'ユーザーが利用可能なモデルIDのリスト。空欄 = 全モデル。', pt: 'Lista de IDs de modelos disponiveis para o usuario. Vazio = todos.' },
-      'adv.modelPlaceholder': { de: 'z.B. claude-sonnet-4-5-20250514', en: 'e.g. claude-sonnet-4-5-20250514', es: 'p.ej. claude-sonnet-4-5-20250514', fr: 'ex. claude-sonnet-4-5-20250514', ja: '例: claude-sonnet-4-5-20250514', pt: 'ex. claude-sonnet-4-5-20250514' },
+      'adv.autoDream': { de: 'Auto Dream', en: 'Auto Dream', es: 'Auto Dream', fr: 'Auto Dream', ja: 'オートドリーム', pt: 'Auto Dream' },
+      'adv.autoDreamDesc': { de: 'Automatische Traumgenerierung aktivieren (experimentell)', en: 'Enable automatic dream generation (experimental)', es: 'Activar generacion automatica de suenos (experimental)', fr: 'Activer la generation automatique de reves (experimental)', ja: '自動ドリーム生成を有効にする（実験的）', pt: 'Ativar geracao automatica de sonhos (experimental)' },
+      'adv.skipDangerousPrompt': { de: 'Bypass-Modus Warnung ueberspringen', en: 'Skip bypass mode warning', es: 'Omitir advertencia del modo bypass', fr: 'Ignorer l\'avertissement du mode bypass', ja: 'バイパスモードの警告をスキップ', pt: 'Pular aviso do modo bypass' },
+      'adv.skipDangerousPromptDesc': { de: 'Keine Bestaetigungs-Abfrage beim Wechsel in den Bypass-Permissions-Modus', en: 'No confirmation prompt when entering bypass permissions mode', es: 'Sin confirmacion al entrar en modo bypass de permisos', fr: 'Pas de confirmation lors du passage en mode bypass', ja: 'バイパス権限モードに入る際の確認なし', pt: 'Sem confirmacao ao entrar no modo bypass de permissoes' },
+      'adv.extraMarketplaces': { de: 'Extra Marketplaces', en: 'Extra Marketplaces', es: 'Marketplaces adicionales', fr: 'Marketplaces supplementaires', ja: '追加マーケットプレイス', pt: 'Marketplaces adicionais' },
+      'adv.extraMarketplacesDesc': { de: 'Zusaetzliche Plugin-Marketplace-Quellen (GitHub-Repositories)', en: 'Additional plugin marketplace sources (GitHub repositories)', es: 'Fuentes de marketplace de plugins adicionales (repositorios GitHub)', fr: 'Sources supplementaires de marketplace de plugins (depots GitHub)', ja: '追加プラグインマーケットプレイスソース（GitHubリポジトリ）', pt: 'Fontes adicionais de marketplace de plugins (repositorios GitHub)' },
+      'adv.modelPlaceholder': { de: 'z.B. claude-opus-4-6', en: 'e.g. claude-opus-4-6', es: 'p.ej. claude-opus-4-6', fr: 'ex. claude-opus-4-6', ja: '例: claude-opus-4-6', pt: 'ex. claude-opus-4-6' },
 
       // ─── Additional Notifications ───
       'notify.error': { de: 'Fehler:', en: 'Error:', es: 'Error:', fr: 'Erreur:', ja: 'エラー:', pt: 'Erro:' },
@@ -4056,6 +4090,8 @@
           { tab: 'advanced', label: 'search.progressBar', desc: 'search.progressBar.desc', keywords: ['progress', 'bar', 'fortschritt'], id: 'setting-progress-bar' },
           { tab: 'advanced', label: 'search.disableHooks', desc: 'search.disableHooks.desc', keywords: ['hooks', 'deaktivieren', 'disable'], id: 'setting-disable-hooks' },
           { tab: 'advanced', label: 'search.availModels', desc: 'search.availModels.desc', keywords: ['modelle', 'models', 'available'], id: 'setting-available-models' },
+          { tab: 'advanced', label: 'adv.skipDangerousPrompt', desc: 'adv.skipDangerousPromptDesc', keywords: ['bypass', 'dangerous', 'permission', 'skip', 'warning'], id: 'setting-skip-dangerous' },
+          { tab: 'advanced', label: 'adv.extraMarketplaces', desc: 'adv.extraMarketplacesDesc', keywords: ['marketplace', 'plugin', 'github', 'extra', 'custom'], id: 'setting-extra-marketplaces' },
           { tab: 'memory', label: 'search.autoMemory', desc: 'search.autoMemory.desc', keywords: ['memory', 'auto', 'speicher', 'notizen', 'remember'], id: 'setting-auto-memory' },
           { tab: 'memory', label: 'search.autoDream', desc: 'search.autoDream.desc', keywords: ['dream', 'traum', 'consolidate', 'konsolidierung', 'rem', 'sleep'], id: 'setting-auto-dream' },
           { tab: 'memory', label: 'search.sessionMemory', desc: 'search.sessionMemory.desc', keywords: ['session', 'compact', 'summary', 'zusammenfassung'], id: 'setting-session-memory' },
@@ -4148,6 +4184,10 @@
           { name: 'sequential-thinking', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-sequential-thinking'] },
           { name: 'context7', type: 'stdio', command: 'npx', args: ['-y', '@upstash/context7-mcp'] },
           { name: 'tavily', type: 'http', url: 'https://mcp.tavily.com/mcp/?tavilyApiKey=YOUR_API_KEY', headers: { 'Accept': 'application/json, text/event-stream' } },
+          { name: 'hue', type: 'stdio', command: 'node', args: ['path/to/hue-mcp/dist/index.js'], env: { HUE_BRIDGE_IP: '', HUE_API_KEY: '' } },
+          { name: 'slack', type: 'stdio', command: 'npx', args: ['-y', '@anthropic-ai/mcp-server-slack'], env: { SLACK_BOT_TOKEN: '' } },
+          { name: 'linear', type: 'stdio', command: 'npx', args: ['-y', '@anthropic-ai/mcp-server-linear'], env: { LINEAR_API_KEY: '' } },
+          { name: 'playwright', type: 'stdio', command: 'npx', args: ['-y', '@anthropic-ai/mcp-server-playwright'] },
         ],
         activeSpinnerPack: null,
         hoverSpinnerPack: null,
@@ -4381,6 +4421,9 @@
               { id: 'start-script@claude-plugins-official', name: 'Start Script', desc: 'Launcher-Scripts für Projekte erstellen', skills: ['/start-script'], provides: 'Plattform-spezifische Start-Scripts (Install + Launch + Browser)', availability: 'ready' },
               { id: 'loop@claude-plugins-official', name: 'Loop', desc: 'Prompts oder Slash-Commands auf Intervall wiederholen', skills: ['/loop'], provides: 'Recurring Tasks, Status-Polling, periodische Ausführung', availability: 'ready' },
               { id: 'claude-hud@claude-hud', name: 'Claude HUD', desc: 'Echtzeit-Statuszeile mit Token-Kosten, Modell, Git-Branch und Tool-Aktivität', skills: ['/claude-hud:setup', '/claude-hud:configure'], provides: 'Live-HUD unter dem Input: Kosten/Tokens, Modell, Git-Info, Tool-Tracker, Session-Dauer, Todos', availability: 'setup', setup: 'Marketplace hinzufügen: /plugin install claude-hud (GitHub: jarrodwatts/claude-hud)' },
+              { id: 'agent-sdk-dev@claude-plugins-official', name: 'Agent SDK Dev', desc: 'Claude Agent SDK Entwicklung und Hilfe', provides: 'Agent SDK Patterns, Tool-Schemas, Multi-Agent Architekturen', availability: 'ready' },
+              { id: 'hookify@claude-plugins-official', name: 'Hookify', desc: 'Hook-Erstellung und -Verwaltung', provides: 'Pre/PostToolUse Hooks, Session Hooks, Permission Hooks', availability: 'ready' },
+              { id: 'schedule@claude-plugins-official', name: 'Schedule', desc: 'Remote Agents auf Cron-Zeitplan erstellen und verwalten', skills: ['/schedule'], provides: 'Scheduled Triggers, Cron-Jobs, automatisierte Remote Agents', availability: 'ready' },
             ]
           },
           {
@@ -4392,12 +4435,20 @@
               { id: 'supabase@claude-plugins-official', name: 'Supabase', desc: 'Supabase Datenbank-Integration', availability: 'setup', setup: 'Supabase-Projekt + API-Key konfigurieren' },
               { id: 'github@claude-plugins-official', name: 'GitHub', desc: 'GitHub Integration', availability: 'setup', setup: 'gh CLI installiert + gh auth login' },
               { id: 'gitlab@claude-plugins-official', name: 'GitLab', desc: 'GitLab Integration', availability: 'setup', setup: 'GitLab-Token konfigurieren' },
-              { id: 'Notion@claude-plugins-official', name: 'Notion', desc: 'Notion Workspace-Integration', availability: 'setup', setup: 'Notion API-Key + Integration erstellen' },
+              { id: 'Notion@claude-plugins-official', name: 'Notion', desc: 'Notion Workspace-Integration mit Pages, Databases, Tasks', skills: ['/create-page', '/create-database-row', '/find', '/database-query', '/search', '/create-task'], provides: 'Notion Pages CRUD, Database-Queries, Task-Management, Workspace-Suche', availability: 'setup', setup: 'Notion API-Key + Integration erstellen' },
               { id: 'coderabbit@claude-plugins-official', name: 'CodeRabbit', desc: 'AI-basierte Code-Reviews mit CodeRabbit', availability: 'setup', setup: 'CodeRabbit-Account + API-Key' },
               { id: 'sonatype-guide@claude-plugins-official', name: 'Sonatype Guide', desc: 'Dependency-Analyse und Sicherheitsprüfung', availability: 'ready' },
               { id: 'firecrawl@claude-plugins-official', name: 'Firecrawl', desc: 'Web-Crawling und Scraping', availability: 'setup', setup: 'Firecrawl API-Key konfigurieren' },
               { id: 'semgrep@claude-plugins-official', name: 'Semgrep', desc: 'Statische Code-Analyse', availability: 'setup', setup: 'pip install semgrep oder brew install semgrep' },
               { id: 'huggingface-skills@claude-plugins-official', name: 'HuggingFace Skills', desc: 'HuggingFace ML-Modelle und Datasets', availability: 'setup', setup: 'HuggingFace API-Token konfigurieren' },
+              { id: 'context7@claude-plugins-official', name: 'Context7', desc: 'Aktuelle Framework-Dokumentation via Context7 API', provides: 'Live-Docs für React, Angular, Firebase, etc. — aktueller als Training Data', availability: 'ready' },
+              { id: 'asana@claude-plugins-official', name: 'Asana', desc: 'Asana Projektmanagement-Integration', availability: 'setup', setup: 'Asana-Account + API-Token konfigurieren' },
+              { id: 'linear@claude-plugins-official', name: 'Linear', desc: 'Linear Issue-Tracking und Projektmanagement', availability: 'setup', setup: 'Linear API-Key konfigurieren' },
+              { id: 'slack@claude-plugins-official', name: 'Slack', desc: 'Slack-Nachrichten senden und Channels durchsuchen', availability: 'setup', setup: 'Slack Bot Token + Workspace konfigurieren' },
+              { id: 'playwright@claude-plugins-official', name: 'Playwright', desc: 'Browser-Automatisierung und Testing', provides: 'Headless Browser, Screenshots, DOM-Interaktion, E2E-Tests', availability: 'setup', setup: 'npx playwright install' },
+              { id: 'greptile@claude-plugins-official', name: 'Greptile', desc: 'AI-gestützte Codebase-Suche und -Analyse', availability: 'setup', setup: 'Greptile-Account + API-Key konfigurieren' },
+              { id: 'laravel-boost@claude-plugins-official', name: 'Laravel Boost', desc: 'Laravel-Entwicklung und Best Practices', provides: 'Eloquent, Blade, Artisan, Migration-Patterns', availability: 'setup', setup: 'Laravel-Projekt + Composer' },
+              { id: 'serena@claude-plugins-official', name: 'Serena', desc: 'Projektmanagement-Assistent', availability: 'setup', setup: 'Serena-Account konfigurieren' },
             ]
           },
           {
@@ -4413,6 +4464,8 @@
               { id: 'kotlin-lsp@claude-plugins-official', name: 'Kotlin LSP', desc: 'Kotlin Language Server', availability: 'lsp', setup: 'JDK + Kotlin Compiler installiert' },
               { id: 'lua-lsp@claude-plugins-official', name: 'Lua LSP', desc: 'Lua Language Server', availability: 'lsp', setup: 'lua-language-server installiert' },
               { id: 'php-lsp@claude-plugins-official', name: 'PHP LSP', desc: 'PHP Language Server', availability: 'lsp', setup: 'PHP + Intelephense (npm i -g intelephense)' },
+              { id: 'jdtls-lsp@claude-plugins-official', name: 'Java LSP', desc: 'Java Language Server (Eclipse JDT)', availability: 'lsp', setup: 'JDK 17+ installiert' },
+              { id: 'ruby-lsp@claude-plugins-official', name: 'Ruby LSP', desc: 'Ruby Language Server', availability: 'lsp', setup: 'Ruby installiert (gem install ruby-lsp)' },
             ]
           },
           {
@@ -4430,6 +4483,8 @@
               { id: 'frontend-slides@community', name: 'Frontend Slides', desc: 'Animierte HTML-Präsentationen aus Text oder PowerPoint erstellen', community: true, install: 'GitHub: zarazhangrui/frontend-slides → SKILL.md nach ~/.claude/skills/frontend-slides/', availability: 'setup', setup: 'Manuell installieren (siehe Install)' },
               { id: 'ui-design-system@community', name: 'UI Design System', desc: 'Design-Token-Generierung, Component-Dokumentation und responsive Berechnungen', community: true, install: 'npx claude-code-templates@latest --skill creative-design/ui-design-system', availability: 'setup', setup: 'npx claude-code-templates installieren' },
               { id: 'frontend-design-community@community', name: 'Frontend Design (Community)', desc: 'Production-grade Interfaces mit hoher Design-Qualität — Community-Version mit 6.5k+ Downloads', community: true, install: 'npx claude-code-templates@latest --skill creative-design/frontend-design', availability: 'setup', setup: 'npx claude-code-templates installieren' },
+              { id: 'ui-ux-pro-max@ui-ux-pro-max-skill', name: 'UI/UX Pro Max', desc: 'Vollständiges UI/UX Design-System — 50+ Styles, 161 Paletten, 57 Font-Pairings, 99 UX-Guidelines', community: true, install: 'Marketplace hinzufügen (GitHub: nextlevelbuilder/ui-ux-pro-max-skill)', skills: ['/ui-ux-pro-max'], provides: 'Design Intelligence für 10 Stacks (React, Angular, Vue, Svelte, SwiftUI, etc.)', availability: 'setup', setup: 'Marketplace via extraKnownMarketplaces registrieren' },
+              { id: 'AI-Toolkit@zAI-Skills', name: 'AI Toolkit', desc: 'KI-Werkzeugsammlung mit Career Coach, Consulting und Investment-Tools', community: true, install: 'Marketplace hinzufügen (GitHub: Aznatkoiny/zAI-Skills)', provides: 'Career Coaching, Consulting Toolkit, Real Estate Investment', availability: 'setup', setup: 'Marketplace via extraKnownMarketplaces registrieren' },
             ]
           },
           {
@@ -4437,6 +4492,7 @@
             plugins: [
               { id: 'agent-tool-builder@community', name: 'Agent Tool Builder', desc: 'AI-Agent-Tools und MCP-Tool-Schemas effektiv designen', community: true, install: 'npx claude-code-templates@latest --skill ai-research/agent-tool-builder', availability: 'setup', setup: 'npx claude-code-templates installieren' },
               { id: 'context7-auto-research@community', name: 'Context7 Auto Research', desc: 'Aktuelle Framework-Doku automatisch via Context7 API abrufen', community: true, install: 'npx claude-code-templates@latest --skill ai-research/context7-auto-research', availability: 'setup', setup: 'npx claude-code-templates installieren' },
+              { id: 'claude-equity-research@claude-equity-research-marketplace', name: 'Equity Research', desc: 'Institutionelle Aktienanalyse und Research Reports', community: true, install: 'claude plugin install --marketplace claude-equity-research', provides: 'Equity Screening, Financial Analysis, Research Reports', availability: 'setup', setup: 'Marketplace hinzufügen: claude-equity-research (GitHub: quant-sentiment-ai/claude-equity-research)' },
             ]
           },
           {
@@ -4460,6 +4516,32 @@
               { id: 'resilient-api@local-skills', name: 'Resilient API', desc: 'Retry+Backoff, shareReplay Poison Fix, CORS Proxy, Fallback Chains — APIs die nicht um 2 Uhr nachts brechen', skills: ['/resilient-api'], provides: 'Exponential Backoff, shareReplay Poison Prevention, Cloudflare Worker CORS Proxy, Auto-Logout 401, Graceful Degradation', availability: 'ready' },
               { id: 'security-audit@local-skills', name: 'Security Audit', desc: '8-Punkt Sicherheits-Checkliste — XSS, SSRF, Secrets, Firebase Rules, CORS, Dependencies, Auth Guards', skills: ['/security-audit'], provides: 'XSS-Scan, SSRF-Validation, Secret-Detection, Firebase Rules Audit, Dependency-Check, CORS-Prüfung, Input-Validation', availability: 'ready' },
               { id: 'decision-review@local-skills', name: 'Decision Review', desc: 'Stress-Test fuer technische Entscheidungen — 5 Lenses: Assumptions, Worst Case, Alternativen, Hidden Costs, Reversibility', skills: ['/decision-review'], provides: 'Assumption Autopsy, Worst-Case Szenarien, Road Not Taken, Hidden Cost Analysis, Reversibility Score (1-5)', availability: 'ready' },
+              { id: 'hive@local-desktop-app-uploads', name: 'HIVE', desc: 'Agent Swarm Orchestrator — Multi-Agent-Schwärme für komplexe Aufgaben', skills: ['/hive'], provides: 'Parallel-Merge, Pipeline, Debate, Refine Patterns mit CRITIC-Review', availability: 'ready' },
+              { id: 'angular-forge@local-skills', name: 'Angular Forge', desc: 'Angular 21 Projekt-Setup mit Standalone Components, Tailwind 4, Firebase', skills: ['/angular-forge'], provides: 'NG0908 Fixes, Zone-less Setup, Tailwind 4 Config, Firebase Integration', availability: 'ready' },
+              { id: 'article-extract@local-skills', name: 'Article Extract', desc: 'Artikel-Extraktion bei Paywalls oder abgeschnittenen Inhalten', skills: ['/article-extract'], provides: 'JSON-LD articleBody, DOM Cleanup, Paywall-Erkennung', availability: 'ready' },
+              { id: 'broadcast@local-skills', name: 'Broadcast', desc: 'TV-Produktion: NDI, GStreamer, iNEWS/MOS, Viz Mosart, SDI/NDI Conversion', skills: ['/broadcast'], provides: 'GStreamer Pipelines, NDI Integration, SMPTE Timecodes, Rundown Management', availability: 'ready' },
+              { id: 'cloudflare@local-skills', name: 'Cloudflare', desc: 'Workers, D1, R2, Wrangler CLI — Cloudflare Platform Skills', skills: ['/cloudflare'], provides: 'Worker Deployment, D1 Migrations, R2 Storage, DNS, Performance', availability: 'ready' },
+              { id: 'defuddle@local-skills', name: 'Defuddle', desc: 'Web-Seiten zu sauberem Markdown — entfernt Clutter und Navigation', skills: ['/defuddle'], provides: 'Clean Markdown Extraction, Token-Optimierung, Alternative zu WebFetch', availability: 'ready' },
+              { id: 'deploy-orchestrator@local-skills', name: 'Deploy Orchestrator', desc: 'Multi-Platform Deployments (Cloudflare, Hostinger, Firebase, Vercel)', skills: ['/deploy-orchestrator'], provides: 'Pre-Flight Checks, Version Bumps, CI/CD Setup, Multi-Target Deploy', availability: 'ready' },
+              { id: 'dsgvo@local-skills', name: 'DSGVO', desc: 'DSGVO-Compliance-Audit und automatische Code-Fixes für Websites', skills: ['/dsgvo'], provides: 'HIVE-Schwarm (Scanner, Jurist, Techniker, Stack-Analyst), Klaro CMP', availability: 'ready' },
+              { id: 'firmencheck@local-skills', name: 'FirmenCheck', desc: 'Tiefenrecherche und Seriositätsprüfung von Unternehmen', skills: ['/firmencheck'], provides: 'HIVE-Schwarm (5 Agents), Handelsregister, Bonitäts-Check, HTML-Report', availability: 'ready' },
+              { id: 'google-workspace@local-skills', name: 'Google Workspace', desc: 'Gmail, Drive, Sheets, Calendar, Docs Management via CLI', skills: ['/google-workspace'], provides: 'Bulk-Operationen, Automatisierung, GWS API Integration', availability: 'ready' },
+              { id: 'immocheck@local-skills', name: 'ImmoCheck', desc: 'Kritische Due-Diligence für Immobilien-Kapitalanlagen', skills: ['/immocheck'], provides: 'HIVE Debate-Pattern (PRO/CONTRA/JUDGE), HTML-Report, PDF-Factsheet', availability: 'ready' },
+              { id: 'json-canvas@local-skills', name: 'JSON Canvas', desc: 'Obsidian Canvas-Dateien (.canvas) mit Nodes, Edges und Groups', skills: ['/json-canvas'], provides: 'Mind Maps, Flowcharts, Visual Canvases in Obsidian', availability: 'ready' },
+              { id: 'landing-page@local-skills', name: 'Landing Page', desc: 'Full-Workflow Landing Page Builder mit HIVE und Decision Review', skills: ['/landing-page'], provides: 'Conversion-optimierte Single Pages, A/B Varianten, CTA-Optimierung', availability: 'ready' },
+              { id: 'market-intel@local-skills', name: 'Market Intel', desc: 'Marktanalyse, Wettbewerber-Research und Pricing-Strategien', skills: ['/market-intel'], provides: 'Competitive Analysis, Market Sizing, Trend-Analyse, Opportunity Scoring', availability: 'ready' },
+              { id: 'ms-office-docx@local-skills', name: 'MS Office DOCX', desc: 'Word-Dokumente erstellen, bearbeiten und analysieren', skills: ['/ms-office-docx'], provides: 'Tracked Changes, Comments, Formatting, Text-Extraktion', availability: 'ready' },
+              { id: 'ms-office-pdf@local-skills', name: 'MS Office PDF', desc: 'PDF erstellen, mergen, splitten, Formulare ausfüllen', skills: ['/ms-office-pdf'], provides: 'Text/Tabellen-Extraktion, PDF-Generierung, Formular-Handling', availability: 'ready' },
+              { id: 'ms-office-pptx@local-skills', name: 'MS Office PPTX', desc: 'PowerPoint-Präsentationen erstellen und bearbeiten', skills: ['/ms-office-pptx'], provides: 'Layouts, Speaker Notes, Content-Analyse, Slide-Generierung', availability: 'ready' },
+              { id: 'ms-office-xlsx@local-skills', name: 'MS Office XLSX', desc: 'Excel-Spreadsheets mit Formeln, Charts und Datenanalyse', skills: ['/ms-office-xlsx'], provides: 'Formeln, Formatierung, Pivot-Tabellen, Visualisierung', availability: 'ready' },
+              { id: 'obsidian-bases@local-skills', name: 'Obsidian Bases', desc: 'Obsidian Bases (.base) mit Views, Filtern und Formeln', skills: ['/obsidian-bases'], provides: 'Table/Card Views, Filter, Formulas, Summaries', availability: 'ready' },
+              { id: 'obsidian-cli@local-skills', name: 'Obsidian CLI', desc: 'Obsidian Vault per CLI steuern — Notes, Tasks, Properties, Plugins', skills: ['/obsidian-cli'], provides: 'Vault-Navigation, Plugin Reload, JavaScript Execution, Screenshots', availability: 'ready' },
+              { id: 'obsidian-markdown@local-skills', name: 'Obsidian Markdown', desc: 'Obsidian Flavored Markdown mit Wikilinks, Embeds, Callouts', skills: ['/obsidian-markdown'], provides: 'Wikilinks, Frontmatter, Tags, Embeds, Callout-Syntax', availability: 'ready' },
+              { id: 'remotion@local-skills', name: 'Remotion', desc: 'Programmatische Videos mit React — Compositions, Animationen, Rendering', skills: ['/remotion'], provides: 'Video-Compositions, interpolate/spring, CLI Rendering, Thumbnails', availability: 'ready' },
+              { id: 'vantastock@local-skills', name: 'VantaStock', desc: 'KI-gestützte Aktien-Tiefenanalyse mit HIVE-Schwarm (7 Agents)', skills: ['/vantastock'], provides: 'Multi-Framework Scoring (Lynch, Buffett, Mayer, O\'Neil), JSON-Report', availability: 'ready' },
+              { id: 'web-forensics@local-skills', name: 'Web-Forensik', desc: 'Forensische Website-Analyse — Wayback Machine, CommonCrawl, Beweispakete', skills: ['/web-forensics'], provides: 'Historische Versionen, Takedown-Nachweis, Medien-Forensik, Gerichtsverwertung', availability: 'ready' },
+              { id: 'trading-ideas@local-skills', name: 'Trading Ideas', desc: 'Professionelle Aktienanalyse und Trading-Ideen', skills: ['/trading-ideas'], provides: 'Institutional-Grade Equity Research, Chart-Analyse', availability: 'ready' },
+              { id: 'angular-tailwind-design@local-desktop-app-uploads', name: 'Angular Tailwind Design', desc: 'Angular + Tailwind CSS Design-Vorlagen und Patterns', provides: 'Angular 21 + Tailwind 4 Component-Patterns, Responsive Layouts', availability: 'ready' },
             ]
           }
         ],
@@ -4876,6 +4958,9 @@
             if (data.availableModels) s.availableModels = [...data.availableModels];
             if (data.autoMemoryEnabled !== undefined) this.settings.autoMemoryEnabled = data.autoMemoryEnabled;
             if (data.autoMemoryDirectory) this.settings.autoMemoryDirectory = data.autoMemoryDirectory;
+            if (data.autoDreamEnabled !== undefined) this.settings.autoDreamEnabled = data.autoDreamEnabled;
+            if (data.skipDangerousModePermissionPrompt !== undefined) this.settings.skipDangerousModePermissionPrompt = data.skipDangerousModePermissionPrompt;
+            if (data.extraKnownMarketplaces) this.settings.extraKnownMarketplaces = JSON.parse(JSON.stringify(data.extraKnownMarketplaces));
             // Preserve unknown properties for roundtrip fidelity
             const knownKeys = new Set([
               'model', 'effortLevel', 'outputStyle', 'language', 'alwaysThinkingEnabled',
@@ -4885,7 +4970,8 @@
               'fastModePerSessionOptIn', 'enableAllProjectMcpServers', 'respectGitignore',
               'teamateMode', 'forceLoginMethod', 'mcpServers', 'apiKeyHelper',
               'plansDirectory', 'terminalProgressBarEnabled', 'disableAllHooks', 'availableModels',
-              'autoMemoryEnabled', 'autoMemoryDirectory'
+              'autoMemoryEnabled', 'autoMemoryDirectory',
+              'autoDreamEnabled', 'skipDangerousModePermissionPrompt', 'extraKnownMarketplaces'
             ]);
             this._extraProps = {};
             for (const [key, value] of Object.entries(data)) {
@@ -4972,6 +5058,9 @@
           if (s.availableModels.length) out.availableModels = [...s.availableModels];
           if (s.autoMemoryEnabled === false) out.autoMemoryEnabled = false;
           if (s.autoMemoryDirectory) out.autoMemoryDirectory = s.autoMemoryDirectory;
+          if (s.autoDreamEnabled) out.autoDreamEnabled = true;
+          if (s.skipDangerousModePermissionPrompt) out.skipDangerousModePermissionPrompt = true;
+          if (Object.keys(s.extraKnownMarketplaces).length) out.extraKnownMarketplaces = JSON.parse(JSON.stringify(s.extraKnownMarketplaces));
           // Re-attach unknown properties preserved from import
           if (!settingsOverride && this._extraProps) {
             for (const [key, value] of Object.entries(this._extraProps)) {
@@ -5284,7 +5373,7 @@
           const s = this.settings;
 
           // Model validation
-          const validModels = ['claude-sonnet-4-5-20250514', 'claude-opus-4-5-20250514', 'claude-haiku-4-5-20251001', 'claude-sonnet-4-6', 'claude-opus-4-6', 'sonnet', 'opus', 'haiku'];
+          const validModels = ['claude-sonnet-4-5-20250514', 'claude-opus-4-5-20250514', 'claude-haiku-4-5-20251001', 'claude-sonnet-4-6', 'claude-opus-4-6', 'claude-haiku-4-5', 'sonnet', 'opus', 'haiku', 'opusplan'];
           if (s.model && !validModels.includes(s.model)) {
             errors.push({ tab: 'general', field: 'model', severity: 'warn', message: this.t('validation.unknownModel') + s.model + this.t('validation.unknownModelSuffix') });
           }
