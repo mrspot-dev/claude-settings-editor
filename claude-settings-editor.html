@@ -789,6 +789,94 @@
               </select>
             </div>
 
+            <div id="setting-fast-mode-global" class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label id="label-fast-mode-global" class="setting-label" x-text="t('general.fastMode')"></label>
+                <p class="setting-desc" x-text="t('general.fastModeDesc')"></p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.fastMode }" @click="settings.fastMode = !settings.fastMode; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-fast-mode-global" :aria-checked="settings.fastMode" @keydown.enter="settings.fastMode = !settings.fastMode; markUnsaved()" @keydown.space.prevent="settings.fastMode = !settings.fastMode; markUnsaved()"></div>
+            </div>
+
+            <div id="setting-voice" class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label id="label-voice" class="setting-label" x-text="t('general.voice')"></label>
+                <p class="setting-desc" x-text="t('general.voiceDesc')"></p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.voiceEnabled }" @click="settings.voiceEnabled = !settings.voiceEnabled; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-voice" :aria-checked="settings.voiceEnabled" @keydown.enter="settings.voiceEnabled = !settings.voiceEnabled; markUnsaved()" @keydown.space.prevent="settings.voiceEnabled = !settings.voiceEnabled; markUnsaved()"></div>
+            </div>
+
+            <div id="setting-editor-mode" class="settings-group">
+              <label for="input-editor-mode" class="setting-label" x-text="t('general.editorMode')"></label>
+              <p class="setting-desc" x-text="t('general.editorModeDesc')"></p>
+              <select id="input-editor-mode" x-model="settings.editorMode" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.editorMode && settings.editorMode !== 'normal' }">
+                <option value="normal" x-text="t('general.editorModeNormal')"></option>
+                <option value="vim" x-text="t('general.editorModeVim')"></option>
+              </select>
+            </div>
+
+            <div id="setting-theme" class="settings-group">
+              <label for="input-theme" class="setting-label" x-text="t('general.theme')"></label>
+              <p class="setting-desc" x-text="t('general.themeDesc')"></p>
+              <select id="input-theme" x-model="settings.theme" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.theme && settings.theme !== 'auto' }">
+                <option value="auto" x-text="t('general.themeAuto')"></option>
+                <option value="light" x-text="t('general.themeLight')"></option>
+                <option value="dark" x-text="t('general.themeDark')"></option>
+              </select>
+            </div>
+
+            <div id="setting-release-channel" class="settings-group">
+              <label for="input-release-channel" class="setting-label" x-text="t('general.releaseChannel')"></label>
+              <p class="setting-desc" x-text="t('general.releaseChannelDesc')"></p>
+              <select id="input-release-channel" x-model="settings.releaseChannel" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.releaseChannel && settings.releaseChannel !== 'stable' }">
+                <option value="stable" x-text="t('general.releaseStable')"></option>
+                <option value="preview" x-text="t('general.releasePreview')"></option>
+              </select>
+            </div>
+
+            <div id="setting-file-suggestions" class="settings-group">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <label id="label-file-suggestions" class="setting-label" x-text="t('general.fileSuggestions')"></label>
+                  <p class="setting-desc" x-text="t('general.fileSuggestionsDesc')"></p>
+                </div>
+                <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.fileSuggestions.enable }" @click="settings.fileSuggestions.enable = !settings.fileSuggestions.enable; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-file-suggestions" :aria-checked="settings.fileSuggestions.enable" @keydown.enter="settings.fileSuggestions.enable = !settings.fileSuggestions.enable; markUnsaved()" @keydown.space.prevent="settings.fileSuggestions.enable = !settings.fileSuggestions.enable; markUnsaved()"></div>
+              </div>
+              <div class="mt-3">
+                <label class="text-xs text-fg-dim font-mono tracking-wide block mb-1.5" x-text="t('general.fileSuggestionsExclude')"></label>
+                <div class="space-y-2">
+                  <template x-for="(pat, i) in settings.fileSuggestions.exclude" :key="'fsexcl-'+i">
+                    <div class="flex items-center gap-2 group">
+                      <code class="flex-1 font-mono text-sm text-amber-300 px-3 py-2 rounded-xl glass border-amber-500/15" x-text="pat"></code>
+                      <button @click="settings.fileSuggestions.exclude.splice(i, 1); markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                    </div>
+                  </template>
+                </div>
+                <div class="flex items-center gap-2 mt-2">
+                  <input type="text" x-model="newFileSuggestionExclude" @keydown.enter="if(newFileSuggestionExclude && !settings.fileSuggestions.exclude.includes(newFileSuggestionExclude)) { settings.fileSuggestions.exclude.push(newFileSuggestionExclude); newFileSuggestionExclude = ''; markUnsaved(); }" :placeholder="t('general.fileSuggestionsExcludePlaceholder')" class="setting-input flex-1 font-mono">
+                  <button @click="if(newFileSuggestionExclude && !settings.fileSuggestions.exclude.includes(newFileSuggestionExclude)) { settings.fileSuggestions.exclude.push(newFileSuggestionExclude); newFileSuggestionExclude = ''; markUnsaved(); }" class="btn-primary px-3 py-2 text-xs font-mono font-medium rounded-xl bg-amber-500 text-white">+</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="setting-model-overrides" class="settings-group">
+              <label class="setting-label" x-text="t('general.modelOverrides')"></label>
+              <p class="setting-desc" x-text="t('general.modelOverridesDesc')"></p>
+              <div class="space-y-2 mt-3">
+                <template x-for="(val, key) in settings.modelOverrides" :key="'mo-'+key">
+                  <div class="flex items-center gap-2 group">
+                    <code class="font-mono text-sm font-semibold text-cyan-400 w-48 flex-shrink-0 truncate" x-text="key"></code>
+                    <code class="flex-1 font-mono text-sm text-fg-muted px-3 py-2 rounded-xl glass truncate" x-text="val"></code>
+                    <button @click="const tmp = {...settings.modelOverrides}; delete tmp[key]; settings.modelOverrides = tmp; markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                  </div>
+                </template>
+              </div>
+              <div class="flex items-center gap-2 mt-3">
+                <input type="text" x-model="newModelOverrideKey" placeholder="Context" class="setting-input !w-48 flex-shrink-0 font-mono">
+                <input type="text" x-model="newModelOverrideValue" @keydown.enter="if(newModelOverrideKey) { settings.modelOverrides = {...settings.modelOverrides, [newModelOverrideKey]: newModelOverrideValue}; newModelOverrideKey = ''; newModelOverrideValue = ''; markUnsaved(); }" :placeholder="t('general.modelOverridesValuePlaceholder')" class="setting-input flex-1 font-mono">
+                <button @click="if(newModelOverrideKey) { settings.modelOverrides = {...settings.modelOverrides, [newModelOverrideKey]: newModelOverrideValue}; newModelOverrideKey = ''; newModelOverrideValue = ''; markUnsaved(); }" class="btn-primary px-3 py-2 text-xs font-mono font-medium rounded-xl bg-cyan-500 text-white">+</button>
+              </div>
+            </div>
+
             <!-- Restart Wizard -->
             <div class="settings-group !border-dashed !border-accent/15 flex items-center justify-between">
               <div>
@@ -901,6 +989,16 @@
               <div class="toggle bg-bg-elevated mt-1"
                    :class="{ 'active': settings.permissions.disableBypassPermissionsMode === 'disable' }"
                    @click="settings.permissions.disableBypassPermissionsMode = settings.permissions.disableBypassPermissionsMode === 'disable' ? '' : 'disable'; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-perm-bypass" :aria-checked="settings.permissions.disableBypassPermissionsMode === 'disable'" @keydown.enter="settings.permissions.disableBypassPermissionsMode = settings.permissions.disableBypassPermissionsMode === 'disable' ? '' : 'disable'; markUnsaved()" @keydown.space.prevent="settings.permissions.disableBypassPermissionsMode = settings.permissions.disableBypassPermissionsMode === 'disable' ? '' : 'disable'; markUnsaved()"></div>
+            </div>
+
+            <div id="setting-perm-disable-auto" class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label id="label-perm-disable-auto" class="setting-label" x-text="t('perm.disableAutoMode')"></label>
+                <p class="setting-desc" x-text="t('perm.disableAutoModeDesc')"></p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1"
+                   :class="{ 'active': settings.permissions.disableAutoMode === 'disable' }"
+                   @click="settings.permissions.disableAutoMode = settings.permissions.disableAutoMode === 'disable' ? '' : 'disable'; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-perm-disable-auto" :aria-checked="settings.permissions.disableAutoMode === 'disable'" @keydown.enter="settings.permissions.disableAutoMode = settings.permissions.disableAutoMode === 'disable' ? '' : 'disable'; markUnsaved()" @keydown.space.prevent="settings.permissions.disableAutoMode = settings.permissions.disableAutoMode === 'disable' ? '' : 'disable'; markUnsaved()"></div>
             </div>
 
             <!-- Allow Rules -->
@@ -1139,6 +1237,8 @@
                           <select x-model="hook.type" @change="markUnsaved()" class="setting-input flex-1 !text-sm has-value">
                             <option value="command" x-text="t('hooks.commandType')"></option>
                             <option value="http" x-text="t('hooks.httpType')"></option>
+                            <option value="prompt" x-text="t('hooks.promptType')"></option>
+                            <option value="agent" x-text="t('hooks.agentType')"></option>
                           </select>
                         </div>
                         <div x-show="hook.type === 'command'" class="flex items-center gap-2">
@@ -1149,6 +1249,18 @@
                           <label class="text-xs text-fg-dim font-mono tracking-wide w-16 flex-shrink-0">URL</label>
                           <input type="text" x-model="hook.url" @input="markUnsaved()" :placeholder="t('hooks.urlPlaceholder')" class="setting-input flex-1 !text-sm font-mono">
                         </div>
+                        <template x-if="hook.type === 'prompt' || hook.type === 'agent'">
+                          <div class="space-y-2">
+                            <div class="flex items-center gap-2">
+                              <label class="text-xs text-fg-dim font-mono tracking-wide w-16 flex-shrink-0" x-text="t('hooks.promptLabel')"></label>
+                              <input type="text" x-model="hook.prompt" @input="markUnsaved()" :placeholder="t('hooks.promptPlaceholder')" class="setting-input flex-1 !text-sm font-mono">
+                            </div>
+                            <div class="flex items-center gap-2">
+                              <label class="text-xs text-fg-dim font-mono tracking-wide w-16 flex-shrink-0" x-text="t('hooks.hookModelLabel')"></label>
+                              <input type="text" x-model="hook.model" @input="markUnsaved()" placeholder="claude-sonnet-4-6" class="setting-input flex-1 !text-sm font-mono">
+                            </div>
+                          </div>
+                        </template>
                         <div class="flex items-center gap-4">
                           <div class="flex items-center gap-2">
                             <label class="text-xs text-fg-dim font-mono tracking-wide" x-text="t('hooks.timeoutLabel')"></label>
@@ -1160,9 +1272,17 @@
                             <div class="toggle bg-bg-elevated" style="width:36px;height:20px" :class="{ 'active': hook.async }" @click="hook.async = !hook.async; markUnsaved()" tabindex="0" role="switch" :aria-checked="hook.async" @keydown.enter="hook.async = !hook.async; markUnsaved()" @keydown.space.prevent="hook.async = !hook.async; markUnsaved()"></div>
                           </div>
                         </div>
+                        <div class="flex items-center gap-2">
+                          <label class="text-xs text-fg-dim font-mono tracking-wide" x-text="t('hooks.ifLabel')"></label>
+                          <input type="text" x-model="hook.if" @input="markUnsaved()" :placeholder="t('hooks.ifPlaceholder')" class="setting-input flex-1 !text-sm font-mono">
+                        </div>
+                        <div x-show="hook.type === 'command'" class="flex items-center gap-2">
+                          <label class="text-xs text-fg-dim font-mono tracking-wide" x-text="t('hooks.shellLabel')"></label>
+                          <input type="text" x-model="hook.shell" @input="markUnsaved()" :placeholder="t('hooks.shellPlaceholder')" class="setting-input flex-1 !text-sm font-mono">
+                        </div>
                       </div>
                     </template>
-                    <button @click="group.hooks.push({type:'command',command:'',timeout:30000,async:false}); markUnsaved()" class="text-xs font-mono text-accent hover:text-accent-hover ml-4 transition-colors" x-text="t('hooks.addHook')"></button>
+                    <button @click="group.hooks.push({type:'command',command:'',timeout:30000,async:false,if:'',shell:''}); markUnsaved()" class="text-xs font-mono text-accent hover:text-accent-hover ml-4 transition-colors" x-text="t('hooks.addHook')"></button>
                   </div>
                 </template>
               </div>
@@ -1286,6 +1406,19 @@
                           <button @click="if(hk) { if(!server.headers) server.headers = {}; server.headers[hk] = hv; hk = ''; hv = ''; markUnsaved(); }" class="px-3 py-2 rounded-xl text-xs font-mono bg-purple-500/15 text-purple-400 hover:bg-purple-500/25 transition-colors">+</button>
                         </div>
                       </div>
+                      <div>
+                        <label class="text-xs text-fg-dim font-mono tracking-wide block mb-1.5" x-text="t('mcp.allowedEnvVars')"></label>
+                        <template x-for="(v, vi) in (server.allowedEnvVars || [])" :key="'aev-'+vi">
+                          <div class="flex items-center gap-2 mb-1.5 group">
+                            <code class="flex-1 font-mono text-sm text-violet-300 px-3 py-2 rounded-xl glass border-violet-500/15" x-text="v"></code>
+                            <button @click="server.allowedEnvVars.splice(vi, 1); markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                          </div>
+                        </template>
+                        <div class="flex items-center gap-2">
+                          <input type="text" x-model="newMcpAllowedEnvVar[name]" @keydown.enter="if(newMcpAllowedEnvVar[name]) { if(!server.allowedEnvVars) server.allowedEnvVars = []; server.allowedEnvVars.push(newMcpAllowedEnvVar[name]); newMcpAllowedEnvVar[name] = ''; markUnsaved(); }" placeholder="ENV_VAR_NAME" class="setting-input flex-1 !text-sm font-mono">
+                          <button @click="if(newMcpAllowedEnvVar[name]) { if(!server.allowedEnvVars) server.allowedEnvVars = []; server.allowedEnvVars.push(newMcpAllowedEnvVar[name]); newMcpAllowedEnvVar[name] = ''; markUnsaved(); }" class="px-3 py-2 rounded-xl text-xs font-mono bg-violet-500/15 text-violet-400 hover:bg-violet-500/25 transition-colors">+</button>
+                        </div>
+                      </div>
                     </div>
                   </template>
 
@@ -1349,7 +1482,16 @@
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.sandbox.enabled }" @click="settings.sandbox.enabled = !settings.sandbox.enabled; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-sandbox-enable" :aria-checked="settings.sandbox.enabled" @keydown.enter="settings.sandbox.enabled = !settings.sandbox.enabled; markUnsaved()" @keydown.space.prevent="settings.sandbox.enabled = !settings.sandbox.enabled; markUnsaved()"></div>
             </div>
 
-            <template x-for="list in [{key:'allowWrite',label:'Filesystem — Allow Write',color:'emerald'},{key:'denyWrite',label:'Filesystem — Deny Write',color:'red'},{key:'denyRead',label:'Filesystem — Deny Read',color:'red'}]" :key="list.key">
+            <div id="setting-sandbox-mode" class="settings-group">
+              <label for="input-sandbox-mode" class="setting-label" x-text="t('sandbox.mode')"></label>
+              <p class="setting-desc" x-text="t('sandbox.modeDesc')"></p>
+              <select id="input-sandbox-mode" x-model="settings.sandbox.mode" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.sandbox.mode && settings.sandbox.mode !== 'restrict' }">
+                <option value="restrict" x-text="t('sandbox.modeRestrict')"></option>
+                <option value="monitor" x-text="t('sandbox.modeMonitor')"></option>
+              </select>
+            </div>
+
+            <template x-for="list in [{key:'allowWrite',label:'Filesystem — Allow Write',color:'emerald'},{key:'denyWrite',label:'Filesystem — Deny Write',color:'red'},{key:'denyRead',label:'Filesystem — Deny Read',color:'red'},{key:'allowRead',label:'Filesystem — Allow Read',color:'blue'}]" :key="list.key">
               <div class="settings-group">
                 <label class="setting-label" x-text="list.label"></label>
                 <div class="space-y-2 mt-3">
@@ -1363,7 +1505,7 @@
                          @drop.prevent="dragDrop($event, 'sandbox-'+list.key, i)">
                       <svg class="drag-handle flex-shrink-0 w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="4" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="11" cy="12" r="1.5"/></svg>
                       <code class="flex-1 font-mono text-sm px-3 py-2 rounded-xl glass"
-                            :class="list.color === 'emerald' ? 'text-emerald-300 border-emerald-500/15' : 'text-red-300 border-red-500/15'"
+                            :class="list.color === 'emerald' ? 'text-emerald-300 border-emerald-500/15' : list.color === 'blue' ? 'text-blue-300 border-blue-500/15' : 'text-red-300 border-red-500/15'"
                             x-text="path"></code>
                       <button @click="settings.sandbox.filesystem[list.key].splice(i, 1); markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
                     </div>
@@ -1371,7 +1513,7 @@
                 </div>
                 <div class="flex items-center gap-2 mt-3">
                   <input type="text" x-model="newSandboxPath[list.key]" @keydown.enter="addSandboxPath(list.key)" :placeholder="t('sandbox.pathPlaceholder')" class="setting-input flex-1">
-                  <button @click="addSandboxPath(list.key)" class="btn-primary px-3 py-2 text-xs font-mono font-medium rounded-xl text-white" :class="list.color === 'emerald' ? 'bg-emerald-500' : 'bg-red-500'">+</button>
+                  <button @click="addSandboxPath(list.key)" class="btn-primary px-3 py-2 text-xs font-mono font-medium rounded-xl text-white" :class="list.color === 'emerald' ? 'bg-emerald-500' : list.color === 'blue' ? 'bg-blue-500' : 'bg-red-500'">+</button>
                 </div>
               </div>
             </template>
@@ -2971,15 +3113,19 @@
       return {
         model: '', effortLevel: '', outputStyle: '', language: '',
         alwaysThinkingEnabled: false, autoUpdatesChannel: 'latest',
-        permissions: { allow: [], ask: [], deny: [], additionalDirectories: [], defaultMode: 'default', disableBypassPermissionsMode: '' },
+        permissions: { allow: [], ask: [], deny: [], additionalDirectories: [], defaultMode: 'default', disableBypassPermissionsMode: '', disableAutoMode: '' },
         enabledPlugins: {}, hooks: {}, mcpServers: {},
-        sandbox: { enabled: false, filesystem: { allowWrite: [], denyWrite: [], denyRead: [] }, network: { allowedDomains: [], allowLocalBinding: false, allowAllUnixSockets: false } },
+        sandbox: { enabled: false, mode: 'restrict', filesystem: { allowWrite: [], denyWrite: [], denyRead: [], allowRead: [] }, network: { allowedDomains: [], allowLocalBinding: false, allowAllUnixSockets: false } },
         env: {}, spinnerVerbs: { mode: 'append', verbs: [] },
         spinnerTipsEnabled: true, showTurnDuration: true, prefersReducedMotion: false,
         statusLine: { type: '', command: '', url: '', refresh: 5000, disabled: false },
         attribution: { commit: '', pr: '' },
         cleanupPeriodDays: 30, fastModePerSessionOptIn: false, enableAllProjectMcpServers: false,
         respectGitignore: true, teamateMode: 'auto', forceLoginMethod: '',
+        fastMode: false, voiceEnabled: false, editorMode: 'normal', theme: 'auto',
+        releaseChannel: 'stable',
+        fileSuggestions: { enable: true, exclude: [] },
+        modelOverrides: {},
         apiKeyHelper: '', plansDirectory: '', terminalProgressBarEnabled: true,
         disableAllHooks: false, availableModels: [],
         autoMemoryEnabled: true,
@@ -3091,6 +3237,30 @@
       'general.autoUpdatesDesc': { de: 'Welchen Release-Kanal Claude Code fuer automatische Updates verwendet.', en: 'Which release channel Claude Code uses for automatic updates.', es: 'Que canal de lanzamiento usa Claude Code para actualizaciones automaticas.', fr: 'Quel canal de publication Claude Code utilise pour les mises a jour automatiques.', ja: 'Claude Codeが自動アップデートに使用するリリースチャンネル。', pt: 'Qual canal de lancamento o Claude Code usa para atualizacoes automaticas.' },
       'general.autoUpdatesLatest': { de: 'Latest — Neueste Features, evtl. instabiler', en: 'Latest — Newest features, potentially less stable', es: 'Latest — Ultimas funciones, potencialmente menos estable', fr: 'Latest — Dernieres fonctionnalites, potentiellement moins stable', ja: 'Latest — 最新機能、やや不安定な可能性あり', pt: 'Latest — Recursos mais recentes, potencialmente menos estavel' },
       'general.autoUpdatesStable': { de: 'Stable — Stabile Releases', en: 'Stable — Stable releases', es: 'Stable — Lanzamientos estables', fr: 'Stable — Versions stables', ja: 'Stable — 安定版リリース', pt: 'Stable — Lancamentos estaveis' },
+      'general.fastMode': { de: 'Fast Mode (Global)', en: 'Fast Mode (Global)', es: 'Modo rapido (Global)', fr: 'Mode rapide (Global)', ja: 'ファストモード（グローバル）', pt: 'Modo rapido (Global)' },
+      'general.fastModeDesc': { de: 'Aktiviert den Fast Mode global. Schnellere Antworten mit weniger Detailtiefe.', en: 'Enables fast mode globally. Faster responses with less detail.', es: 'Activa el modo rapido globalmente. Respuestas mas rapidas con menos detalle.', fr: 'Active le mode rapide globalement. Reponses plus rapides avec moins de details.', ja: 'ファストモードをグローバルに有効にします。詳細度は下がりますが、高速な応答が可能です。', pt: 'Ativa o modo rapido globalmente. Respostas mais rapidas com menos detalhes.' },
+      'general.voice': { de: 'Voice-Eingabe', en: 'Voice Input', es: 'Entrada de voz', fr: 'Entree vocale', ja: '音声入力', pt: 'Entrada de voz' },
+      'general.voiceDesc': { de: 'Sprachsteuerung aktivieren.', en: 'Enable voice input.', es: 'Activar entrada por voz.', fr: 'Activer l\'entree vocale.', ja: '音声入力を有効にします。', pt: 'Ativar entrada de voz.' },
+      'general.editorMode': { de: 'Editor-Modus', en: 'Editor Mode', es: 'Modo de editor', fr: 'Mode editeur', ja: 'エディターモード', pt: 'Modo do editor' },
+      'general.editorModeDesc': { de: 'Tastaturlayout fuer die Eingabe (Normal oder Vim-Keybindings).', en: 'Keyboard layout for input (Normal or Vim keybindings).', es: 'Disposicion del teclado para la entrada (Normal o Vim).', fr: 'Disposition du clavier pour la saisie (Normal ou Vim).', ja: '入力用のキーボードレイアウト（NormalまたはVimキーバインド）。', pt: 'Layout do teclado para entrada (Normal ou Vim).' },
+      'general.editorModeNormal': { de: 'Normal — Standard-Eingabe', en: 'Normal — Standard input', es: 'Normal — Entrada estandar', fr: 'Normal — Saisie standard', ja: 'Normal — 標準入力', pt: 'Normal — Entrada padrao' },
+      'general.editorModeVim': { de: 'Vim — Vim-Keybindings', en: 'Vim — Vim keybindings', es: 'Vim — Atajos de Vim', fr: 'Vim — Raccourcis Vim', ja: 'Vim — Vimキーバインド', pt: 'Vim — Teclas Vim' },
+      'general.theme': { de: 'Theme', en: 'Theme', es: 'Tema', fr: 'Theme', ja: 'テーマ', pt: 'Tema' },
+      'general.themeDesc': { de: 'Farbschema fuer das Terminal-Interface.', en: 'Color scheme for the terminal interface.', es: 'Esquema de colores para la interfaz del terminal.', fr: 'Schema de couleurs pour l\'interface du terminal.', ja: 'ターミナルインターフェースのカラースキーム。', pt: 'Esquema de cores para a interface do terminal.' },
+      'general.themeAuto': { de: 'Auto — Systemeinstellung', en: 'Auto — System preference', es: 'Auto — Preferencia del sistema', fr: 'Auto — Preference systeme', ja: 'Auto — システム設定に従う', pt: 'Auto — Preferencia do sistema' },
+      'general.themeLight': { de: 'Light — Heller Modus', en: 'Light — Light mode', es: 'Light — Modo claro', fr: 'Light — Mode clair', ja: 'Light — ライトモード', pt: 'Light — Modo claro' },
+      'general.themeDark': { de: 'Dark — Dunkler Modus', en: 'Dark — Dark mode', es: 'Dark — Modo oscuro', fr: 'Dark — Mode sombre', ja: 'Dark — ダークモード', pt: 'Dark — Modo escuro' },
+      'general.releaseChannel': { de: 'Release Channel', en: 'Release Channel', es: 'Canal de lanzamiento', fr: 'Canal de publication', ja: 'リリースチャンネル', pt: 'Canal de lancamento' },
+      'general.releaseChannelDesc': { de: 'Welchen Release-Kanal Claude Code verwendet.', en: 'Which release channel Claude Code uses.', es: 'Que canal de lanzamiento usa Claude Code.', fr: 'Quel canal de publication Claude Code utilise.', ja: 'Claude Codeが使用するリリースチャンネル。', pt: 'Qual canal de lancamento o Claude Code usa.' },
+      'general.releaseStable': { de: 'Stable — Stabile Releases', en: 'Stable — Stable releases', es: 'Stable — Lanzamientos estables', fr: 'Stable — Versions stables', ja: 'Stable — 安定版リリース', pt: 'Stable — Lancamentos estaveis' },
+      'general.releasePreview': { de: 'Preview — Vorab-Releases', en: 'Preview — Preview releases', es: 'Preview — Lanzamientos previos', fr: 'Preview — Versions de previsualisation', ja: 'Preview — プレビューリリース', pt: 'Preview — Lancamentos previos' },
+      'general.fileSuggestions': { de: 'File Suggestions', en: 'File Suggestions', es: 'Sugerencias de archivos', fr: 'Suggestions de fichiers', ja: 'ファイル候補', pt: 'Sugestoes de arquivos' },
+      'general.fileSuggestionsDesc': { de: 'Datei-Vorschlaege beim Tippen aktivieren.', en: 'Enable file suggestions while typing.', es: 'Activar sugerencias de archivos al escribir.', fr: 'Activer les suggestions de fichiers lors de la saisie.', ja: '入力中のファイル候補を有効にします。', pt: 'Ativar sugestoes de arquivos ao digitar.' },
+      'general.fileSuggestionsExclude': { de: 'Exclude-Patterns', en: 'Exclude patterns', es: 'Patrones de exclusion', fr: 'Motifs d\'exclusion', ja: '除外パターン', pt: 'Padroes de exclusao' },
+      'general.fileSuggestionsExcludePlaceholder': { de: 'z.B. node_modules, .git', en: 'e.g. node_modules, .git', es: 'ej. node_modules, .git', fr: 'ex. node_modules, .git', ja: '例: node_modules, .git', pt: 'ex. node_modules, .git' },
+      'general.modelOverrides': { de: 'Model Overrides', en: 'Model Overrides', es: 'Sobrecargas de modelo', fr: 'Surcharges de modele', ja: 'モデルオーバーライド', pt: 'Sobrecargas de modelo' },
+      'general.modelOverridesDesc': { de: 'Modell-Overrides fuer bestimmte Kontexte (z.B. subagent, editor).', en: 'Model overrides for specific contexts (e.g. subagent, editor).', es: 'Sobrecargas de modelo para contextos especificos (ej. subagent, editor).', fr: 'Surcharges de modele pour des contextes specifiques (ex. subagent, editor).', ja: '特定のコンテキスト用のモデルオーバーライド（例: subagent, editor）。', pt: 'Sobrecargas de modelo para contextos especificos (ex. subagent, editor).' },
+      'general.modelOverridesValuePlaceholder': { de: 'Modell-ID (z.B. claude-sonnet-4-6)', en: 'Model ID (e.g. claude-sonnet-4-6)', es: 'ID de modelo (ej. claude-sonnet-4-6)', fr: 'ID de modele (ex. claude-sonnet-4-6)', ja: 'モデルID（例: claude-sonnet-4-6）', pt: 'ID do modelo (ex. claude-sonnet-4-6)' },
       'general.restartWizard': { de: 'Setup-Assistent', en: 'Setup Wizard', es: 'Asistente de configuracion', fr: 'Assistant de configuration', ja: 'セットアップウィザード', pt: 'Assistente de configuracao' },
       'general.restartWizardDesc': { de: 'Den Einrichtungsassistenten erneut starten.', en: 'Restart the setup wizard.', es: 'Reiniciar el asistente de configuracion.', fr: 'Relancer l\'assistant de configuration.', ja: 'セットアップウィザードを再起動します。', pt: 'Reiniciar o assistente de configuracao.' },
       'general.restartWizardBtn': { de: 'Wizard starten', en: 'Run Wizard', es: 'Ejecutar', fr: 'Lancer', ja: '実行', pt: 'Executar' },
@@ -3145,6 +3315,8 @@
       'perm.defaultModeDesc': { de: 'Fallback, wenn keine Allow/Ask/Deny-Regel greift.', en: 'Fallback when no Allow/Ask/Deny rule matches.', es: 'Respaldo cuando ninguna regla Allow/Ask/Deny coincide.', fr: 'Solution de repli quand aucune regle Allow/Ask/Deny ne correspond.', ja: 'Allow/Ask/Denyルールが一致しない場合のフォールバック。', pt: 'Alternativa quando nenhuma regra Allow/Ask/Deny corresponde.' },
       'perm.bypass': { de: 'Bypass-Modus deaktivieren', en: 'Disable bypass mode', es: 'Desactivar modo bypass', fr: 'Desactiver le mode bypass', ja: 'バイパスモードを無効化', pt: 'Desativar modo bypass' },
       'perm.bypassDesc': { de: 'Wenn deaktiviert, kann niemand Permissions temporaer ueberspringen.', en: 'When disabled, no one can temporarily skip permissions.', es: 'Cuando esta desactivado, nadie puede omitir permisos temporalmente.', fr: 'Lorsque desactive, personne ne peut contourner temporairement les permissions.', ja: '無効にすると、誰もパーミッションを一時的にスキップできなくなります。', pt: 'Quando desativado, ninguem pode pular permissoes temporariamente.' },
+      'perm.disableAutoMode': { de: 'Auto-Modus deaktivieren', en: 'Disable auto mode', es: 'Desactivar modo automatico', fr: 'Desactiver le mode auto', ja: '自動モードを無効化', pt: 'Desativar modo automatico' },
+      'perm.disableAutoModeDesc': { de: 'Verhindert, dass Claude automatisch in den Auto-Modus wechselt.', en: 'Prevents Claude from automatically switching to auto mode.', es: 'Evita que Claude cambie automaticamente al modo automatico.', fr: 'Empeche Claude de passer automatiquement en mode auto.', ja: 'Claudeが自動的にAutoモードに切り替わるのを防ぎます。', pt: 'Impede que o Claude mude automaticamente para o modo automatico.' },
       'perm.allowRules': { de: 'Allow Rules', en: 'Allow Rules', es: 'Reglas Allow', fr: 'Regles Allow', ja: 'Allowルール', pt: 'Regras Allow' },
       'perm.allowDesc': { de: 'automatisch erlaubt, keine Rueckfrage', en: 'automatically allowed, no confirmation', es: 'permitido automaticamente, sin confirmacion', fr: 'autorise automatiquement, sans confirmation', ja: '自動的に許可、確認なし', pt: 'permitido automaticamente, sem confirmacao' },
       'perm.allowDescLong': { de: 'Tools und Patterns die Claude automatisch ausfuehren darf.', en: 'Tools and patterns that Claude can execute automatically.', es: 'Herramientas y patrones que Claude puede ejecutar automaticamente.', fr: 'Outils et motifs que Claude peut executer automatiquement.', ja: 'Claudeが自動的に実行できるツールとパターン。', pt: 'Ferramentas e padroes que o Claude pode executar automaticamente.' },
@@ -3195,6 +3367,7 @@
       'mcp.headers': { de: 'Headers', en: 'Headers', es: 'Headers', fr: 'En-tetes', ja: 'ヘッダー', pt: 'Headers' },
       'mcp.env': { de: 'Env', en: 'Env', es: 'Env', fr: 'Env', ja: '環境変数', pt: 'Env' },
       'mcp.addArgument': { de: '+ Argument', en: '+ Argument', es: '+ Argumento', fr: '+ Argument', ja: '+ 引数', pt: '+ Argumento' },
+      'mcp.allowedEnvVars': { de: 'Allowed Env Vars', en: 'Allowed Env Vars', es: 'Variables de entorno permitidas', fr: 'Variables d\'env autorisees', ja: '許可された環境変数', pt: 'Variaveis de ambiente permitidas' },
       'mcp.addServerBtn': { de: '+ Server', en: '+ Server', es: '+ Servidor', fr: '+ Serveur', ja: '+ サーバー', pt: '+ Servidor' },
       'sandbox.pathPrefixInfo': { de: 'Pfad-Prefixes: <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">//</code> = absoluter Pfad, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">~/</code> = Home-Verzeichnis, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">./</code> = relativ zum Projekt. Sinnvoll wenn Claude in sensiblen Umgebungen laeuft oder du verhindern willst, dass z.B. ~/.ssh oder ~/.aws gelesen werden.', en: 'Path prefixes: <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">//</code> = absolute path, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">~/</code> = home directory, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">./</code> = relative to project. Useful when Claude runs in sensitive environments or you want to prevent access to e.g. ~/.ssh or ~/.aws.', es: 'Prefijos de ruta: <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">//</code> = ruta absoluta, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">~/</code> = directorio home, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">./</code> = relativo al proyecto. Util cuando Claude se ejecuta en entornos sensibles o quieres evitar el acceso a ~/.ssh o ~/.aws.', fr: 'Prefixes de chemin: <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">//</code> = chemin absolu, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">~/</code> = repertoire personnel, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">./</code> = relatif au projet. Utile quand Claude fonctionne dans des environnements sensibles ou pour empecher l\'acces a ~/.ssh ou ~/.aws.', ja: 'パスプレフィックス: <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">//</code> = 絶対パス、<code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">~/</code> = ホームディレクトリ、<code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">./</code> = プロジェクト相対。Claudeが機密環境で実行される場合や ~/.ssh や ~/.aws へのアクセスを防止したい場合に有用。', pt: 'Prefixos de caminho: <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">//</code> = caminho absoluto, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">~/</code> = diretorio home, <code class="font-mono text-xs bg-bg-muted px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">./</code> = relativo ao projeto. Util quando o Claude roda em ambientes sensiveis ou voce quer impedir acesso a ~/.ssh ou ~/.aws.' },
       'env.usageInfo': { de: 'Nuetzlich um z.B. das Subagent-Modell zu steuern (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">CLAUDE_CODE_SUBAGENT_MODEL</code>), Node-Umgebungen zu setzen (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">NODE_ENV</code>), oder Prompt-Caching zu konfigurieren.', en: 'Useful for controlling the subagent model (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">CLAUDE_CODE_SUBAGENT_MODEL</code>), setting Node environments (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">NODE_ENV</code>), or configuring prompt caching.', es: 'Util para controlar el modelo de subagente (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">CLAUDE_CODE_SUBAGENT_MODEL</code>), configurar entornos Node (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">NODE_ENV</code>), o configurar el almacenamiento en cache de prompts.', fr: 'Utile pour controler le modele de sous-agent (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">CLAUDE_CODE_SUBAGENT_MODEL</code>), definir les environnements Node (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">NODE_ENV</code>), ou configurer la mise en cache des prompts.', ja: 'サブエージェントモデルの制御 (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">CLAUDE_CODE_SUBAGENT_MODEL</code>)、Node環境の設定 (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">NODE_ENV</code>)、プロンプトキャッシュの設定に便利です。', pt: 'Util para controlar o modelo de subagente (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">CLAUDE_CODE_SUBAGENT_MODEL</code>), definir ambientes Node (<code class="font-mono text-[10px] bg-bg-muted px-1 py-0.5 rounded">NODE_ENV</code>), ou configurar o cache de prompts.' },
@@ -3203,6 +3376,10 @@
       // ─── Tab: Sandbox ───
       'sandbox.enable': { de: 'Sandbox aktivieren', en: 'Enable sandbox', es: 'Activar sandbox', fr: 'Activer le bac a sable', ja: 'サンドボックスを有効化', pt: 'Ativar sandbox' },
       'sandbox.enableDesc': { de: 'Isoliert Dateisystem- und Netzwerkzugriffe.', en: 'Isolates file system and network access.', es: 'Aisla el acceso al sistema de archivos y la red.', fr: 'Isole les acces au systeme de fichiers et au reseau.', ja: 'ファイルシステムとネットワークアクセスを分離します。', pt: 'Isola o acesso ao sistema de arquivos e a rede.' },
+      'sandbox.mode': { de: 'Sandbox-Modus', en: 'Sandbox Mode', es: 'Modo de sandbox', fr: 'Mode sandbox', ja: 'サンドボックスモード', pt: 'Modo de sandbox' },
+      'sandbox.modeDesc': { de: 'Restrict blockiert verbotene Zugriffe, Monitor loggt sie nur.', en: 'Restrict blocks forbidden access, Monitor only logs it.', es: 'Restrict bloquea accesos prohibidos, Monitor solo los registra.', fr: 'Restrict bloque les acces interdits, Monitor les enregistre seulement.', ja: 'Restrictは禁止されたアクセスをブロックし、Monitorはログのみ記録します。', pt: 'Restrict bloqueia acessos proibidos, Monitor apenas os registra.' },
+      'sandbox.modeRestrict': { de: 'Restrict — Zugriffe blockieren', en: 'Restrict — Block access', es: 'Restrict — Bloquear acceso', fr: 'Restrict — Bloquer les acces', ja: 'Restrict — アクセスをブロック', pt: 'Restrict — Bloquear acesso' },
+      'sandbox.modeMonitor': { de: 'Monitor — Nur loggen', en: 'Monitor — Log only', es: 'Monitor — Solo registrar', fr: 'Monitor — Journaliser uniquement', ja: 'Monitor — ログのみ', pt: 'Monitor — Apenas registrar' },
       'sandbox.allowWrite': { de: 'Schreibzugriff erlaubt', en: 'Write access allowed', es: 'Acceso de escritura permitido', fr: 'Acces en ecriture autorise', ja: '書き込みアクセス許可', pt: 'Acesso de escrita permitido' },
       'sandbox.denyWrite': { de: 'Schreibzugriff blockiert', en: 'Write access blocked', es: 'Acceso de escritura bloqueado', fr: 'Acces en ecriture bloque', ja: '書き込みアクセスブロック', pt: 'Acesso de escrita bloqueado' },
       'sandbox.denyRead': { de: 'Lesezugriff blockiert', en: 'Read access blocked', es: 'Acceso de lectura bloqueado', fr: 'Acces en lecture bloque', ja: '読み取りアクセスブロック', pt: 'Acesso de leitura bloqueado' },
@@ -3423,6 +3600,7 @@
       'notify.inserted': { de: 'Eingefuegt!', en: 'Inserted!', es: 'Insertado!', fr: 'Insere!', ja: '挿入しました！', pt: 'Inserido!' },
       'notify.urlError': { de: 'Fehler beim Erstellen der URL:', en: 'Error creating URL:', es: 'Error al crear la URL:', fr: 'Erreur lors de la creation de l\'URL:', ja: 'URL作成エラー:', pt: 'Erro ao criar a URL:' },
       'notify.settingsFromUrl': { de: 'Settings aus URL geladen!', en: 'Settings loaded from URL!', es: 'Ajustes cargados desde URL!', fr: 'Parametres charges depuis l\'URL!', ja: 'URLから設定を読み込みました！', pt: 'Configuracoes carregadas da URL!' },
+      'notify.autoDetectLoaded': { de: 'Auto-Detect:', en: 'Auto-Detect:', es: 'Auto-Detect:', fr: 'Auto-Detect:', ja: 'Auto-Detect:', pt: 'Auto-Detect:' },
       'notify.importedAsSettings': { de: 'Als settings.json importiert (kein Bundle-Format)', en: 'Imported as settings.json (not a bundle)', es: 'Importado como settings.json (no es un paquete)', fr: 'Importe comme settings.json (pas un paquet)', ja: 'settings.jsonとしてインポート（バンドル形式ではありません）', pt: 'Importado como settings.json (nao e um pacote)' },
       'notify.exportFailed': { de: 'Export fehlgeschlagen:', en: 'Export failed:', es: 'Exportacion fallida:', fr: 'Export echoue:', ja: 'エクスポート失敗:', pt: 'Exportacao falhou:' },
       'notify.importFailed': { de: 'Import fehlgeschlagen:', en: 'Import failed:', es: 'Importacion fallida:', fr: 'Import echoue:', ja: 'インポート失敗:', pt: 'Importacao falhou:' },
@@ -3486,6 +3664,19 @@
       'data.hook.Stop.desc': { de: 'Wenn Claude stoppt', en: 'When Claude stops', es: 'Cuando Claude se detiene', fr: 'Quand Claude s\'arrete', ja: 'Claude停止時', pt: 'Quando o Claude para' },
       'data.hook.PreCompact.desc': { de: 'Vor dem Compact-Vorgang', en: 'Before the compact operation', es: 'Antes de la operacion de compactacion', fr: 'Avant l\'operation de compactage', ja: 'コンパクト操作前', pt: 'Antes da operacao de compactacao' },
       'data.hook.SessionEnd.desc': { de: 'Beim Beenden einer Session', en: 'When a session ends', es: 'Al finalizar una sesion', fr: 'A la fin d\'une session', ja: 'セッション終了時', pt: 'Ao finalizar uma sessao' },
+      'data.hook.PostCompact.desc': { de: 'Nach Context-Komprimierung', en: 'After context compaction', es: 'Despues de la compactacion del contexto', fr: 'Apres la compaction du contexte', ja: 'コンテキスト圧縮後', pt: 'Apos a compactacao do contexto' },
+      'data.hook.InstructionsLoaded.desc': { de: 'Nachdem CLAUDE.md geladen wurde', en: 'After CLAUDE.md instructions loaded', es: 'Despues de cargar las instrucciones CLAUDE.md', fr: 'Apres le chargement des instructions CLAUDE.md', ja: 'CLAUDE.md命令読み込み後', pt: 'Apos carregar as instrucoes CLAUDE.md' },
+      'data.hook.StopFailure.desc': { de: 'Wenn das Stoppen fehlschlaegt', en: 'When stop fails', es: 'Cuando la detencion falla', fr: 'Quand l\'arret echoue', ja: '停止失敗時', pt: 'Quando a parada falha' },
+      'data.hook.TaskCompleted.desc': { de: 'Wenn ein Task abgeschlossen wird', en: 'When a task is completed', es: 'Cuando se completa una tarea', fr: 'Quand une tache est terminee', ja: 'タスク完了時', pt: 'Quando uma tarefa e concluida' },
+      'data.hook.TaskCreated.desc': { de: 'Wenn ein neuer Task erstellt wird', en: 'When a new task is created', es: 'Cuando se crea una nueva tarea', fr: 'Quand une nouvelle tache est creee', ja: '新しいタスク作成時', pt: 'Quando uma nova tarefa e criada' },
+      'data.hook.TeammateIdle.desc': { de: 'Wenn ein Teammate im Idle ist', en: 'When a teammate is idle', es: 'Cuando un companero esta inactivo', fr: 'Quand un coequipier est inactif', ja: 'チームメイトがアイドル状態の時', pt: 'Quando um colega esta inativo' },
+      'data.hook.ConfigChange.desc': { de: 'Wenn sich die Konfiguration aendert', en: 'When the configuration changes', es: 'Cuando la configuracion cambia', fr: 'Quand la configuration change', ja: '設定変更時', pt: 'Quando a configuracao muda' },
+      'data.hook.FileChanged.desc': { de: 'Wenn eine Datei geaendert wird', en: 'When a file is changed', es: 'Cuando un archivo es modificado', fr: 'Quand un fichier est modifie', ja: 'ファイル変更時', pt: 'Quando um arquivo e alterado' },
+      'data.hook.CwdChanged.desc': { de: 'Wenn das Arbeitsverzeichnis wechselt', en: 'When the working directory changes', es: 'Cuando el directorio de trabajo cambia', fr: 'Quand le repertoire de travail change', ja: '作業ディレクトリ変更時', pt: 'Quando o diretorio de trabalho muda' },
+      'data.hook.WorktreeCreate.desc': { de: 'Wenn ein Git-Worktree erstellt wird', en: 'When a git worktree is created', es: 'Cuando se crea un git worktree', fr: 'Quand un git worktree est cree', ja: 'Gitワークツリー作成時', pt: 'Quando um git worktree e criado' },
+      'data.hook.WorktreeRemove.desc': { de: 'Wenn ein Git-Worktree entfernt wird', en: 'When a git worktree is removed', es: 'Cuando se elimina un git worktree', fr: 'Quand un git worktree est supprime', ja: 'Gitワークツリー削除時', pt: 'Quando um git worktree e removido' },
+      'data.hook.Elicitation.desc': { de: 'Wenn Claude eine Rueckfrage stellt', en: 'When Claude asks a clarifying question', es: 'Cuando Claude hace una pregunta', fr: 'Quand Claude pose une question', ja: 'Claudeが確認質問をする時', pt: 'Quando o Claude faz uma pergunta' },
+      'data.hook.ElicitationResult.desc': { de: 'Wenn der User auf eine Rueckfrage antwortet', en: 'When user responds to clarifying question', es: 'Cuando el usuario responde a una pregunta', fr: 'Quand l\'utilisateur repond a une question', ja: 'ユーザーが確認質問に回答した時', pt: 'Quando o usuario responde a uma pergunta' },
 
       // ─── Plugin Category Names ───
       'data.category.Workflow': { de: 'Workflow', en: 'Workflow', es: 'Flujo de trabajo', fr: 'Workflow', ja: 'ワークフロー', pt: 'Fluxo de trabalho' },
@@ -3659,6 +3850,15 @@
       'hooks.infoDesc': { de: 'Hooks erlauben dir, Shell-Commands oder HTTP-Requests automatisch auszufuehren, wenn bestimmte Events eintreten. Ideal fuer Logging, Notifications oder CI/CD-Integration.', en: 'Hooks let you automatically run shell commands or HTTP requests when specific events occur. Ideal for logging, notifications or CI/CD integration.', es: 'Los hooks te permiten ejecutar automaticamente comandos shell o solicitudes HTTP cuando ocurren eventos especificos. Ideal para logging, notificaciones o integracion CI/CD.', fr: 'Les hooks vous permettent d\'executer automatiquement des commandes shell ou des requetes HTTP lors d\'evenements specifiques. Ideal pour le logging, les notifications ou l\'integration CI/CD.', ja: 'Hooksは特定のイベント発生時にシェルコマンドやHTTPリクエストを自動実行できます。ロギング、通知、CI/CD統合に最適。', pt: 'Os hooks permitem executar automaticamente comandos shell ou requisicoes HTTP quando eventos especificos ocorrem. Ideal para logging, notificacoes ou integracao CI/CD.' },
       'hooks.commandType': { de: 'Command — Shell-Befehl ausfuehren', en: 'Command — Run shell command', es: 'Command — Ejecutar comando shell', fr: 'Command — Executer une commande shell', ja: 'Command — シェルコマンドを実行', pt: 'Command — Executar comando shell' },
       'hooks.httpType': { de: 'HTTP — Webhook aufrufen', en: 'HTTP — Call webhook', es: 'HTTP — Llamar webhook', fr: 'HTTP — Appeler un webhook', ja: 'HTTP — Webhookを呼び出し', pt: 'HTTP — Chamar webhook' },
+      'hooks.promptType': { de: 'Prompt — Claude-Prompt als Handler', en: 'Prompt — Claude prompt as handler', es: 'Prompt — Prompt de Claude como handler', fr: 'Prompt — Prompt Claude comme handler', ja: 'Prompt — Claudeプロンプトをハンドラーに', pt: 'Prompt — Prompt do Claude como handler' },
+      'hooks.agentType': { de: 'Agent — Subagent als Handler', en: 'Agent — Subagent as handler', es: 'Agent — Subagente como handler', fr: 'Agent — Sous-agent comme handler', ja: 'Agent — サブエージェントをハンドラーに', pt: 'Agent — Subagente como handler' },
+      'hooks.promptLabel': { de: 'Prompt', en: 'Prompt', es: 'Prompt', fr: 'Prompt', ja: 'プロンプト', pt: 'Prompt' },
+      'hooks.promptPlaceholder': { de: 'Anweisung an Claude...', en: 'Instruction for Claude...', es: 'Instruccion para Claude...', fr: 'Instruction pour Claude...', ja: 'Claudeへの指示...', pt: 'Instrucao para o Claude...' },
+      'hooks.hookModelLabel': { de: 'Model', en: 'Model', es: 'Modelo', fr: 'Modele', ja: 'モデル', pt: 'Modelo' },
+      'hooks.ifLabel': { de: 'If (Bedingung)', en: 'If (Condition)', es: 'If (Condicion)', fr: 'If (Condition)', ja: 'If（条件）', pt: 'If (Condicao)' },
+      'hooks.ifPlaceholder': { de: 'z.B. Bash(npm *)', en: 'e.g. Bash(npm *)', es: 'ej. Bash(npm *)', fr: 'ex. Bash(npm *)', ja: '例: Bash(npm *)', pt: 'ex. Bash(npm *)' },
+      'hooks.shellLabel': { de: 'Shell', en: 'Shell', es: 'Shell', fr: 'Shell', ja: 'シェル', pt: 'Shell' },
+      'hooks.shellPlaceholder': { de: 'z.B. /bin/zsh (leer = Standard)', en: 'e.g. /bin/zsh (empty = default)', es: 'ej. /bin/zsh (vacio = defecto)', fr: 'ex. /bin/zsh (vide = defaut)', ja: '例: /bin/zsh（空 = デフォルト）', pt: 'ex. /bin/zsh (vazio = padrao)' },
       // ─── Hooks Info Examples ───
       'hooks.exPostToolEdit': { de: 'Auto-Linting nach jeder Dateiaenderung', en: 'Auto-linting after every file change', es: 'Auto-linting despues de cada cambio de archivo', fr: 'Auto-linting apres chaque modification de fichier', ja: 'ファイル変更後の自動Lint', pt: 'Auto-linting apos cada alteracao de arquivo' },
       'hooks.exPreToolBash': { de: 'Gefaehrliche Befehle abfangen und blockieren', en: 'Intercept and block dangerous commands', es: 'Interceptar y bloquear comandos peligrosos', fr: 'Intercepter et bloquer les commandes dangereuses', ja: '危険なコマンドを検出してブロック', pt: 'Interceptar e bloquear comandos perigosos' },
@@ -3782,12 +3982,28 @@
       'search.companion.desc': { de: 'Happy Coder, Warp Terminal, Obsidian Vault', en: 'Happy Coder, Warp Terminal, Obsidian Vault', es: 'Happy Coder, Warp Terminal, Obsidian Vault', fr: 'Happy Coder, Warp Terminal, Obsidian Vault', ja: 'Happy Coder, Warp Terminal, Obsidian Vault', pt: 'Happy Coder, Warp Terminal, Obsidian Vault' },
       'search.autoUpdates': { de: 'Auto-Updates Channel', en: 'Auto-Updates Channel', es: 'Canal de actualizaciones', fr: 'Canal de mises a jour', ja: '自動更新チャンネル', pt: 'Canal de atualizacoes' },
       'search.autoUpdates.desc': { de: 'Release-Kanal fuer Updates', en: 'Release channel for updates', es: 'Canal de lanzamiento para actualizaciones', fr: 'Canal de publication pour les mises a jour', ja: 'アップデートのリリースチャンネル', pt: 'Canal de lancamento para atualizacoes' },
+      'search.fastModeGlobal': { de: 'Fast Mode (Global)', en: 'Fast Mode (Global)', es: 'Modo rapido (Global)', fr: 'Mode rapide (Global)', ja: 'ファストモード（グローバル）', pt: 'Modo rapido (Global)' },
+      'search.fastModeGlobal.desc': { de: 'Globaler Fast Mode fuer schnellere Antworten', en: 'Global fast mode for faster responses', es: 'Modo rapido global para respuestas mas rapidas', fr: 'Mode rapide global pour des reponses plus rapides', ja: 'より高速な応答のためのグローバルファストモード', pt: 'Modo rapido global para respostas mais rapidas' },
+      'search.voice': { de: 'Voice-Eingabe', en: 'Voice Input', es: 'Entrada de voz', fr: 'Entree vocale', ja: '音声入力', pt: 'Entrada de voz' },
+      'search.voice.desc': { de: 'Sprachsteuerung aktivieren', en: 'Enable voice input', es: 'Activar entrada por voz', fr: 'Activer l\'entree vocale', ja: '音声入力を有効にする', pt: 'Ativar entrada de voz' },
+      'search.editorMode': { de: 'Editor-Modus', en: 'Editor Mode', es: 'Modo de editor', fr: 'Mode editeur', ja: 'エディターモード', pt: 'Modo do editor' },
+      'search.editorMode.desc': { de: 'Normal oder Vim-Keybindings', en: 'Normal or Vim keybindings', es: 'Normal o atajos de Vim', fr: 'Normal ou raccourcis Vim', ja: 'NormalまたはVimキーバイン��', pt: 'Normal ou teclas Vim' },
+      'search.theme': { de: 'Theme', en: 'Theme', es: 'Tema', fr: 'Theme', ja: 'テーマ', pt: 'Tema' },
+      'search.theme.desc': { de: 'Farbschema (Auto, Light, Dark)', en: 'Color scheme (Auto, Light, Dark)', es: 'Esquema de colores (Auto, Light, Dark)', fr: 'Schema de couleurs (Auto, Light, Dark)', ja: 'カラースキーム（Auto、Light、Dark）', pt: 'Esquema de cores (Auto, Light, Dark)' },
+      'search.releaseChannel': { de: 'Release Channel', en: 'Release Channel', es: 'Canal de lanzamiento', fr: 'Canal de publication', ja: 'リリースチャンネル', pt: 'Canal de lancamento' },
+      'search.releaseChannel.desc': { de: 'Stable oder Preview Release-Kanal', en: 'Stable or Preview release channel', es: 'Canal de lanzamiento Stable o Preview', fr: 'Canal de publication Stable ou Preview', ja: 'StableまたはPreviewリリースチャンネル', pt: 'Canal de lancamento Stable ou Preview' },
+      'search.fileSuggestions': { de: 'File Suggestions', en: 'File Suggestions', es: 'Sugerencias de archivos', fr: 'Suggestions de fichiers', ja: 'ファイル候補', pt: 'Sugestoes de arquivos' },
+      'search.fileSuggestions.desc': { de: 'Datei-Vorschlaege und Exclude-Patterns', en: 'File suggestions and exclude patterns', es: 'Sugerencias de archivos y patrones de exclusion', fr: 'Suggestions de fichiers et motifs d\'exclusion', ja: 'ファイル候補と除外パターン', pt: 'Sugestoes de arquivos e padroes de exclusao' },
+      'search.modelOverrides': { de: 'Model Overrides', en: 'Model Overrides', es: 'Sobrecargas de modelo', fr: 'Surcharges de modele', ja: 'モデルオーバーライド', pt: 'Sobrecargas de modelo' },
+      'search.modelOverrides.desc': { de: 'Modell-Overrides fuer Kontexte', en: 'Model overrides for contexts', es: 'Sobrecargas de modelo por contexto', fr: 'Surcharges de modele par contexte', ja: 'コンテキスト用のモデルオーバーライド', pt: 'Sobrecargas de modelo por contexto' },
       'search.permPresets': { de: 'Permission Presets', en: 'Permission Presets', es: 'Presets de permisos', fr: 'Presets de permissions', ja: 'パーミッションプリセット', pt: 'Presets de permissoes' },
       'search.permPresets.desc': { de: 'Schnellstart-Vorlagen fuer Permissions', en: 'Quick-start templates for permissions', es: 'Plantillas rapidas para permisos', fr: 'Modeles de demarrage rapide pour les permissions', ja: 'パーミッションのクイックスタートテンプレート', pt: 'Modelos de inicio rapido para permissoes' },
       'search.defaultMode': { de: 'Default Mode', en: 'Default Mode', es: 'Modo predeterminado', fr: 'Mode par defaut', ja: 'デフォルトモード', pt: 'Modo padrao' },
       'search.defaultMode.desc': { de: 'Fallback wenn keine Regel greift', en: 'Fallback when no rule matches', es: 'Respaldo cuando ninguna regla aplica', fr: 'Repli quand aucune regle ne s\'applique', ja: 'ルールが一致しない場合のフォールバック', pt: 'Fallback quando nenhuma regra se aplica' },
       'search.bypass': { de: 'Bypass-Modus', en: 'Bypass Mode', es: 'Modo bypass', fr: 'Mode bypass', ja: 'バイパスモード', pt: 'Modo bypass' },
       'search.bypass.desc': { de: 'Bypass-Modus deaktivieren', en: 'Disable bypass mode', es: 'Desactivar modo bypass', fr: 'Desactiver le mode bypass', ja: 'バイパスモードを無効にする', pt: 'Desativar modo bypass' },
+      'search.disableAutoMode': { de: 'Auto-Modus deaktivieren', en: 'Disable Auto Mode', es: 'Desactivar modo automatico', fr: 'Desactiver le mode auto', ja: '自動モードを無効化', pt: 'Desativar modo automatico' },
+      'search.disableAutoMode.desc': { de: 'Automatischen Moduswechsel verhindern', en: 'Prevent automatic mode switching', es: 'Evitar cambio automatico de modo', fr: 'Empecher le changement de mode automatique', ja: '自動モ���ド切り替えを防止', pt: 'Impedir mudanca automatica de modo' },
       'search.allowRules': { de: 'Allow Rules', en: 'Allow Rules', es: 'Reglas Allow', fr: 'Regles Allow', ja: 'Allowルール', pt: 'Regras Allow' },
       'search.allowRules.desc': { de: 'Automatisch erlaubte Tools', en: 'Automatically allowed tools', es: 'Herramientas permitidas automaticamente', fr: 'Outils automatiquement autorises', ja: '自動的に許可されるツール', pt: 'Ferramentas permitidas automaticamente' },
       'search.askRules': { de: 'Ask Rules', en: 'Ask Rules', es: 'Reglas Ask', fr: 'Regles Ask', ja: 'Askルール', pt: 'Regras Ask' },
@@ -3802,6 +4018,10 @@
       'search.mcp.desc': { de: 'Model Context Protocol Server', en: 'Model Context Protocol servers', es: 'Servidores Model Context Protocol', fr: 'Serveurs Model Context Protocol', ja: 'モデルコンテキストプロトコルサーバー', pt: 'Servidores Model Context Protocol' },
       'search.sandboxEnable': { de: 'Sandbox aktivieren', en: 'Enable Sandbox', es: 'Activar sandbox', fr: 'Activer le sandbox', ja: 'サンドボックスを有効化', pt: 'Ativar sandbox' },
       'search.sandboxEnable.desc': { de: 'Dateisystem und Netzwerk isolieren', en: 'Isolate filesystem and network', es: 'Aislar sistema de archivos y red', fr: 'Isoler le systeme de fichiers et le reseau', ja: 'ファイルシステムとネットワークを分離', pt: 'Isolar sistema de arquivos e rede' },
+      'search.sandboxMode': { de: 'Sandbox-Modus', en: 'Sandbox Mode', es: 'Modo de sandbox', fr: 'Mode sandbox', ja: 'サンドボックスモード', pt: 'Modo de sandbox' },
+      'search.sandboxMode.desc': { de: 'Restrict oder Monitor Modus', en: 'Restrict or Monitor mode', es: 'Modo Restrict o Monitor', fr: 'Mode Restrict ou Monitor', ja: 'RestrictまたはMonitorモード', pt: 'Modo Restrict ou Monitor' },
+      'search.sandboxAllowRead': { de: 'Sandbox Allow Read', en: 'Sandbox Allow Read', es: 'Sandbox Allow Read', fr: 'Sandbox Allow Read', ja: 'サンドボックス読み取り許可', pt: 'Sandbox Allow Read' },
+      'search.sandboxAllowRead.desc': { de: 'Lesezugriff erlaubte Pfade', en: 'Read access allowed paths', es: 'Rutas con acceso de lectura permitido', fr: 'Chemins avec acces en lecture autorise', ja: '読み取りアクセスが許可されたパス', pt: 'Caminhos com acesso de leitura permitido' },
       'search.networkDomains': { de: 'Network Domains', en: 'Network Domains', es: 'Dominios de red', fr: 'Domaines reseau', ja: 'ネットワークドメイン', pt: 'Dominios de rede' },
       'search.networkDomains.desc': { de: 'Erlaubte Domains fuer Netzwerkzugriff', en: 'Allowed domains for network access', es: 'Dominios permitidos para acceso a red', fr: 'Domaines autorises pour l\'acces reseau', ja: 'ネットワークアクセスの許可ドメイン', pt: 'Dominios permitidos para acesso a rede' },
       'search.localBinding': { de: 'Local Binding', en: 'Local Binding', es: 'Enlace local', fr: 'Liaison locale', ja: 'ローカルバインディング', pt: 'Ligacao local' },
@@ -4003,6 +4223,7 @@
       'validation.askAllowOverlap': { de: '" ist in Allow UND Ask. Ask ueberschreibt Allow — die Allow-Rule ist wirkungslos.', en: '" is in both Allow AND Ask. Ask overrides Allow — the Allow rule has no effect.', es: '" esta en Allow Y Ask. Ask anula Allow — la regla Allow no tiene efecto.', fr: '" est dans Allow ET Ask. Ask ecrase Allow — la regle Allow est sans effet.', ja: '"はAllowとAskの両方にあります。AskがAllowを上書き — Allow規則は無効です。', pt: '" esta em Allow E Ask. Ask sobrepoe Allow — a regla Allow nao tem efeito.' },
       'validation.hookCommandMissing': { de: ': Command fehlt.', en: ': Command missing.', es: ': Falta el comando.', fr: ': Commande manquante.', ja: ': コマンドがありません。', pt: ': Comando ausente.' },
       'validation.hookUrlMissing': { de: ': URL fehlt.', en: ': URL missing.', es: ': Falta la URL.', fr: ': URL manquante.', ja: ': URLがありません。', pt: ': URL ausente.' },
+      'validation.hookPromptMissing': { de: ': Prompt/Agent-Handler benoetigt einen Prompt-Text.', en: ': Prompt/Agent handler requires a prompt text.', es: ': El handler Prompt/Agent requiere un texto de prompt.', fr: ': Le handler Prompt/Agent necessite un texte de prompt.', ja: ': Prompt/Agentハンドラーにはプロンプトテキストが必要です。', pt: ': O handler Prompt/Agent requer um texto de prompt.' },
       'validation.hookTimeoutInvalid': { de: ': Timeout muss eine positive Zahl sein.', en: ': Timeout must be a positive number.', es: ': El timeout debe ser un numero positivo.', fr: ': Le timeout doit etre un nombre positif.', ja: ': タイムアウトは正の数である必要があります。', pt: ': O timeout deve ser um numero positivo.' },
       'validation.mcpCommandMissing': { de: '": Command fehlt (stdio erfordert ein command).', en: '": Command missing (stdio requires a command).', es: '": Falta el comando (stdio requiere un command).', fr: '": Commande manquante (stdio necessite une commande).', ja: '": コマンドがありません（stdioにはcommandが必要です）。', pt: '": Comando ausente (stdio requer um command).' },
       'validation.mcpUrlMissing': { de: '": URL fehlt (', en: '": URL missing (', es: '": Falta la URL (', fr: '": URL manquante (', ja: '": URLがありません（', pt: '": URL ausente (' },
@@ -4014,6 +4235,14 @@
       'validation.emptyAvailModel': { de: 'Available Models Eintrag #', en: 'Available Models entry #', es: 'Entrada de modelos disponibles #', fr: 'Entree de modeles disponibles #', ja: '利用可能なモデルのエントリ #', pt: 'Entrada de modelos disponiveis #' },
       'validation.emptyAvailModelSuffix': { de: ' ist leer.', en: ' is empty.', es: ' esta vacio.', fr: ' est vide.', ja: ' が空です。', pt: ' esta vazio.' },
       'validation.emptyEnvKey': { de: 'Umgebungsvariable mit leerem Key gefunden.', en: 'Environment variable with empty key found.', es: 'Variable de entorno con clave vacia encontrada.', fr: 'Variable d\'environnement avec cle vide trouvee.', ja: '空のキーを持つ環境変数が見つかりました。', pt: 'Variavel de ambiente com chave vazia encontrada.' },
+      'validation.invalidEditorMode': { de: 'Ungueltiger Editor-Modus: "', en: 'Invalid editor mode: "', es: 'Modo de editor invalido: "', fr: 'Mode editeur invalide: "', ja: '無効なエディターモード: "', pt: 'Modo do editor invalido: "' },
+      'validation.invalidEditorModeSuffix': { de: '". Erlaubt: normal, vim.', en: '". Allowed: normal, vim.', es: '". Permitidos: normal, vim.', fr: '". Autorise: normal, vim.', ja: '"。許可: normal, vim。', pt: '". Permitidos: normal, vim.' },
+      'validation.invalidTheme': { de: 'Ungueltiges Theme: "', en: 'Invalid theme: "', es: 'Tema invalido: "', fr: 'Theme invalide: "', ja: '無効なテーマ: "', pt: 'Tema invalido: "' },
+      'validation.invalidThemeSuffix': { de: '". Erlaubt: auto, light, dark.', en: '". Allowed: auto, light, dark.', es: '". Permitidos: auto, light, dark.', fr: '". Autorise: auto, light, dark.', ja: '"。許可: auto, light, dark。', pt: '". Permitidos: auto, light, dark.' },
+      'validation.invalidReleaseChannel': { de: 'Ungueltiger Release Channel: "', en: 'Invalid release channel: "', es: 'Canal de lanzamiento invalido: "', fr: 'Canal de publication invalide: "', ja: '無効なリリースチャンネル: "', pt: 'Canal de lancamento invalido: "' },
+      'validation.invalidReleaseChannelSuffix': { de: '". Erlaubt: stable, preview.', en: '". Allowed: stable, preview.', es: '". Permitidos: stable, preview.', fr: '". Autorise: stable, preview.', ja: '"。許可: stable, preview。', pt: '". Permitidos: stable, preview.' },
+      'validation.invalidSandboxMode': { de: 'Ungueltiger Sandbox-Modus: "', en: 'Invalid sandbox mode: "', es: 'Modo de sandbox invalido: "', fr: 'Mode sandbox invalide: "', ja: '無効なサンドボックスモード: "', pt: 'Modo de sandbox invalido: "' },
+      'validation.invalidSandboxModeSuffix': { de: '". Erlaubt: restrict, monitor.', en: '". Allowed: restrict, monitor.', es: '". Permitidos: restrict, monitor.', fr: '". Autorise: restrict, monitor.', ja: '"。許可: restrict, monitor。', pt: '". Permitidos: restrict, monitor.' },
       'validation.mcpServer': { de: 'MCP Server "', en: 'MCP Server "', es: 'Servidor MCP "', fr: 'Serveur MCP "', ja: 'MCPサーバー "', pt: 'Servidor MCP "' },
       'validation.hookPrefix': { de: ' Hook #', en: ' Hook #', es: ' Hook #', fr: ' Hook #', ja: ' Hook #', pt: ' Hook #' },
       'validation.ruleLabel': { de: ' Rule #', en: ' Rule #', es: ' Regla #', fr: ' Regle #', ja: ' ルール #', pt: ' Regra #' },
@@ -4039,13 +4268,17 @@
         newAdditionalDir: '',
         newEnvKey: '',
         newEnvValue: '',
-        newSandboxPath: { allowWrite: '', denyWrite: '', denyRead: '' },
+        newSandboxPath: { allowWrite: '', denyWrite: '', denyRead: '', allowRead: '' },
         newDomain: '',
         newHookEvent: '',
         newSpinnerVerb: '',
         newMcpName: '',
         newMcpType: 'stdio',
         newAvailableModel: '',
+        newFileSuggestionExclude: '',
+        newModelOverrideKey: '',
+        newModelOverrideValue: '',
+        newMcpAllowedEnvVar: {},
 
         // === Global Search ===
         searchQuery: '',
@@ -4058,10 +4291,18 @@
           { tab: 'general', label: 'search.language', desc: 'search.language.desc', keywords: ['language', 'sprache', 'deutsch', 'english'], id: 'setting-language' },
           { tab: 'general', label: 'search.thinking', desc: 'search.thinking.desc', keywords: ['thinking', 'denken', 'reasoning'], id: 'setting-thinking' },
           { tab: 'general', label: 'search.autoUpdates', desc: 'search.autoUpdates.desc', keywords: ['updates', 'channel', 'latest', 'stable'], id: 'setting-auto-updates' },
+          { tab: 'general', label: 'search.fastModeGlobal', desc: 'search.fastModeGlobal.desc', keywords: ['fast', 'mode', 'schnell', 'global'], id: 'setting-fast-mode-global' },
+          { tab: 'general', label: 'search.voice', desc: 'search.voice.desc', keywords: ['voice', 'stimme', 'sprache', 'mikrofon'], id: 'setting-voice' },
+          { tab: 'general', label: 'search.editorMode', desc: 'search.editorMode.desc', keywords: ['editor', 'vim', 'normal', 'keybindings'], id: 'setting-editor-mode' },
+          { tab: 'general', label: 'search.theme', desc: 'search.theme.desc', keywords: ['theme', 'dark', 'light', 'auto', 'farbschema'], id: 'setting-theme' },
+          { tab: 'general', label: 'search.releaseChannel', desc: 'search.releaseChannel.desc', keywords: ['release', 'channel', 'stable', 'preview', 'kanal'], id: 'setting-release-channel' },
+          { tab: 'general', label: 'search.fileSuggestions', desc: 'search.fileSuggestions.desc', keywords: ['file', 'suggestions', 'exclude', 'vorschlaege', 'dateien'], id: 'setting-file-suggestions' },
+          { tab: 'general', label: 'search.modelOverrides', desc: 'search.modelOverrides.desc', keywords: ['model', 'overrides', 'subagent', 'editor', 'context'], id: 'setting-model-overrides' },
           { tab: 'companion-tools', label: 'search.companion', desc: 'search.companion.desc', keywords: ['companion', 'tools', 'happy', 'warp', 'obsidian', 'mobile', 'terminal', 'vault'], id: 'setting-companion-tools' },
           { tab: 'permissions', label: 'search.permPresets', desc: 'search.permPresets.desc', keywords: ['presets', 'vorlagen', 'safety', 'produktiv'], id: 'setting-perm-presets' },
           { tab: 'permissions', label: 'search.defaultMode', desc: 'search.defaultMode.desc', keywords: ['default', 'mode', 'bypassPermissions', 'acceptEdits', 'dontAsk', 'auto', 'plan'], id: 'setting-perm-default-mode' },
           { tab: 'permissions', label: 'search.bypass', desc: 'search.bypass.desc', keywords: ['bypass', 'deaktivieren'], id: 'setting-perm-bypass' },
+          { tab: 'permissions', label: 'search.disableAutoMode', desc: 'search.disableAutoMode.desc', keywords: ['auto', 'mode', 'disable', 'deaktivieren'], id: 'setting-perm-disable-auto' },
           { tab: 'permissions', label: 'search.allowRules', desc: 'search.allowRules.desc', keywords: ['allow', 'erlaubt', 'permit', 'bash', 'read'], id: 'setting-perm-allow' },
           { tab: 'permissions', label: 'search.askRules', desc: 'search.askRules.desc', keywords: ['ask', 'fragen', 'bestätigung'], id: 'setting-perm-ask' },
           { tab: 'permissions', label: 'search.denyRules', desc: 'search.denyRules.desc', keywords: ['deny', 'blockiert', 'verboten'], id: 'setting-perm-deny' },
@@ -4069,6 +4310,8 @@
           { tab: 'hooks', label: 'search.hooks', desc: 'search.hooks.desc', keywords: ['hooks', 'event', 'session', 'tool'], id: 'setting-hooks' },
           { tab: 'mcp', label: 'search.mcp', desc: 'search.mcp.desc', keywords: ['mcp', 'server', 'stdio', 'http', 'sse'], id: 'setting-mcp' },
           { tab: 'sandbox', label: 'search.sandboxEnable', desc: 'search.sandboxEnable.desc', keywords: ['sandbox', 'isolieren', 'sicherheit'], id: 'setting-sandbox-enable' },
+          { tab: 'sandbox', label: 'search.sandboxMode', desc: 'search.sandboxMode.desc', keywords: ['sandbox', 'mode', 'restrict', 'monitor'], id: 'setting-sandbox-mode' },
+          { tab: 'sandbox', label: 'search.sandboxAllowRead', desc: 'search.sandboxAllowRead.desc', keywords: ['sandbox', 'read', 'lesen', 'allowRead'], id: 'setting-sandbox-allow-read' },
           { tab: 'sandbox', label: 'search.networkDomains', desc: 'search.networkDomains.desc', keywords: ['network', 'domains', 'netzwerk'], id: 'setting-sandbox-domains' },
           { tab: 'sandbox', label: 'search.localBinding', desc: 'search.localBinding.desc', keywords: ['local', 'binding', 'port'], id: 'setting-sandbox-local-binding' },
           { tab: 'env', label: 'search.env', desc: 'search.env.desc', keywords: ['env', 'environment', 'variablen', 'NODE_ENV'], id: 'setting-env' },
@@ -4390,17 +4633,30 @@
 
         hookEvents: [
           { id: 'SessionStart', desc: 'Beim Start einer Session' },
+          { id: 'InstructionsLoaded', desc: 'Nachdem CLAUDE.md Instruktionen geladen wurden' },
           { id: 'UserPromptSubmit', desc: 'Bevor User-Prompt verarbeitet wird' },
-          { id: 'PreToolUse', desc: 'Vor der Ausführung eines Tools (kann blockieren)' },
-          { id: 'PostToolUse', desc: 'Nach erfolgreicher Tool-Ausführung' },
-          { id: 'PostToolUseFailure', desc: 'Nach fehlgeschlagener Tool-Ausführung' },
+          { id: 'PreToolUse', desc: 'Vor der Ausfuehrung eines Tools (kann blockieren)' },
+          { id: 'PostToolUse', desc: 'Nach erfolgreicher Tool-Ausfuehrung' },
+          { id: 'PostToolUseFailure', desc: 'Nach fehlgeschlagener Tool-Ausfuehrung' },
           { id: 'PermissionRequest', desc: 'Vor dem Permission-Dialog' },
           { id: 'Notification', desc: 'Wenn Claude Aufmerksamkeit braucht' },
           { id: 'SubagentStart', desc: 'Bevor ein Subagent startet' },
           { id: 'SubagentStop', desc: 'Nachdem ein Subagent stoppt' },
           { id: 'Stop', desc: 'Bevor die Session endet' },
+          { id: 'StopFailure', desc: 'Wenn das Stoppen fehlschlaegt' },
           { id: 'PreCompact', desc: 'Vor Context-Komprimierung' },
+          { id: 'PostCompact', desc: 'Nach Context-Komprimierung' },
           { id: 'SessionEnd', desc: 'Wenn die Session endet' },
+          { id: 'TaskCompleted', desc: 'Wenn ein Task abgeschlossen wird' },
+          { id: 'TaskCreated', desc: 'Wenn ein neuer Task erstellt wird' },
+          { id: 'TeammateIdle', desc: 'Wenn ein Teammate im Idle ist' },
+          { id: 'ConfigChange', desc: 'Wenn sich die Konfiguration aendert' },
+          { id: 'FileChanged', desc: 'Wenn eine Datei geaendert wird' },
+          { id: 'CwdChanged', desc: 'Wenn das Arbeitsverzeichnis wechselt' },
+          { id: 'WorktreeCreate', desc: 'Wenn ein Git-Worktree erstellt wird' },
+          { id: 'WorktreeRemove', desc: 'Wenn ein Git-Worktree entfernt wird' },
+          { id: 'Elicitation', desc: 'Wenn Claude eine Rueckfrage stellt' },
+          { id: 'ElicitationResult', desc: 'Wenn der User auf eine Rueckfrage antwortet' },
         ],
 
         pluginCategories: [
@@ -4921,15 +5177,18 @@
               s.permissions.additionalDirectories = data.permissions.additionalDirectories || [];
               if (data.permissions.defaultMode) s.permissions.defaultMode = data.permissions.defaultMode;
               if (data.permissions.disableBypassPermissionsMode) s.permissions.disableBypassPermissionsMode = data.permissions.disableBypassPermissionsMode;
+              if (data.permissions.disableAutoMode) s.permissions.disableAutoMode = data.permissions.disableAutoMode;
             }
             if (data.enabledPlugins) s.enabledPlugins = { ...data.enabledPlugins };
             if (data.hooks) s.hooks = JSON.parse(JSON.stringify(data.hooks));
             if (data.sandbox) {
               s.sandbox.enabled = data.sandbox.enabled || false;
+              if (data.sandbox.mode) s.sandbox.mode = data.sandbox.mode;
               if (data.sandbox.filesystem) {
                 s.sandbox.filesystem.allowWrite = data.sandbox.filesystem.allowWrite || [];
                 s.sandbox.filesystem.denyWrite = data.sandbox.filesystem.denyWrite || [];
                 s.sandbox.filesystem.denyRead = data.sandbox.filesystem.denyRead || [];
+                s.sandbox.filesystem.allowRead = data.sandbox.filesystem.allowRead || [];
               }
               if (data.sandbox.network) {
                 s.sandbox.network.allowedDomains = data.sandbox.network.allowedDomains || [];
@@ -4961,6 +5220,16 @@
             if (data.autoDreamEnabled !== undefined) this.settings.autoDreamEnabled = data.autoDreamEnabled;
             if (data.skipDangerousModePermissionPrompt !== undefined) this.settings.skipDangerousModePermissionPrompt = data.skipDangerousModePermissionPrompt;
             if (data.extraKnownMarketplaces) this.settings.extraKnownMarketplaces = JSON.parse(JSON.stringify(data.extraKnownMarketplaces));
+            if (data.fastMode !== undefined) this.settings.fastMode = data.fastMode;
+            if (data.voiceEnabled !== undefined) this.settings.voiceEnabled = data.voiceEnabled;
+            if (data.editorMode) this.settings.editorMode = data.editorMode;
+            if (data.theme) this.settings.theme = data.theme;
+            if (data.releaseChannel) this.settings.releaseChannel = data.releaseChannel;
+            if (data.fileSuggestions) {
+              this.settings.fileSuggestions.enable = data.fileSuggestions.enable !== undefined ? data.fileSuggestions.enable : true;
+              this.settings.fileSuggestions.exclude = data.fileSuggestions.exclude || [];
+            }
+            if (data.modelOverrides) this.settings.modelOverrides = JSON.parse(JSON.stringify(data.modelOverrides));
             // Preserve unknown properties for roundtrip fidelity
             const knownKeys = new Set([
               'model', 'effortLevel', 'outputStyle', 'language', 'alwaysThinkingEnabled',
@@ -4971,7 +5240,9 @@
               'teamateMode', 'forceLoginMethod', 'mcpServers', 'apiKeyHelper',
               'plansDirectory', 'terminalProgressBarEnabled', 'disableAllHooks', 'availableModels',
               'autoMemoryEnabled', 'autoMemoryDirectory',
-              'autoDreamEnabled', 'skipDangerousModePermissionPrompt', 'extraKnownMarketplaces'
+              'autoDreamEnabled', 'skipDangerousModePermissionPrompt', 'extraKnownMarketplaces',
+              'fastMode', 'voiceEnabled', 'editorMode', 'theme', 'releaseChannel',
+              'fileSuggestions', 'modelOverrides'
             ]);
             this._extraProps = {};
             for (const [key, value] of Object.entries(data)) {
@@ -4996,6 +5267,7 @@
           if (s.permissions.additionalDirectories.length) perms.additionalDirectories = [...s.permissions.additionalDirectories];
           if (s.permissions.defaultMode && s.permissions.defaultMode !== 'default') perms.defaultMode = s.permissions.defaultMode;
           if (s.permissions.disableBypassPermissionsMode) perms.disableBypassPermissionsMode = s.permissions.disableBypassPermissionsMode;
+          if (s.permissions.disableAutoMode) perms.disableAutoMode = s.permissions.disableAutoMode;
           if (Object.keys(perms).length) out.permissions = perms;
           const plugins = {};
           for (const [k, v] of Object.entries(s.enabledPlugins)) { if (v !== undefined) plugins[k] = v; }
@@ -5003,10 +5275,12 @@
           if (Object.keys(s.hooks).length) out.hooks = JSON.parse(JSON.stringify(s.hooks));
           const sandbox = {};
           if (s.sandbox.enabled) sandbox.enabled = true;
+          if (s.sandbox.mode && s.sandbox.mode !== 'restrict') sandbox.mode = s.sandbox.mode;
           const fs = {};
           if (s.sandbox.filesystem.allowWrite.length) fs.allowWrite = [...s.sandbox.filesystem.allowWrite];
           if (s.sandbox.filesystem.denyWrite.length) fs.denyWrite = [...s.sandbox.filesystem.denyWrite];
           if (s.sandbox.filesystem.denyRead.length) fs.denyRead = [...s.sandbox.filesystem.denyRead];
+          if (s.sandbox.filesystem.allowRead.length) fs.allowRead = [...s.sandbox.filesystem.allowRead];
           if (Object.keys(fs).length) sandbox.filesystem = fs;
           const net = {};
           if (s.sandbox.network.allowedDomains.length) net.allowedDomains = [...s.sandbox.network.allowedDomains];
@@ -5045,7 +5319,7 @@
             for (const [name, srv] of Object.entries(s.mcpServers)) {
               const m = { type: srv.type || 'stdio' };
               if (m.type === 'stdio') { if (srv.command) m.command = srv.command; if (srv.args?.length) m.args = [...srv.args]; }
-              else { if (srv.url) m.url = srv.url; if (srv.headers && Object.keys(srv.headers).length) m.headers = {...srv.headers}; }
+              else { if (srv.url) m.url = srv.url; if (srv.headers && Object.keys(srv.headers).length) m.headers = {...srv.headers}; if (srv.allowedEnvVars?.length) m.allowedEnvVars = [...srv.allowedEnvVars]; }
               if (srv.env && Object.keys(srv.env).length) m.env = {...srv.env};
               mcp[name] = m;
             }
@@ -5061,6 +5335,16 @@
           if (s.autoDreamEnabled) out.autoDreamEnabled = true;
           if (s.skipDangerousModePermissionPrompt) out.skipDangerousModePermissionPrompt = true;
           if (Object.keys(s.extraKnownMarketplaces).length) out.extraKnownMarketplaces = JSON.parse(JSON.stringify(s.extraKnownMarketplaces));
+          if (s.fastMode) out.fastMode = true;
+          if (s.voiceEnabled) out.voiceEnabled = true;
+          if (s.editorMode && s.editorMode !== 'normal') out.editorMode = s.editorMode;
+          if (s.theme && s.theme !== 'auto') out.theme = s.theme;
+          if (s.releaseChannel && s.releaseChannel !== 'stable') out.releaseChannel = s.releaseChannel;
+          const fileSug = {};
+          if (s.fileSuggestions.enable === false) fileSug.enable = false;
+          if (s.fileSuggestions.exclude.length) fileSug.exclude = [...s.fileSuggestions.exclude];
+          if (Object.keys(fileSug).length) out.fileSuggestions = fileSug;
+          if (Object.keys(s.modelOverrides).length) out.modelOverrides = { ...s.modelOverrides };
           // Re-attach unknown properties preserved from import
           if (!settingsOverride && this._extraProps) {
             for (const [key, value] of Object.entries(this._extraProps)) {
@@ -5201,7 +5485,7 @@
 
         addHookEvent() {
           if (this.newHookEvent && !this.settings.hooks[this.newHookEvent]) {
-            this.settings.hooks[this.newHookEvent] = [{ matcher: '', hooks: [{ type: 'command', command: '', timeout: 30000, async: false }] }];
+            this.settings.hooks[this.newHookEvent] = [{ matcher: '', hooks: [{ type: 'command', command: '', timeout: 30000, async: false, if: '', shell: '' }] }];
             this.newHookEvent = ''; this.markUnsaved();
           }
         },
@@ -5211,7 +5495,7 @@
           if (!name || this.settings.mcpServers[name]) return;
           const server = { type: this.newMcpType, env: {} };
           if (this.newMcpType === 'stdio') { server.command = ''; server.args = []; }
-          else { server.url = ''; server.headers = {}; }
+          else { server.url = ''; server.headers = {}; server.allowedEnvVars = []; }
           this.settings.mcpServers = { ...this.settings.mcpServers, [name]: server };
           this.newMcpName = ''; this.newMcpType = 'stdio'; this.markUnsaved();
         },
@@ -5390,6 +5674,30 @@
             errors.push({ tab: 'general', field: 'effortLevel', severity: 'error', message: this.t('validation.invalidEffort') + s.effortLevel + this.t('validation.invalidEffortSuffix') });
           }
 
+          // Editor mode
+          const validEditorModes = ['', 'normal', 'vim'];
+          if (s.editorMode && !validEditorModes.includes(s.editorMode)) {
+            errors.push({ tab: 'general', field: 'editorMode', severity: 'error', message: this.t('validation.invalidEditorMode') + s.editorMode + this.t('validation.invalidEditorModeSuffix') });
+          }
+
+          // Theme
+          const validThemes = ['', 'auto', 'light', 'dark'];
+          if (s.theme && !validThemes.includes(s.theme)) {
+            errors.push({ tab: 'general', field: 'theme', severity: 'error', message: this.t('validation.invalidTheme') + s.theme + this.t('validation.invalidThemeSuffix') });
+          }
+
+          // Release channel
+          const validReleaseChannels = ['', 'stable', 'preview'];
+          if (s.releaseChannel && !validReleaseChannels.includes(s.releaseChannel)) {
+            errors.push({ tab: 'general', field: 'releaseChannel', severity: 'error', message: this.t('validation.invalidReleaseChannel') + s.releaseChannel + this.t('validation.invalidReleaseChannelSuffix') });
+          }
+
+          // Sandbox mode
+          const validSandboxModes = ['', 'restrict', 'monitor'];
+          if (s.sandbox.mode && !validSandboxModes.includes(s.sandbox.mode)) {
+            errors.push({ tab: 'sandbox', field: 'sandboxMode', severity: 'error', message: this.t('validation.invalidSandboxMode') + s.sandbox.mode + this.t('validation.invalidSandboxModeSuffix') });
+          }
+
           // Permissions: empty rules
           ['allow', 'ask', 'deny'].forEach(type => {
             s.permissions[type].forEach((rule, i) => {
@@ -5427,6 +5735,9 @@
                 }
                 if (hook.type === 'http' && !hook.url) {
                   errors.push({ tab: 'hooks', field: 'hooks', severity: 'error', message: event + this.t('validation.hookPrefix') + (gi + 1) + '.' + (hi + 1) + this.t('validation.hookUrlMissing') });
+                }
+                if ((hook.type === 'prompt' || hook.type === 'agent') && !hook.prompt) {
+                  errors.push({ tab: 'hooks', field: 'hooks', severity: 'error', message: event + this.t('validation.hookPrefix') + (gi + 1) + '.' + (hi + 1) + this.t('validation.hookPromptMissing') });
                 }
                 if (hook.timeout !== undefined && hook.timeout !== '' && (isNaN(hook.timeout) || hook.timeout < 0)) {
                   errors.push({ tab: 'hooks', field: 'hooks', severity: 'warn', message: event + this.t('validation.hookPrefix') + (gi + 1) + '.' + (hi + 1) + this.t('validation.hookTimeoutInvalid') });
@@ -5811,19 +6122,34 @@
           try {
             const hash = window.location.hash;
             if (!hash.startsWith('#settings=')) return;
-            const encoded = hash.substring('#settings='.length);
-            if (encoded.length > 100000) return; // Max ~75KB decoded
+            // Parse hash params: #settings=<base64>&auto=1&scope=user&file=settings.json
+            const parts = hash.substring(1).split('&');
+            const params = {};
+            parts.forEach(p => { const [k, ...v] = p.split('='); params[k] = v.join('='); });
+            const encoded = params.settings;
+            if (!encoded || encoded.length > 100000) return; // Max ~75KB decoded
             const json = decodeURIComponent(escape(atob(encoded)));
-            // Security: confirm before loading external settings
             const data = JSON.parse(json);
             const keyCount = Object.keys(data).length;
-            if (!confirm(this.t('confirm.importUrl') + '\n\n' + keyCount + ' ' + this.t('confirm.importUrlDetails'))) {
-              history.replaceState(null, '', window.location.pathname);
-              return;
+            const isAutoDetect = params.auto === '1';
+            // Auto-detect from companion script: skip confirm dialog
+            if (!isAutoDetect) {
+              if (!confirm(this.t('confirm.importUrl') + '\n\n' + keyCount + ' ' + this.t('confirm.importUrlDetails'))) {
+                history.replaceState(null, '', window.location.pathname);
+                return;
+              }
             }
             this.loadJson(json);
-            this.unsaved = true;
-            this.notify(this.t('notify.settingsFromUrl'));
+            this.unsaved = false; // Loaded from file, not modified yet
+            const scope = params.scope || '';
+            const file = params.file ? decodeURIComponent(params.file) : '';
+            if (isAutoDetect && file) {
+              this.fileName = file;
+              const scopeLabel = scope === 'user' ? 'User (global)' : scope === 'project' ? 'Project' : scope === 'local' ? 'Local' : '';
+              this.notify(this.t('notify.autoDetectLoaded') + ' ' + (scopeLabel ? scopeLabel + ' — ' : '') + file, 'success');
+            } else {
+              this.notify(this.t('notify.settingsFromUrl'));
+            }
             history.replaceState(null, '', window.location.pathname);
           } catch (e) {
             // Silently ignore invalid hash
