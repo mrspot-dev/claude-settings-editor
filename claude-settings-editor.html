@@ -845,7 +845,14 @@
                 <label class="text-xs text-fg-dim font-mono tracking-wide block mb-1.5" x-text="t('general.fileSuggestionsExclude')"></label>
                 <div class="space-y-2">
                   <template x-for="(pat, i) in settings.fileSuggestions.exclude" :key="'fsexcl-'+i">
-                    <div class="flex items-center gap-2 group">
+                    <div class="flex items-center gap-2 group draggable-rule"
+                         draggable="true"
+                         @dragstart="dragStart($event, 'fileSuggestionsExclude', i)"
+                         @dragend="dragEnd($event)"
+                         @dragover.prevent="dragOver($event, 'fileSuggestionsExclude', i)"
+                         @dragleave="dragLeave($event)"
+                         @drop.prevent="dragDrop($event, 'fileSuggestionsExclude', i)">
+                      <svg class="drag-handle flex-shrink-0 w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="4" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="11" cy="12" r="1.5"/></svg>
                       <code class="flex-1 font-mono text-sm text-amber-300 px-3 py-2 rounded-xl glass border-amber-500/15" x-text="pat"></code>
                       <button @click="settings.fileSuggestions.exclude.splice(i, 1); markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
                     </div>
@@ -871,8 +878,8 @@
                 </template>
               </div>
               <div class="flex items-center gap-2 mt-3">
-                <input type="text" x-model="newModelOverrideKey" :placeholder="t('general.modelOverridesKeyPlaceholder')" class="setting-input !w-48 flex-shrink-0 font-mono">
-                <input type="text" x-model="newModelOverrideValue" @keydown.enter="if(newModelOverrideKey) { settings.modelOverrides = {...settings.modelOverrides, [newModelOverrideKey]: newModelOverrideValue}; newModelOverrideKey = ''; newModelOverrideValue = ''; markUnsaved(); }" :placeholder="t('general.modelOverridesValuePlaceholder')" class="setting-input flex-1 font-mono">
+                <input type="text" x-model="newModelOverrideKey" :placeholder="t('general.modelOverridesKeyPlaceholder')" aria-label="Model alias (e.g. claude-sonnet-4-6)" class="setting-input !w-48 flex-shrink-0 font-mono">
+                <input type="text" x-model="newModelOverrideValue" @keydown.enter="if(newModelOverrideKey) { settings.modelOverrides = {...settings.modelOverrides, [newModelOverrideKey]: newModelOverrideValue}; newModelOverrideKey = ''; newModelOverrideValue = ''; markUnsaved(); }" :placeholder="t('general.modelOverridesValuePlaceholder')" aria-label="Provider model ID" class="setting-input flex-1 font-mono">
                 <button @click="if(newModelOverrideKey) { settings.modelOverrides = {...settings.modelOverrides, [newModelOverrideKey]: newModelOverrideValue}; newModelOverrideKey = ''; newModelOverrideValue = ''; markUnsaved(); }" class="btn-primary px-3 py-2 text-xs font-mono font-medium rounded-xl bg-cyan-500 text-white">+</button>
               </div>
             </div>
@@ -1290,7 +1297,7 @@
 
             <div class="border border-dashed border-[rgba(255,255,255,0.1)] rounded-2xl p-4 hover:border-accent/20 transition-colors">
               <div class="flex items-center gap-2">
-                <select x-model="newHookEvent" class="setting-input flex-1" :class="{ 'has-value': newHookEvent }">
+                <select x-model="newHookEvent" class="setting-input flex-1" :class="{ 'has-value': newHookEvent }" :aria-label="t('hooks.selectEvent')">
                   <option value="" x-text="t('hooks.selectEvent')"></option>
                   <template x-for="g in hookEventGroups" :key="g.group">
                     <optgroup :label="g.group">
@@ -5594,6 +5601,7 @@
         _getArrayForType(type) {
           if (type === 'allow' || type === 'ask' || type === 'deny') return this.settings.permissions[type];
           if (type === 'additionalDirectories') return this.settings.permissions.additionalDirectories;
+          if (type === 'fileSuggestionsExclude') return this.settings.fileSuggestions.exclude;
           if (type.startsWith('sandbox-')) return this.settings.sandbox.filesystem[type.replace('sandbox-', '')];
           if (type.startsWith('hook-')) return this.settings.hooks[type.replace('hook-', '')];
           return null;
