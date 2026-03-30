@@ -242,7 +242,7 @@
         </h1>
         <div class="overflow-hidden transition-all duration-300"
              :class="sidebarCollapsed ? 'max-h-0 opacity-0' : 'max-h-12 opacity-100'">
-          <p class="text-[10px] text-fg-dim/40 mt-1.5 font-mono whitespace-nowrap">v1.1 · made with 💛</p>
+          <p class="text-[10px] text-fg-dim/40 mt-1.5 font-mono whitespace-nowrap">v1.2 · made with 💛</p>
           <p class="text-[10px] text-fg-dim/40 mt-0.5 font-mono whitespace-nowrap">by <a href="https://github.com/mrspot-dev" target="_blank" class="text-fg-muted hover:text-accent transition-colors">mrspot-dev</a></p>
         </div>
       </div>
@@ -871,7 +871,7 @@
                 </template>
               </div>
               <div class="flex items-center gap-2 mt-3">
-                <input type="text" x-model="newModelOverrideKey" placeholder="Context" class="setting-input !w-48 flex-shrink-0 font-mono">
+                <input type="text" x-model="newModelOverrideKey" :placeholder="t('general.modelOverridesKeyPlaceholder')" class="setting-input !w-48 flex-shrink-0 font-mono">
                 <input type="text" x-model="newModelOverrideValue" @keydown.enter="if(newModelOverrideKey) { settings.modelOverrides = {...settings.modelOverrides, [newModelOverrideKey]: newModelOverrideValue}; newModelOverrideKey = ''; newModelOverrideValue = ''; markUnsaved(); }" :placeholder="t('general.modelOverridesValuePlaceholder')" class="setting-input flex-1 font-mono">
                 <button @click="if(newModelOverrideKey) { settings.modelOverrides = {...settings.modelOverrides, [newModelOverrideKey]: newModelOverrideValue}; newModelOverrideKey = ''; newModelOverrideValue = ''; markUnsaved(); }" class="btn-primary px-3 py-2 text-xs font-mono font-medium rounded-xl bg-cyan-500 text-white">+</button>
               </div>
@@ -1292,8 +1292,12 @@
               <div class="flex items-center gap-2">
                 <select x-model="newHookEvent" class="setting-input flex-1" :class="{ 'has-value': newHookEvent }">
                   <option value="" x-text="t('hooks.selectEvent')"></option>
-                  <template x-for="e in hookEvents" :key="e.id">
-                    <option :value="e.id" x-text="e.id + ' — ' + td('data.hook.' + e.id + '.desc', e.desc)"></option>
+                  <template x-for="g in hookEventGroups" :key="g.group">
+                    <optgroup :label="g.group">
+                      <template x-for="e in g.events" :key="e.id">
+                        <option :value="e.id" x-text="e.id + ' — ' + td('data.hook.' + e.id + '.desc', e.desc)"></option>
+                      </template>
+                    </optgroup>
                   </template>
                 </select>
                 <button @click="addHookEvent()" :disabled="!newHookEvent" class="btn-primary px-4 py-2 text-xs font-mono font-medium rounded-xl bg-accent text-bg disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none" x-text="t('hooks.addEvent')"></button>
@@ -1492,7 +1496,7 @@
             </div>
 
             <template x-for="list in [{key:'allowWrite',label:'Filesystem — Allow Write',color:'emerald'},{key:'denyWrite',label:'Filesystem — Deny Write',color:'red'},{key:'denyRead',label:'Filesystem — Deny Read',color:'red'},{key:'allowRead',label:'Filesystem — Allow Read',color:'blue'}]" :key="list.key">
-              <div class="settings-group">
+              <div class="settings-group" :id="'setting-sandbox-' + list.key">
                 <label class="setting-label" x-text="list.label"></label>
                 <div class="space-y-2 mt-3">
                   <template x-for="(path, i) in settings.sandbox.filesystem[list.key]" :key="list.key+'-'+i">
@@ -3143,7 +3147,7 @@
 
     const T = {
       // ─── App Shell ───
-      'app.version': { de: 'v1.1 · made with <3', en: 'v1.1 · made with <3', es: 'v1.1 · hecho con <3', fr: 'v1.1 · fait avec <3', ja: 'v1.1 · made with <3', pt: 'v1.1 · feito com <3' },
+      'app.version': { de: 'v1.2 · made with <3', en: 'v1.2 · made with <3', es: 'v1.2 · hecho con <3', fr: 'v1.2 · fait avec <3', ja: 'v1.2 · made with <3', pt: 'v1.2 · feito com <3' },
       'app.by': { de: 'von', en: 'by', es: 'por', fr: 'par', ja: '作成者', pt: 'por' },
       'sidebar.collapse': { de: 'Sidebar einklappen', en: 'Collapse sidebar', es: 'Contraer barra lateral', fr: 'Replier la barre laterale', ja: 'サイドバーを折りたたむ', pt: 'Recolher barra lateral' },
       'sidebar.expand': { de: 'Sidebar ausklappen', en: 'Expand sidebar', es: 'Expandir barra lateral', fr: 'Deplier la barre laterale', ja: 'サイドバーを展開する', pt: 'Expandir barra lateral' },
@@ -3260,7 +3264,8 @@
       'general.fileSuggestionsExcludePlaceholder': { de: 'z.B. node_modules, .git', en: 'e.g. node_modules, .git', es: 'ej. node_modules, .git', fr: 'ex. node_modules, .git', ja: '例: node_modules, .git', pt: 'ex. node_modules, .git' },
       'general.modelOverrides': { de: 'Model Overrides', en: 'Model Overrides', es: 'Sobrecargas de modelo', fr: 'Surcharges de modele', ja: 'モデルオーバーライド', pt: 'Sobrecargas de modelo' },
       'general.modelOverridesDesc': { de: 'Modell-Overrides fuer bestimmte Kontexte (z.B. subagent, editor).', en: 'Model overrides for specific contexts (e.g. subagent, editor).', es: 'Sobrecargas de modelo para contextos especificos (ej. subagent, editor).', fr: 'Surcharges de modele pour des contextes specifiques (ex. subagent, editor).', ja: '特定のコンテキスト用のモデルオーバーライド（例: subagent, editor）。', pt: 'Sobrecargas de modelo para contextos especificos (ex. subagent, editor).' },
-      'general.modelOverridesValuePlaceholder': { de: 'Modell-ID (z.B. claude-sonnet-4-6)', en: 'Model ID (e.g. claude-sonnet-4-6)', es: 'ID de modelo (ej. claude-sonnet-4-6)', fr: 'ID de modele (ex. claude-sonnet-4-6)', ja: 'モデルID（例: claude-sonnet-4-6）', pt: 'ID do modelo (ex. claude-sonnet-4-6)' },
+      'general.modelOverridesKeyPlaceholder': { de: 'claude-sonnet-4-6', en: 'claude-sonnet-4-6', es: 'claude-sonnet-4-6', fr: 'claude-sonnet-4-6', ja: 'claude-sonnet-4-6', pt: 'claude-sonnet-4-6' },
+      'general.modelOverridesValuePlaceholder': { de: 'Provider-ID (z.B. arn:aws:bedrock:...)', en: 'Provider ID (e.g. arn:aws:bedrock:...)', es: 'ID del proveedor (ej. arn:aws:bedrock:...)', fr: 'ID du fournisseur (ex. arn:aws:bedrock:...)', ja: 'プロバイダーID（例: arn:aws:bedrock:...）', pt: 'ID do provedor (ex. arn:aws:bedrock:...)' },
       'general.restartWizard': { de: 'Setup-Assistent', en: 'Setup Wizard', es: 'Asistente de configuracion', fr: 'Assistant de configuration', ja: 'セットアップウィザード', pt: 'Assistente de configuracao' },
       'general.restartWizardDesc': { de: 'Den Einrichtungsassistenten erneut starten.', en: 'Restart the setup wizard.', es: 'Reiniciar el asistente de configuracion.', fr: 'Relancer l\'assistant de configuration.', ja: 'セットアップウィザードを再起動します。', pt: 'Reiniciar o assistente de configuracao.' },
       'general.restartWizardBtn': { de: 'Wizard starten', en: 'Run Wizard', es: 'Ejecutar', fr: 'Lancer', ja: '実行', pt: 'Executar' },
@@ -4311,7 +4316,7 @@
           { tab: 'mcp', label: 'search.mcp', desc: 'search.mcp.desc', keywords: ['mcp', 'server', 'stdio', 'http', 'sse'], id: 'setting-mcp' },
           { tab: 'sandbox', label: 'search.sandboxEnable', desc: 'search.sandboxEnable.desc', keywords: ['sandbox', 'isolieren', 'sicherheit'], id: 'setting-sandbox-enable' },
           { tab: 'sandbox', label: 'search.sandboxMode', desc: 'search.sandboxMode.desc', keywords: ['sandbox', 'mode', 'restrict', 'monitor'], id: 'setting-sandbox-mode' },
-          { tab: 'sandbox', label: 'search.sandboxAllowRead', desc: 'search.sandboxAllowRead.desc', keywords: ['sandbox', 'read', 'lesen', 'allowRead'], id: 'setting-sandbox-allow-read' },
+          { tab: 'sandbox', label: 'search.sandboxAllowRead', desc: 'search.sandboxAllowRead.desc', keywords: ['sandbox', 'read', 'lesen', 'allowRead'], id: 'setting-sandbox-allowRead' },
           { tab: 'sandbox', label: 'search.networkDomains', desc: 'search.networkDomains.desc', keywords: ['network', 'domains', 'netzwerk'], id: 'setting-sandbox-domains' },
           { tab: 'sandbox', label: 'search.localBinding', desc: 'search.localBinding.desc', keywords: ['local', 'binding', 'port'], id: 'setting-sandbox-local-binding' },
           { tab: 'env', label: 'search.env', desc: 'search.env.desc', keywords: ['env', 'environment', 'variablen', 'NODE_ENV'], id: 'setting-env' },
@@ -4631,33 +4636,48 @@
           { id: 'companion-tools', label: 'Companion Tools', desc: 'Empfohlene Erweiterungen für den Claude Code Workflow', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"/></svg>' },
         ],
 
-        hookEvents: [
-          { id: 'SessionStart', desc: 'Beim Start einer Session' },
-          { id: 'InstructionsLoaded', desc: 'Nachdem CLAUDE.md Instruktionen geladen wurden' },
-          { id: 'UserPromptSubmit', desc: 'Bevor User-Prompt verarbeitet wird' },
-          { id: 'PreToolUse', desc: 'Vor der Ausfuehrung eines Tools (kann blockieren)' },
-          { id: 'PostToolUse', desc: 'Nach erfolgreicher Tool-Ausfuehrung' },
-          { id: 'PostToolUseFailure', desc: 'Nach fehlgeschlagener Tool-Ausfuehrung' },
-          { id: 'PermissionRequest', desc: 'Vor dem Permission-Dialog' },
-          { id: 'Notification', desc: 'Wenn Claude Aufmerksamkeit braucht' },
-          { id: 'SubagentStart', desc: 'Bevor ein Subagent startet' },
-          { id: 'SubagentStop', desc: 'Nachdem ein Subagent stoppt' },
-          { id: 'Stop', desc: 'Bevor die Session endet' },
-          { id: 'StopFailure', desc: 'Wenn das Stoppen fehlschlaegt' },
-          { id: 'PreCompact', desc: 'Vor Context-Komprimierung' },
-          { id: 'PostCompact', desc: 'Nach Context-Komprimierung' },
-          { id: 'SessionEnd', desc: 'Wenn die Session endet' },
-          { id: 'TaskCompleted', desc: 'Wenn ein Task abgeschlossen wird' },
-          { id: 'TaskCreated', desc: 'Wenn ein neuer Task erstellt wird' },
-          { id: 'TeammateIdle', desc: 'Wenn ein Teammate im Idle ist' },
-          { id: 'ConfigChange', desc: 'Wenn sich die Konfiguration aendert' },
-          { id: 'FileChanged', desc: 'Wenn eine Datei geaendert wird' },
-          { id: 'CwdChanged', desc: 'Wenn das Arbeitsverzeichnis wechselt' },
-          { id: 'WorktreeCreate', desc: 'Wenn ein Git-Worktree erstellt wird' },
-          { id: 'WorktreeRemove', desc: 'Wenn ein Git-Worktree entfernt wird' },
-          { id: 'Elicitation', desc: 'Wenn Claude eine Rueckfrage stellt' },
-          { id: 'ElicitationResult', desc: 'Wenn der User auf eine Rueckfrage antwortet' },
+        hookEventGroups: [
+          { group: 'Lifecycle', events: [
+            { id: 'SessionStart', desc: 'Beim Start einer Session' },
+            { id: 'InstructionsLoaded', desc: 'Nachdem CLAUDE.md Instruktionen geladen wurden' },
+            { id: 'Stop', desc: 'Bevor die Session endet' },
+            { id: 'StopFailure', desc: 'Wenn das Stoppen fehlschlaegt' },
+            { id: 'SessionEnd', desc: 'Wenn die Session endet' },
+          ]},
+          { group: 'Prompts', events: [
+            { id: 'UserPromptSubmit', desc: 'Bevor User-Prompt verarbeitet wird' },
+            { id: 'PermissionRequest', desc: 'Vor dem Permission-Dialog' },
+            { id: 'Notification', desc: 'Wenn Claude Aufmerksamkeit braucht' },
+            { id: 'Elicitation', desc: 'Wenn Claude eine Rueckfrage stellt' },
+            { id: 'ElicitationResult', desc: 'Wenn der User auf eine Rueckfrage antwortet' },
+          ]},
+          { group: 'Tools', events: [
+            { id: 'PreToolUse', desc: 'Vor der Ausfuehrung eines Tools (kann blockieren)' },
+            { id: 'PostToolUse', desc: 'Nach erfolgreicher Tool-Ausfuehrung' },
+            { id: 'PostToolUseFailure', desc: 'Nach fehlgeschlagener Tool-Ausfuehrung' },
+          ]},
+          { group: 'Agents', events: [
+            { id: 'SubagentStart', desc: 'Bevor ein Subagent startet' },
+            { id: 'SubagentStop', desc: 'Nachdem ein Subagent stoppt' },
+            { id: 'TeammateIdle', desc: 'Wenn ein Teammate im Idle ist' },
+          ]},
+          { group: 'Tasks', events: [
+            { id: 'TaskCreated', desc: 'Wenn ein neuer Task erstellt wird' },
+            { id: 'TaskCompleted', desc: 'Wenn ein Task abgeschlossen wird' },
+          ]},
+          { group: 'Context', events: [
+            { id: 'PreCompact', desc: 'Vor Context-Komprimierung' },
+            { id: 'PostCompact', desc: 'Nach Context-Komprimierung' },
+          ]},
+          { group: 'Workspace', events: [
+            { id: 'ConfigChange', desc: 'Wenn sich die Konfiguration aendert' },
+            { id: 'FileChanged', desc: 'Wenn eine Datei geaendert wird' },
+            { id: 'CwdChanged', desc: 'Wenn das Arbeitsverzeichnis wechselt' },
+            { id: 'WorktreeCreate', desc: 'Wenn ein Git-Worktree erstellt wird' },
+            { id: 'WorktreeRemove', desc: 'Wenn ein Git-Worktree entfernt wird' },
+          ]},
         ],
+        get hookEvents() { return this.hookEventGroups.flatMap(g => g.events); },
 
         pluginCategories: [
           {
@@ -5246,7 +5266,7 @@
             ]);
             this._extraProps = {};
             for (const [key, value] of Object.entries(data)) {
-              if (!knownKeys.has(key)) this._extraProps[key] = value;
+              if (!knownKeys.has(key) && key !== '__proto__' && key !== 'constructor' && key !== 'prototype') this._extraProps[key] = value;
             }
             this.unsaved = false;
           } catch (e) { this.notify(this.t('notify.invalidJson') + ' ' + e.message, 'error'); }
@@ -5289,8 +5309,8 @@
           if (Object.keys(net).length) sandbox.network = net;
           if (Object.keys(sandbox).length) out.sandbox = sandbox;
           if (Object.keys(s.env).length) out.env = { ...s.env };
-          if (s.spinnerTipsEnabled) out.spinnerTipsEnabled = true;
-          if (s.showTurnDuration) out.showTurnDuration = true;
+          if (!s.spinnerTipsEnabled) out.spinnerTipsEnabled = false;
+          if (!s.showTurnDuration) out.showTurnDuration = false;
           if (s.prefersReducedMotion) out.prefersReducedMotion = true;
           if (s.spinnerVerbs.verbs.length) out.spinnerVerbs = { mode: s.spinnerVerbs.mode, verbs: [...s.spinnerVerbs.verbs] };
           if (s.statusLine.type === 'command' && s.statusLine.command) {
@@ -6132,8 +6152,9 @@
             const data = JSON.parse(json);
             const keyCount = Object.keys(data).length;
             const isAutoDetect = params.auto === '1';
-            // Auto-detect from companion script: skip confirm dialog
-            if (!isAutoDetect) {
+            // Auto-detect from companion script: skip confirm only for local file:// or same-origin
+            const trustedAuto = isAutoDetect && (window.location.protocol === 'file:' || !document.referrer || new URL(document.referrer).origin === window.location.origin);
+            if (!trustedAuto) {
               if (!confirm(this.t('confirm.importUrl') + '\n\n' + keyCount + ' ' + this.t('confirm.importUrlDetails'))) {
                 history.replaceState(null, '', window.location.pathname);
                 return;
@@ -6152,7 +6173,8 @@
             }
             history.replaceState(null, '', window.location.pathname);
           } catch (e) {
-            // Silently ignore invalid hash
+            // Silently ignore invalid hash, but clean up URL
+            try { history.replaceState(null, '', window.location.pathname); } catch (_) {}
           }
         },
 
