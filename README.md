@@ -19,10 +19,42 @@
 
 ## Quick Start
 
+**Option A — Manual:**
 1. Download `claude-settings-editor.html`
 2. Open in any Chromium browser (Chrome, Edge, Arc)
-3. Click **Open** or **Auto-Detect** to load your `settings.json`
+3. Click **Open** to load your `settings.json`
 4. Edit visually, then **Save** back to disk
+
+**Option B — Auto-Detect (recommended):**
+1. Download the repo (or just `claude-settings-editor.html` + `open-editor.py`)
+2. Run the companion script:
+   ```bash
+   python open-editor.py
+   ```
+3. The script finds all your `settings.json` files, lets you pick one, and opens the editor pre-loaded
+
+```
+  Claude Settings Editor — Auto-Detect
+  ========================================
+
+  Found 3 settings files:
+
+    [1] User (global)
+        Your personal settings, apply to ALL projects
+        C:\Users\you\.claude\settings.json
+
+    [2] Project (shared)
+        Project settings, committed to git. Shared with team.
+        /repo/.claude/settings.json
+
+    [3] Local (gitignored)
+        Personal project overrides, NOT committed.
+        /repo/.claude/settings.local.json
+
+  Priority: Local > Project > User > Defaults
+```
+
+On Windows, you can also double-click `open-editor.bat`.
 
 > Uses the [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_Access_API) for direct read/write. Works best in Chromium-based browsers.
 
@@ -45,12 +77,12 @@
 
 | Tab | What it covers |
 |-----|----------------|
-| General | Model, effort level (visual card selector), output style, language, thinking mode |
+| General | Model, effort level (visual card selector), output style, language, thinking mode, fast mode, voice, vim mode, theme, release channel, file suggestions, model overrides |
 | Permissions | Allow/Ask/Deny rules, default mode, presets, conflict detection |
 | Skills & Plugins | Toggle 80+ plugins with categories, search, availability badges, 35+ custom skills |
-| Hooks | Event-based automation (PreToolUse, PostToolUse, SessionStart, etc.) |
+| Hooks | 25 events in 7 groups, 4 handler types (command, http, prompt, agent), conditional `if` + `shell` |
 | MCP Servers | stdio/http/sse config, env vars, headers, 14 quick-add presets, status check |
-| Sandbox | Filesystem allow/deny paths, network domains |
+| Sandbox | Mode (restrict/monitor), filesystem allow/deny/read paths, network domains |
 | Environment | Custom environment variables |
 | Display & UI | Spinner verbs (8 themed packs + custom), status line, motion preferences |
 | Attribution | Commit and PR attribution strings |
