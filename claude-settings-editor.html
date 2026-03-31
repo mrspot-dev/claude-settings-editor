@@ -1942,6 +1942,55 @@
               <p class="setting-desc" x-text="t('adv.extraMarketplacesDesc')"></p>
               <textarea class="setting-input w-full font-mono text-xs" rows="4" :value="JSON.stringify(settings.extraKnownMarketplaces, null, 2)" @input="try { settings.extraKnownMarketplaces = JSON.parse($event.target.value); markUnsaved(); } catch(e) {}" placeholder='{ "my-marketplace": { "owner": "github-user", "repo": "repo-name" } }'></textarea>
             </div>
+
+            <!-- Privacy & Telemetry -->
+            <div id="setting-privacy" class="settings-group space-y-4">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                </div>
+                <div>
+                  <h3 class="font-display font-semibold text-sm text-fg" x-text="t('privacy.title')"></h3>
+                  <p class="text-xs text-fg-dim" x-text="t('privacy.desc')"></p>
+                </div>
+              </div>
+
+              <!-- Toggle: Disable Telemetry (Statsig) -->
+              <div class="flex items-center justify-between py-3 px-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)]">
+                <div>
+                  <span class="setting-label" id="label-disable-telemetry" x-text="t('privacy.telemetryLabel')"></span>
+                  <p class="text-xs text-fg-dim mt-0.5" x-text="t('privacy.telemetryDesc')"></p>
+                </div>
+                <div class="toggle bg-bg-elevated mt-1"
+                     :class="{ 'active': settings.env['DISABLE_TELEMETRY'] === '1' }"
+                     @click="(function(){ if (settings.env['DISABLE_TELEMETRY'] === '1') { const e = {...settings.env}; delete e['DISABLE_TELEMETRY']; settings.env = e; } else { settings.env = {...settings.env, DISABLE_TELEMETRY: '1'}; } markUnsaved(); })()"
+                     tabindex="0" role="switch" aria-labelledby="label-disable-telemetry"
+                     :aria-checked="settings.env['DISABLE_TELEMETRY'] === '1'"
+                     @keydown.enter="(function(){ if (settings.env['DISABLE_TELEMETRY'] === '1') { const e = {...settings.env}; delete e['DISABLE_TELEMETRY']; settings.env = e; } else { settings.env = {...settings.env, DISABLE_TELEMETRY: '1'}; } markUnsaved(); })()"
+                     @keydown.space.prevent="(function(){ if (settings.env['DISABLE_TELEMETRY'] === '1') { const e = {...settings.env}; delete e['DISABLE_TELEMETRY']; settings.env = e; } else { settings.env = {...settings.env, DISABLE_TELEMETRY: '1'}; } markUnsaved(); })()"></div>
+              </div>
+
+              <!-- Toggle: Disable Error Reporting (Sentry) -->
+              <div class="flex items-center justify-between py-3 px-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)]">
+                <div>
+                  <span class="setting-label" id="label-disable-error-reporting" x-text="t('privacy.errorReportingLabel')"></span>
+                  <p class="text-xs text-fg-dim mt-0.5" x-text="t('privacy.errorReportingDesc')"></p>
+                </div>
+                <div class="toggle bg-bg-elevated mt-1"
+                     :class="{ 'active': settings.env['DISABLE_ERROR_REPORTING'] === '1' }"
+                     @click="(function(){ if (settings.env['DISABLE_ERROR_REPORTING'] === '1') { const e = {...settings.env}; delete e['DISABLE_ERROR_REPORTING']; settings.env = e; } else { settings.env = {...settings.env, DISABLE_ERROR_REPORTING: '1'}; } markUnsaved(); })()"
+                     tabindex="0" role="switch" aria-labelledby="label-disable-error-reporting"
+                     :aria-checked="settings.env['DISABLE_ERROR_REPORTING'] === '1'"
+                     @keydown.enter="(function(){ if (settings.env['DISABLE_ERROR_REPORTING'] === '1') { const e = {...settings.env}; delete e['DISABLE_ERROR_REPORTING']; settings.env = e; } else { settings.env = {...settings.env, DISABLE_ERROR_REPORTING: '1'}; } markUnsaved(); })()"
+                     @keydown.space.prevent="(function(){ if (settings.env['DISABLE_ERROR_REPORTING'] === '1') { const e = {...settings.env}; delete e['DISABLE_ERROR_REPORTING']; settings.env = e; } else { settings.env = {...settings.env, DISABLE_ERROR_REPORTING: '1'}; } markUnsaved(); })()"></div>
+              </div>
+
+              <!-- Info box -->
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-blue-500/5 border border-blue-500/10">
+                <svg class="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="text-xs text-fg-dim" x-text="t('privacy.info')"></p>
+              </div>
+            </div>
           </div>
 
           <!-- ═══════════════ DESIGN PROMPTS TAB ═══════════════ -->
@@ -2767,7 +2816,62 @@
               </div>
             </div>
 
-            <!-- Section 3: Session Memory -->
+            <!-- Section 3: Memory History -->
+            <div class="settings-group space-y-4" id="setting-memory-history">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <h3 class="font-display font-semibold text-sm text-fg" x-text="t('memory.historyTitle')"></h3>
+                    <span class="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-400/15 text-amber-300 border border-amber-400/20" x-text="t('memory.historyRecommended')"></span>
+                  </div>
+                  <p class="text-xs text-fg-dim mt-0.5" x-text="t('memory.historyDesc')"></p>
+                </div>
+              </div>
+
+              <!-- Input + Quick Presets -->
+              <div class="p-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)] space-y-3">
+                <div class="flex items-center gap-3">
+                  <div class="flex-1">
+                    <label class="text-xs font-semibold text-fg-dim mb-1 block" x-text="t('memory.historyDaysLabel')"></label>
+                    <input type="number" x-model.number="settings.cleanupPeriodDays" @input="markUnsaved()" min="1" max="365" class="setting-input !w-32 font-mono">
+                  </div>
+                  <div class="text-right">
+                    <p class="text-[10px] text-fg-dim" x-text="t('memory.historyDefault')"></p>
+                    <p class="text-[10px] text-amber-400 font-semibold mt-0.5" x-text="t('memory.historyMax')"></p>
+                  </div>
+                </div>
+
+                <!-- Quick Presets -->
+                <div class="flex gap-2 flex-wrap">
+                  <button @click="settings.cleanupPeriodDays = 30; markUnsaved()"
+                          :class="settings.cleanupPeriodDays === 30 ? 'border-accent/40 bg-accent/10 text-accent' : 'border-[rgba(255,255,255,0.08)] text-fg-dim hover:border-[rgba(255,255,255,0.2)]'"
+                          class="px-3 py-1.5 rounded-lg text-xs font-mono border transition-all">30d</button>
+                  <button @click="settings.cleanupPeriodDays = 90; markUnsaved()"
+                          :class="settings.cleanupPeriodDays === 90 ? 'border-accent/40 bg-accent/10 text-accent' : 'border-[rgba(255,255,255,0.08)] text-fg-dim hover:border-[rgba(255,255,255,0.2)]'"
+                          class="px-3 py-1.5 rounded-lg text-xs font-mono border transition-all">90d</button>
+                  <button @click="settings.cleanupPeriodDays = 180; markUnsaved()"
+                          :class="settings.cleanupPeriodDays === 180 ? 'border-accent/40 bg-accent/10 text-accent' : 'border-[rgba(255,255,255,0.08)] text-fg-dim hover:border-[rgba(255,255,255,0.2)]'"
+                          class="px-3 py-1.5 rounded-lg text-xs font-mono border transition-all">180d</button>
+                  <button @click="settings.cleanupPeriodDays = 365; markUnsaved()"
+                          :class="settings.cleanupPeriodDays === 365 ? 'border-amber-400/40 bg-amber-400/10 text-amber-300' : 'border-[rgba(255,255,255,0.08)] text-fg-dim hover:border-amber-400/30 hover:text-amber-400'"
+                          class="px-3 py-1.5 rounded-lg text-xs font-mono border transition-all flex items-center gap-1">
+                    <span>365d</span>
+                    <span class="text-[9px]">★</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tip -->
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                <svg class="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                <p class="text-xs text-fg-dim" x-text="t('memory.historyTip')"></p>
+              </div>
+            </div>
+
+            <!-- Section 4: Session Memory -->
             <div class="settings-group space-y-4" id="setting-session-memory">
               <div class="flex items-center gap-3 mb-2">
                 <div class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center">
@@ -3588,6 +3692,20 @@
       'adv.availableModelsDescLong': { de: 'Liste von Modell-IDs die dem User zur Auswahl stehen. Leer = alle.', en: 'List of model IDs available to the user. Empty = all models.', es: 'Lista de IDs de modelos disponibles para el usuario. Vacio = todos.', fr: 'Liste des IDs de modeles disponibles pour l\'utilisateur. Vide = tous.', ja: 'ユーザーが利用可能なモデルIDのリスト。空欄 = 全モデル。', pt: 'Lista de IDs de modelos disponiveis para o usuario. Vazio = todos.' },
       'adv.autoDream': { de: 'Auto Dream', en: 'Auto Dream', es: 'Auto Dream', fr: 'Auto Dream', ja: 'オートドリーム', pt: 'Auto Dream' },
       'adv.autoDreamDesc': { de: 'Automatische Traumgenerierung aktivieren (experimentell)', en: 'Enable automatic dream generation (experimental)', es: 'Activar generacion automatica de suenos (experimental)', fr: 'Activer la generation automatique de reves (experimental)', ja: '自動ドリーム生成を有効にする（実験的）', pt: 'Ativar geracao automatica de sonhos (experimental)' },
+      'privacy.title': { de: 'Datenschutz & Telemetrie', en: 'Privacy & Telemetry', es: 'Privacidad y Telemetria', fr: 'Confidentialite & Telemetrie', ja: 'プライバシーとテレメトリー', pt: 'Privacidade & Telemetria' },
+      'privacy.desc': { de: 'Kontrolle über Datenübermittlung an Anthropic/Sentry', en: 'Control what data is sent to Anthropic/Sentry', es: 'Controla que datos se envian a Anthropic/Sentry', fr: 'Controlez les donnees envoyees a Anthropic/Sentry', ja: 'Anthropic/Sentryへのデータ送信を制御', pt: 'Controle o que e enviado para Anthropic/Sentry' },
+      'privacy.telemetryLabel': { de: 'Nutzungsmetriken deaktivieren (Statsig)', en: 'Disable Usage Metrics (Statsig)', es: 'Desactivar metricas de uso (Statsig)', fr: 'Desactiver les metriques d\'utilisation (Statsig)', ja: '使用状況メトリクスを無効化 (Statsig)', pt: 'Desativar metricas de uso (Statsig)' },
+      'privacy.telemetryDesc': { de: 'Sendet keine Latenz- und Performance-Daten an Anthropic', en: 'Stops sending latency and performance data to Anthropic', es: 'Deja de enviar datos de latencia y rendimiento a Anthropic', fr: 'Arrete l\'envoi de donnees de latence a Anthropic', ja: 'Anthropicへのレイテンシーデータ送信を停止', pt: 'Para de enviar dados de latencia para Anthropic' },
+      'privacy.errorReportingLabel': { de: 'Fehler-Reporting deaktivieren (Sentry)', en: 'Disable Error Reporting (Sentry)', es: 'Desactivar informes de errores (Sentry)', fr: 'Desactiver les rapports d\'erreurs (Sentry)', ja: 'エラー報告を無効化 (Sentry)', pt: 'Desativar relatorios de erros (Sentry)' },
+      'privacy.errorReportingDesc': { de: 'Sendet keine Fehler-Logs an Anthropic/Sentry', en: 'Stops sending error logs to Anthropic/Sentry', es: 'Deja de enviar registros de errores a Anthropic/Sentry', fr: 'Arrete l\'envoi de journaux d\'erreurs a Anthropic/Sentry', ja: 'Anthropic/Sentryへのエラーログ送信を停止', pt: 'Para de enviar logs de erros para Anthropic/Sentry' },
+      'privacy.info': { de: 'Setzt DISABLE_TELEMETRY=1 und DISABLE_ERROR_REPORTING=1 als Umgebungsvariablen im env-Block der settings.json', en: 'Sets DISABLE_TELEMETRY=1 and DISABLE_ERROR_REPORTING=1 as environment variables in the env block of settings.json', es: 'Establece DISABLE_TELEMETRY=1 y DISABLE_ERROR_REPORTING=1 en el bloque env de settings.json', fr: 'Definit DISABLE_TELEMETRY=1 et DISABLE_ERROR_REPORTING=1 dans le bloc env de settings.json', ja: 'settings.jsonのenvブロックにDISABLE_TELEMETRY=1とDISABLE_ERROR_REPORTING=1を設定', pt: 'Define DISABLE_TELEMETRY=1 e DISABLE_ERROR_REPORTING=1 no bloco env do settings.json' },
+      'memory.historyTitle': { de: 'Memory-Verlauf', en: 'Memory History', es: 'Historial de Memoria', fr: 'Historique de Memoire', ja: 'メモリ履歴', pt: 'Historico de Memoria' },
+      'memory.historyRecommended': { de: '365 Tage empfohlen', en: '365 days recommended', es: '365 dias recomendado', fr: '365 jours recommande', ja: '365日推奨', pt: '365 dias recomendado' },
+      'memory.historyDesc': { de: 'Wie lange Memory-Dateien aufbewahrt werden bevor sie automatisch gelöscht werden', en: 'How long memory files are kept before automatic deletion', es: 'Cuanto tiempo se conservan los archivos de memoria antes de eliminarse', fr: 'Duree de conservation des fichiers memoire avant suppression automatique', ja: 'メモリファイルが自動削除されるまでの保持期間', pt: 'Por quanto tempo os arquivos de memoria sao mantidos antes da exclusao automatica' },
+      'memory.historyDaysLabel': { de: 'Aufbewahrungsdauer in Tagen', en: 'Retention period in days', es: 'Periodo de retencion en dias', fr: 'Periode de conservation en jours', ja: '保持期間（日数）', pt: 'Periodo de retencao em dias' },
+      'memory.historyDefault': { de: 'Standard: 30 Tage', en: 'Default: 30 days', es: 'Predeterminado: 30 dias', fr: 'Par defaut: 30 jours', ja: 'デフォルト: 30日', pt: 'Padrao: 30 dias' },
+      'memory.historyMax': { de: '★ Empfohlen: 365 Tage', en: '★ Recommended: 365 days', es: '★ Recomendado: 365 dias', fr: '★ Recommande: 365 jours', ja: '★ 推奨: 365日', pt: '★ Recomendado: 365 dias' },
+      'memory.historyTip': { de: 'Bei aktivem Auto Memory und Auto Dream empfehlen wir 365 Tage, damit wertvolle Erkenntnisse nicht verloren gehen.', en: 'With Auto Memory and Auto Dream active, we recommend 365 days so valuable insights are not lost.', es: 'Con Auto Memory y Auto Dream activos, recomendamos 365 dias para no perder informacion valiosa.', fr: 'Avec Auto Memory et Auto Dream actifs, nous recommandons 365 jours pour ne pas perdre d\'informations.', ja: 'Auto MemoryとAuto Dreamが有効な場合、重要な洞察を失わないよう365日を推奨します。', pt: 'Com Auto Memory e Auto Dream ativos, recomendamos 365 dias para nao perder informacoes valiosas.' },
       'adv.skipDangerousPrompt': { de: 'Bypass-Modus Warnung ueberspringen', en: 'Skip bypass mode warning', es: 'Omitir advertencia del modo bypass', fr: 'Ignorer l\'avertissement du mode bypass', ja: 'バイパスモードの警告をスキップ', pt: 'Pular aviso do modo bypass' },
       'adv.skipDangerousPromptDesc': { de: 'Keine Bestaetigungs-Abfrage beim Wechsel in den Bypass-Permissions-Modus', en: 'No confirmation prompt when entering bypass permissions mode', es: 'Sin confirmacion al entrar en modo bypass de permisos', fr: 'Pas de confirmation lors du passage en mode bypass', ja: 'バイパス権限モードに入る際の確認なし', pt: 'Sem confirmacao ao entrar no modo bypass de permissoes' },
       'adv.extraMarketplaces': { de: 'Extra Marketplaces', en: 'Extra Marketplaces', es: 'Marketplaces adicionales', fr: 'Marketplaces supplementaires', ja: '追加マーケットプレイス', pt: 'Marketplaces adicionais' },
@@ -4349,6 +4467,8 @@
           { tab: 'advanced', label: 'adv.extraMarketplaces', desc: 'adv.extraMarketplacesDesc', keywords: ['marketplace', 'plugin', 'github', 'extra', 'custom'], id: 'setting-extra-marketplaces' },
           { tab: 'memory', label: 'search.autoMemory', desc: 'search.autoMemory.desc', keywords: ['memory', 'auto', 'speicher', 'notizen', 'remember'], id: 'setting-auto-memory' },
           { tab: 'memory', label: 'search.autoDream', desc: 'search.autoDream.desc', keywords: ['dream', 'traum', 'consolidate', 'konsolidierung', 'rem', 'sleep'], id: 'setting-auto-dream' },
+          { tab: 'memory', label: 'memory.historyTitle', desc: 'memory.historyDesc', keywords: ['history', 'verlauf', 'cleanup', 'days', 'tage', 'retention', 'aufbewahrung', '365', 'cleanupPeriodDays'], id: 'setting-memory-history' },
+          { tab: 'advanced', label: 'privacy.title', desc: 'privacy.desc', keywords: ['privacy', 'datenschutz', 'telemetry', 'telemetrie', 'sentry', 'statsig', 'reporting', 'tracking', 'disable'], id: 'setting-privacy' },
           { tab: 'memory', label: 'search.sessionMemory', desc: 'search.sessionMemory.desc', keywords: ['session', 'compact', 'summary', 'zusammenfassung'], id: 'setting-session-memory' },
           { tab: 'memory', label: 'search.claudeMd', desc: 'search.claudeMd.desc', keywords: ['claude.md', 'instructions', 'regeln', 'rules', 'hierarchy'], id: 'setting-claudemd-overview' },
         ],
@@ -5360,6 +5480,7 @@
           if (s.autoMemoryEnabled === false) out.autoMemoryEnabled = false;
           if (s.autoMemoryDirectory) out.autoMemoryDirectory = s.autoMemoryDirectory;
           if (s.autoDreamEnabled) out.autoDreamEnabled = true;
+          if (Object.keys(s.env).length) out.env = { ...s.env };
           if (s.skipDangerousModePermissionPrompt) out.skipDangerousModePermissionPrompt = true;
           if (Object.keys(s.extraKnownMarketplaces).length) out.extraKnownMarketplaces = JSON.parse(JSON.stringify(s.extraKnownMarketplaces));
           if (s.fastMode) out.fastMode = true;
