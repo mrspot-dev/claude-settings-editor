@@ -61,7 +61,7 @@ On Windows, you can also double-click `open-editor.bat`.
 ## Features
 
 ### Core
-- **15 Tabs** covering every `settings.json` option
+- **16 Tabs** covering every `settings.json` option
 - **6 Languages** — full i18n support (Deutsch, English, Español, Français, 日本語, Português)
 - **Live JSON Preview** — see the output as you edit
 - **File System Access API** — open and save `settings.json` directly (no copy-paste)
@@ -72,6 +72,7 @@ On Windows, you can also double-click `open-editor.bat`.
 - **Share via URL** — Base64-encoded settings in the URL hash for easy sharing
 - **Guided Setup Wizard** — 6-step onboarding for first-time users (includes language selection)
 - **Roundtrip-safe** — unknown properties are preserved on import/export
+- **Privacy controls** — disable Statsig telemetry and Sentry error reporting with one toggle
 
 ### Tabs
 
@@ -86,7 +87,8 @@ On Windows, you can also double-click `open-editor.bat`.
 | Environment | Custom environment variables |
 | Display & UI | Spinner verbs (8 themed packs + custom), status line, motion preferences |
 | Attribution | Commit and PR attribution strings |
-| Advanced | API key helper, plans directory, cleanup period, available models |
+| Advanced | API key helper, plans directory, cleanup period, available models, **Privacy & Telemetry** (disable Statsig/Sentry) |
+| Memory | Auto Memory toggle, **Memory History** (retention period presets: 30/90/180/365 days), Auto Dream, Session Memory, CLAUDE.md overview |
 | Companion Tools | 14 recommended tools for the Claude Code workflow (Happy Coder, Warp, LazyGit, etc.) |
 | Design Prompts | 30 curated design styles with AI prompts and color palettes + [designprompts.dev](https://www.designprompts.dev/) |
 | Terminal Prompts | 26 prompts in 9 categories + CLAUDE.md Builder |
