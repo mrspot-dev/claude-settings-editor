@@ -621,16 +621,37 @@
 
           <!-- ═══ TAB: General ═══ -->
           <div x-show="activeTab === 'general'" class="tab-content space-y-6" role="tabpanel">
+            <div class="mb-2 p-3 rounded-xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] flex items-start gap-2.5">
+              <svg class="w-4 h-4 text-accent/70 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <p class="text-xs text-fg-muted leading-relaxed" x-text="t('general.configHint')"></p>
+            </div>
             <div id="setting-model" class="settings-group">
               <label for="input-model" class="setting-label" x-text="t('general.model')"></label>
               <p class="setting-desc" x-text="t('general.modelDesc')"></p>
               <select id="input-model" x-model="settings.model" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.model }">
                 <option value="" x-text="t('general.modelOpusDefault')"></option>
+                <option value="best" x-text="t('general.modelBest')"></option>
+                <option value="fable" x-text="t('general.modelFable')"></option>
                 <option value="opus" x-text="t('general.modelOpus')"></option>
                 <option value="sonnet" x-text="t('general.modelSonnet')"></option>
                 <option value="haiku" x-text="t('general.modelHaiku')"></option>
                 <option value="opusplan" x-text="t('general.modelOpusPlan')"></option>
               </select>
+            </div>
+
+            <div id="setting-fallback-model" class="settings-group">
+              <label class="setting-label" x-text="t('general.fallbackModel')"></label>
+              <p class="setting-desc" x-text="t('general.fallbackModelDesc')"></p>
+              <template x-for="(m, i) in settings.fallbackModel" :key="'fbmod-'+i">
+                <div class="flex items-center gap-2 mb-1.5 group">
+                  <span class="font-mono text-sm text-fg px-3 py-2 rounded-xl flex-1" style="background:rgba(18,18,26,0.7);border:1px solid rgba(255,255,255,0.07)" x-text="m"></span>
+                  <button @click="settings.fallbackModel.splice(i, 1); markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                </div>
+              </template>
+              <div class="flex items-center gap-2" x-show="settings.fallbackModel.length < 3">
+                <input type="text" x-model="newFallbackModel" @keydown.enter="addFallbackModel()" :placeholder="t('general.fallbackModelPlaceholder')" class="setting-input flex-1 !text-sm font-mono">
+                <button @click="addFallbackModel()" :disabled="!newFallbackModel" class="px-3 py-2 rounded-xl text-xs font-mono bg-accent/15 text-accent hover:bg-accent/25 transition-colors disabled:opacity-30">+</button>
+              </div>
             </div>
 
             <div id="setting-effort" class="settings-group">
@@ -988,6 +1009,20 @@
               </select>
             </div>
 
+            <div id="setting-classify-all-shell" class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label id="label-classify-all-shell" class="setting-label" x-text="t('perm.classifyAllShell')"></label>
+                <p class="setting-desc" x-text="t('perm.classifyAllShellDesc')"></p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1"
+                   :class="{ 'active': settings.autoMode.classifyAllShell }"
+                   @click="settings.autoMode = {...settings.autoMode, classifyAllShell: !settings.autoMode.classifyAllShell}; markUnsaved()"
+                   tabindex="0" role="switch" aria-labelledby="label-classify-all-shell"
+                   :aria-checked="!!settings.autoMode.classifyAllShell"
+                   @keydown.enter="settings.autoMode = {...settings.autoMode, classifyAllShell: !settings.autoMode.classifyAllShell}; markUnsaved()"
+                   @keydown.space.prevent="settings.autoMode = {...settings.autoMode, classifyAllShell: !settings.autoMode.classifyAllShell}; markUnsaved()"></div>
+            </div>
+
             <div id="setting-perm-bypass" class="settings-group flex items-start justify-between">
               <div class="flex-1">
                 <label id="label-perm-bypass" class="setting-label" x-text="t('perm.bypass')"></label>
@@ -1246,6 +1281,7 @@
                             <option value="http" x-text="t('hooks.httpType')"></option>
                             <option value="prompt" x-text="t('hooks.promptType')"></option>
                             <option value="agent" x-text="t('hooks.agentType')"></option>
+                            <option value="mcp_tool" x-text="t('hooks.mcpToolType')"></option>
                           </select>
                         </div>
                         <div x-show="hook.type === 'command'" class="flex items-center gap-2">
@@ -1265,6 +1301,22 @@
                             <div class="flex items-center gap-2">
                               <label class="text-xs text-fg-dim font-mono tracking-wide w-16 flex-shrink-0" x-text="t('hooks.hookModelLabel')"></label>
                               <input type="text" x-model="hook.model" @input="markUnsaved()" placeholder="claude-sonnet-4-6" class="setting-input flex-1 !text-sm font-mono">
+                            </div>
+                          </div>
+                        </template>
+                        <template x-if="hook.type === 'mcp_tool'">
+                          <div class="space-y-2">
+                            <div class="flex items-center gap-2">
+                              <label class="text-xs text-fg-dim font-mono tracking-wide w-16 flex-shrink-0" x-text="t('hooks.mcpServerLabel')"></label>
+                              <input type="text" x-model="hook.server" @input="markUnsaved()" placeholder="my-mcp-server" class="setting-input flex-1 !text-sm font-mono">
+                            </div>
+                            <div class="flex items-center gap-2">
+                              <label class="text-xs text-fg-dim font-mono tracking-wide w-16 flex-shrink-0" x-text="t('hooks.mcpToolLabel')"></label>
+                              <input type="text" x-model="hook.tool" @input="markUnsaved()" placeholder="tool_name" class="setting-input flex-1 !text-sm font-mono">
+                            </div>
+                            <div class="flex items-start gap-2">
+                              <label class="text-xs text-fg-dim font-mono tracking-wide w-16 flex-shrink-0 pt-2" x-text="t('hooks.mcpInputLabel')"></label>
+                              <textarea @input="setHookInput(hook, $event.target.value)" :value="hook.input ? JSON.stringify(hook.input) : ''" placeholder='{ &quot;key&quot;: &quot;value&quot; }' rows="2" class="setting-input flex-1 !text-sm font-mono"></textarea>
                             </div>
                           </div>
                         </template>
@@ -1927,6 +1979,15 @@
               </div>
             </div>
 
+            <!-- Toggle: enforceAvailableModels -->
+            <div id="setting-enforce-available-models" class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label id="label-enforce-available-models" class="setting-label" x-text="t('adv.enforceAvailableModels')"></label>
+                <p class="setting-desc" x-text="t('adv.enforceAvailableModelsDesc')"></p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.enforceAvailableModels }" @click="settings.enforceAvailableModels = !settings.enforceAvailableModels; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-enforce-available-models" :aria-checked="settings.enforceAvailableModels" @keydown.enter="settings.enforceAvailableModels = !settings.enforceAvailableModels; markUnsaved()" @keydown.space.prevent="settings.enforceAvailableModels = !settings.enforceAvailableModels; markUnsaved()"></div>
+            </div>
+
             <!-- Toggle: skipDangerousModePermissionPrompt -->
             <div id="setting-skip-dangerous" class="settings-group flex items-center justify-between">
               <div class="flex-1">
@@ -1936,11 +1997,45 @@
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.skipDangerousModePermissionPrompt }" @click="settings.skipDangerousModePermissionPrompt = !settings.skipDangerousModePermissionPrompt; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-skip-dangerous" :aria-checked="settings.skipDangerousModePermissionPrompt" @keydown.enter="settings.skipDangerousModePermissionPrompt = !settings.skipDangerousModePermissionPrompt; markUnsaved()" @keydown.space.prevent="settings.skipDangerousModePermissionPrompt = !settings.skipDangerousModePermissionPrompt; markUnsaved()"></div>
             </div>
 
+            <!-- Managed / Enterprise heading -->
+            <div class="pt-2">
+              <h3 class="font-display font-semibold text-sm text-fg" x-text="t('adv.managedHeading')"></h3>
+              <p class="text-xs text-fg-dim mt-0.5" x-text="t('adv.managedHeadingDesc')"></p>
+            </div>
+
             <!-- JSON Editor: extraKnownMarketplaces -->
             <div id="setting-extra-marketplaces" class="settings-group">
               <label class="setting-label" x-text="t('adv.extraMarketplaces')"></label>
               <p class="setting-desc" x-text="t('adv.extraMarketplacesDesc')"></p>
-              <textarea class="setting-input w-full font-mono text-xs" rows="4" :value="JSON.stringify(settings.extraKnownMarketplaces, null, 2)" @input="try { settings.extraKnownMarketplaces = JSON.parse($event.target.value); markUnsaved(); } catch(e) {}" placeholder='{ "my-marketplace": { "owner": "github-user", "repo": "repo-name" } }'></textarea>
+              <textarea class="setting-input w-full font-mono text-xs" rows="4" :value="JSON.stringify(settings.extraKnownMarketplaces, null, 2)" @input="setJsonField('extraKnownMarketplaces', $event.target.value)" placeholder='{ "my-marketplace": { "owner": "github-user", "repo": "repo-name" } }'></textarea>
+            </div>
+
+            <!-- JSON Editor: autoMode (managed classifier tuning) -->
+            <div id="setting-auto-mode" class="settings-group">
+              <label class="setting-label" x-text="t('adv.autoMode')"></label>
+              <p class="setting-desc" x-text="t('adv.autoModeDesc')"></p>
+              <textarea class="setting-input w-full font-mono text-xs" rows="4" :value="JSON.stringify(settings.autoMode, null, 2)" @input="setJsonField('autoMode', $event.target.value)" placeholder='{ "classifyAllShell": false, "allow": [], "soft_deny": [], "hard_deny": [] }'></textarea>
+            </div>
+
+            <!-- JSON Editor: strictKnownMarketplaces -->
+            <div id="setting-strict-marketplaces" class="settings-group">
+              <label class="setting-label" x-text="t('adv.strictMarketplaces')"></label>
+              <p class="setting-desc" x-text="t('adv.strictMarketplacesDesc')"></p>
+              <textarea class="setting-input w-full font-mono text-xs" rows="3" :value="JSON.stringify(settings.strictKnownMarketplaces, null, 2)" @input="setJsonField('strictKnownMarketplaces', $event.target.value)" placeholder='[ "owner/repo" ]'></textarea>
+            </div>
+
+            <!-- JSON Editor: blockedMarketplaces -->
+            <div id="setting-blocked-marketplaces" class="settings-group">
+              <label class="setting-label" x-text="t('adv.blockedMarketplaces')"></label>
+              <p class="setting-desc" x-text="t('adv.blockedMarketplacesDesc')"></p>
+              <textarea class="setting-input w-full font-mono text-xs" rows="3" :value="JSON.stringify(settings.blockedMarketplaces, null, 2)" @input="setJsonField('blockedMarketplaces', $event.target.value)" placeholder='[ "owner/repo" ]'></textarea>
+            </div>
+
+            <!-- JSON Editor: pluginSuggestionMarketplaces -->
+            <div id="setting-plugin-suggestion-marketplaces" class="settings-group">
+              <label class="setting-label" x-text="t('adv.pluginSuggestionMarketplaces')"></label>
+              <p class="setting-desc" x-text="t('adv.pluginSuggestionMarketplacesDesc')"></p>
+              <textarea class="setting-input w-full font-mono text-xs" rows="3" :value="JSON.stringify(settings.pluginSuggestionMarketplaces, null, 2)" @input="setJsonField('pluginSuggestionMarketplaces', $event.target.value)" placeholder='[ "marketplace-name" ]'></textarea>
             </div>
 
             <!-- Privacy & Telemetry -->
@@ -3248,6 +3343,12 @@
         autoDreamEnabled: false,
         skipDangerousModePermissionPrompt: false,
         extraKnownMarketplaces: {},
+        fallbackModel: [],
+        enforceAvailableModels: false,
+        autoMode: {},
+        strictKnownMarketplaces: [],
+        blockedMarketplaces: [],
+        pluginSuggestionMarketplaces: [],
       };
     }
 
@@ -3258,7 +3359,7 @@
 
     const T = {
       // ─── App Shell ───
-      'app.version': { de: 'v1.2 · made with <3', en: 'v1.2 · made with <3', es: 'v1.2 · hecho con <3', fr: 'v1.2 · fait avec <3', ja: 'v1.2 · made with <3', pt: 'v1.2 · feito com <3' },
+      'app.version': { de: 'v1.3 · made with <3', en: 'v1.3 · made with <3', es: 'v1.3 · hecho con <3', fr: 'v1.3 · fait avec <3', ja: 'v1.3 · made with <3', pt: 'v1.3 · feito com <3' },
       'app.by': { de: 'von', en: 'by', es: 'por', fr: 'par', ja: '作成者', pt: 'por' },
       'sidebar.collapse': { de: 'Sidebar einklappen', en: 'Collapse sidebar', es: 'Contraer barra lateral', fr: 'Replier la barre laterale', ja: 'サイドバーを折りたたむ', pt: 'Recolher barra lateral' },
       'sidebar.expand': { de: 'Sidebar ausklappen', en: 'Expand sidebar', es: 'Expandir barra lateral', fr: 'Deplier la barre laterale', ja: 'サイドバーを展開する', pt: 'Expandir barra lateral' },
@@ -3313,11 +3414,17 @@
       // ─── Tab: General ───
       'general.model': { de: 'Model', en: 'Model', es: 'Modelo', fr: 'Modele', ja: 'モデル', pt: 'Modelo' },
       'general.modelDesc': { de: 'Das Standard-Modell fuer Claude Code. Aliases zeigen immer auf die neueste Version. Leer = Opus (staerkstes Modell).', en: 'The default model for Claude Code. Aliases always point to the latest version. Empty = Opus (strongest model).', es: 'El modelo predeterminado para Claude Code. Los alias siempre apuntan a la ultima version. Vacio = Opus (modelo mas fuerte).', fr: 'Le modele par defaut pour Claude Code. Les alias pointent toujours vers la derniere version. Vide = Opus (modele le plus puissant).', ja: 'Claude Codeのデフォルトモデル。エイリアスは常に最新バージョンを指します。空欄 = Opus（最強モデル）。', pt: 'O modelo padrao para Claude Code. Os alias sempre apontam para a versao mais recente. Vazio = Opus (modelo mais forte).' },
-      'general.modelOpusDefault': { de: 'Opus 4.6 (Standard — staerkstes Reasoning, 1M Kontext)', en: 'Opus 4.6 (Default — strongest reasoning, 1M context)', es: 'Opus 4.6 (Predeterminado — razonamiento mas fuerte, 1M contexto)', fr: 'Opus 4.6 (Par defaut — raisonnement le plus puissant, 1M contexte)', ja: 'Opus 4.6（デフォルト — 最強の推論、1Mコンテキスト）', pt: 'Opus 4.6 (Padrao — raciocinio mais forte, 1M contexto)' },
-      'general.modelOpus': { de: 'Opus 4.6 — Staerkstes Reasoning, ideal fuer Architektur & komplexe Probleme', en: 'Opus 4.6 — Strongest reasoning, ideal for architecture & complex problems', es: 'Opus 4.6 — Razonamiento mas fuerte, ideal para arquitectura y problemas complejos', fr: 'Opus 4.6 — Raisonnement le plus puissant, ideal pour l\'architecture et les problemes complexes', ja: 'Opus 4.6 — 最強の推論、アーキテクチャや複雑な問題に最適', pt: 'Opus 4.6 — Raciocinio mais forte, ideal para arquitetura e problemas complexos' },
-      'general.modelSonnet': { de: 'Sonnet 4.6 — Schnell und ausgewogen, fuer die meisten taeglichen Coding-Tasks', en: 'Sonnet 4.6 — Fast and balanced, sufficient for most daily coding tasks', es: 'Sonnet 4.6 — Rapido y equilibrado, suficiente para la mayoria de las tareas diarias', fr: 'Sonnet 4.6 — Rapide et equilibre, suffisant pour la plupart des taches quotidiennes', ja: 'Sonnet 4.6 — 高速でバランス型、日常のコーディングタスクに最適', pt: 'Sonnet 4.6 — Rapido e equilibrado, suficiente para a maioria das tarefas diarias' },
-      'general.modelHaiku': { de: 'Haiku 4.5 — Am schnellsten und guenstigsten, fuer einfache Aufgaben', en: 'Haiku 4.5 — Fastest and cheapest, for simple tasks', es: 'Haiku 4.5 — El mas rapido y economico, para tareas simples', fr: 'Haiku 4.5 — Le plus rapide et le moins cher, pour les taches simples', ja: 'Haiku 4.5 — 最速で最安、シンプルなタスク向け', pt: 'Haiku 4.5 — Mais rapido e barato, para tarefas simples' },
-      'general.modelOpusPlan': { de: 'OpusPlan — Opus 4.6 denkt & plant, Sonnet 4.6 schreibt den Code', en: 'OpusPlan — Opus 4.6 thinks & plans, Sonnet 4.6 writes code', es: 'OpusPlan — Opus 4.6 piensa y planifica, Sonnet 4.6 escribe el codigo', fr: 'OpusPlan — Opus 4.6 reflechit et planifie, Sonnet 4.6 ecrit le code', ja: 'OpusPlan — Opus 4.6が思考・計画、Sonnet 4.6がコードを記述', pt: 'OpusPlan — Opus 4.6 pensa e planeja, Sonnet 4.6 escreve o codigo' },
+      'general.modelOpusDefault': { de: 'Standard (Account-Default — meist Opus 4.8 bzw. Sonnet 5)', en: 'Default (account default — usually Opus 4.8 or Sonnet 5)', es: 'Predeterminado (predet. de la cuenta — normalmente Opus 4.8 o Sonnet 5)', fr: 'Par defaut (defaut du compte — generalement Opus 4.8 ou Sonnet 5)', ja: 'デフォルト（アカウント既定 — 通常はOpus 4.8またはSonnet 5）', pt: 'Padrao (padrao da conta — geralmente Opus 4.8 ou Sonnet 5)' },
+      'general.modelBest': { de: 'Best — stärkstes verfügbares Modell (Fable 5, sonst neuestes Opus)', en: 'Best — strongest available model (Fable 5, otherwise newest Opus)', es: 'Best — modelo mas potente disponible (Fable 5, si no el Opus mas reciente)', fr: 'Best — modele le plus puissant disponible (Fable 5, sinon le dernier Opus)', ja: 'Best — 利用可能な最強モデル（Fable 5、なければ最新のOpus）', pt: 'Best — modelo mais potente disponivel (Fable 5, senao o Opus mais recente)' },
+      'general.modelFable': { de: 'Fable 5 — leistungsstärkstes Modell, für anspruchsvolles Reasoning & lange Agenten-Läufe', en: 'Fable 5 — most capable model, for demanding reasoning & long agent runs', es: 'Fable 5 — el modelo mas capaz, para razonamiento exigente y ejecuciones largas de agentes', fr: 'Fable 5 — le modele le plus performant, pour raisonnement exigeant et longues sessions agentiques', ja: 'Fable 5 — 最も高性能なモデル、高度な推論と長時間のエージェント実行向け', pt: 'Fable 5 — o modelo mais capaz, para raciocinio exigente e execucoes longas de agentes' },
+      'general.modelOpus': { de: 'Opus — aktuell Opus 4.8 (hoch autonom, 1M Kontext)', en: 'Opus — currently Opus 4.8 (highly autonomous, 1M context)', es: 'Opus — actualmente Opus 4.8 (muy autonomo, contexto 1M)', fr: 'Opus — actuellement Opus 4.8 (tres autonome, contexte 1M)', ja: 'Opus — 現在Opus 4.8（高い自律性、1Mコンテキスト）', pt: 'Opus — atualmente Opus 4.8 (altamente autonomo, contexto 1M)' },
+      'general.modelSonnet': { de: 'Sonnet — aktuell Sonnet 5 (schnell & ausgewogen, nahe Opus-Qualität)', en: 'Sonnet — currently Sonnet 5 (fast & balanced, near Opus quality)', es: 'Sonnet — actualmente Sonnet 5 (rapido y equilibrado, cerca de la calidad Opus)', fr: 'Sonnet — actuellement Sonnet 5 (rapide et equilibre, proche de la qualite Opus)', ja: 'Sonnet — 現在Sonnet 5（高速でバランス型、Opusに近い品質）', pt: 'Sonnet — atualmente Sonnet 5 (rapido e equilibrado, perto da qualidade Opus)' },
+      'general.modelHaiku': { de: 'Haiku 4.5 — am schnellsten & günstigsten, für einfache Aufgaben', en: 'Haiku 4.5 — fastest & cheapest, for simple tasks', es: 'Haiku 4.5 — el mas rapido y economico, para tareas simples', fr: 'Haiku 4.5 — le plus rapide et le moins cher, pour les taches simples', ja: 'Haiku 4.5 — 最速で最安、シンプルなタスク向け', pt: 'Haiku 4.5 — mais rapido e barato, para tarefas simples' },
+      'general.modelOpusPlan': { de: 'OpusPlan — Opus plant im Plan-Mode, Sonnet baut in der Ausführung', en: 'OpusPlan — Opus plans in plan mode, Sonnet builds during execution', es: 'OpusPlan — Opus planifica en modo plan, Sonnet construye en la ejecucion', fr: 'OpusPlan — Opus planifie en mode plan, Sonnet construit en execution', ja: 'OpusPlan — OpusがプランモードでプランしSonnetが実行でビルド', pt: 'OpusPlan — Opus planeja no modo plano, Sonnet constroi na execucao' },
+      'general.fallbackModel': { de: 'Fallback-Modelle', en: 'Fallback Models', es: 'Modelos de reserva', fr: 'Modeles de repli', ja: 'フォールバックモデル', pt: 'Modelos de reserva' },
+      'general.fallbackModelDesc': { de: 'Fallback-Kette: Wird der Reihe nach probiert, wenn das Primär-Modell überlastet oder nicht verfügbar ist (max. 3). "default" nutzt das Account-Standardmodell.', en: 'Fallback chain: tried in order when the primary model is overloaded or unavailable (max 3). "default" uses the account default model.', es: 'Cadena de reserva: se intenta en orden cuando el modelo primario esta sobrecargado o no disponible (max. 3). "default" usa el modelo predeterminado de la cuenta.', fr: 'Chaine de repli: testee en ordre quand le modele principal est surcharge ou indisponible (max. 3). "default" utilise le modele par defaut du compte.', ja: 'フォールバック連鎖: プライマリモデルが過負荷または利用不可のとき順に試行（最大3）。「default」はアカウント既定モデルを使用。', pt: 'Cadeia de reserva: testada em ordem quando o modelo primario esta sobrecarregado ou indisponivel (max. 3). "default" usa o modelo padrao da conta.' },
+      'general.fallbackModelPlaceholder': { de: 'z.B. opus, sonnet, default', en: 'e.g. opus, sonnet, default', es: 'p.ej. opus, sonnet, default', fr: 'p.ex. opus, sonnet, default', ja: '例: opus, sonnet, default', pt: 'ex. opus, sonnet, default' },
+      'general.configHint': { de: 'Tipp: Diese Einstellungen lassen sich auch direkt im Terminal setzen — /config öffnet das eingebaute TUI, /config <key>=<value> setzt einen Wert nicht-interaktiv.', en: 'Tip: These settings can also be set directly in the terminal — /config opens the built-in TUI, /config <key>=<value> sets a value non-interactively.', es: 'Consejo: Estos ajustes tambien se pueden configurar directamente en la terminal — /config abre el TUI integrado, /config <key>=<value> establece un valor de forma no interactiva.', fr: 'Astuce: Ces parametres peuvent aussi etre definis directement dans le terminal — /config ouvre le TUI integre, /config <key>=<value> definit une valeur de maniere non interactive.', ja: 'ヒント: これらの設定はターミナルからも直接設定できます — /config は組み込みTUIを開き、/config <key>=<value> は値を非対話的に設定します。', pt: 'Dica: Estas configuracoes tambem podem ser definidas diretamente no terminal — /config abre o TUI integrado, /config <key>=<value> define um valor de forma nao interativa.' },
       'general.effort': { de: 'Effort Level', en: 'Effort Level', es: 'Nivel de esfuerzo', fr: 'Niveau d\'effort', ja: 'エフォートレベル', pt: 'Nivel de esforco' },
       'general.effortDesc': { de: 'Wie viel Denkaufwand Claude in Antworten steckt. "low" = knapp und schnell. "high" = tieferes Reasoning.', en: 'How much thinking effort Claude puts into answers. "low" = brief and fast. "high" = deeper reasoning.', es: 'Cuanto esfuerzo de razonamiento pone Claude en las respuestas. "low" = breve y rapido. "high" = razonamiento mas profundo.', fr: 'Combien d\'effort de reflexion Claude met dans les reponses. "low" = bref et rapide. "high" = raisonnement approfondi.', ja: 'Claudeが回答にかける思考量。「low」= 簡潔で高速。「high」= より深い推論。', pt: 'Quanto esforco de raciocinio o Claude coloca nas respostas. "low" = breve e rapido. "high" = raciocinio mais profundo.' },
       'general.effortDefault': { de: 'Standard (high)', en: 'Default (high)', es: 'Predeterminado (high)', fr: 'Par defaut (high)', ja: 'デフォルト（high）', pt: 'Padrao (high)' },
@@ -3429,6 +3536,8 @@
       'perm.presetsDesc': { de: 'Schnellstart-Vorlagen nur fuer Permissions. Aendert nur Allow/Ask/Deny und Default Mode.', en: 'Quick-start templates for permissions only. Changes only Allow/Ask/Deny and Default Mode.', es: 'Plantillas rapidas solo para permisos. Cambia solo Allow/Ask/Deny y Modo Predeterminado.', fr: 'Modeles de demarrage rapide pour les permissions uniquement. Change seulement Allow/Ask/Deny et Mode par defaut.', ja: 'パーミッション専用のクイックスタートテンプレート。Allow/Ask/Denyとデフォルトモードのみ変更します。', pt: 'Modelos rapidos apenas para permissoes. Altera apenas Allow/Ask/Deny e Modo Padrao.' },
       'perm.defaultMode': { de: 'Default Permission Mode', en: 'Default Permission Mode', es: 'Modo de permiso predeterminado', fr: 'Mode de permission par defaut', ja: 'デフォルトパーミッションモード', pt: 'Modo de permissao padrao' },
       'perm.defaultModeDesc': { de: 'Fallback, wenn keine Allow/Ask/Deny-Regel greift.', en: 'Fallback when no Allow/Ask/Deny rule matches.', es: 'Respaldo cuando ninguna regla Allow/Ask/Deny coincide.', fr: 'Solution de repli quand aucune regle Allow/Ask/Deny ne correspond.', ja: 'Allow/Ask/Denyルールが一致しない場合のフォールバック。', pt: 'Alternativa quando nenhuma regra Allow/Ask/Deny corresponde.' },
+      'perm.classifyAllShell': { de: 'Alle Shell-Befehle klassifizieren', en: 'Classify all shell commands', es: 'Clasificar todos los comandos de shell', fr: 'Classer toutes les commandes shell', ja: 'すべてのシェルコマンドを分類', pt: 'Classificar todos os comandos de shell' },
+      'perm.classifyAllShellDesc': { de: 'Leitet alle Bash/PowerShell-Befehle durch den Auto-Mode-Klassifikator (nur bei defaultMode=auto wirksam).', en: 'Routes all Bash/PowerShell commands through the auto-mode classifier (only effective when defaultMode=auto).', es: 'Enruta todos los comandos Bash/PowerShell por el clasificador de modo automatico (solo efectivo con defaultMode=auto).', fr: 'Achemine toutes les commandes Bash/PowerShell via le classificateur de mode auto (effectif uniquement si defaultMode=auto).', ja: 'すべてのBash/PowerShellコマンドを自動モード分類器に通す（defaultMode=autoのときのみ有効）。', pt: 'Encaminha todos os comandos Bash/PowerShell pelo classificador de modo automatico (efetivo apenas quando defaultMode=auto).' },
       'perm.bypass': { de: 'Bypass-Modus deaktivieren', en: 'Disable bypass mode', es: 'Desactivar modo bypass', fr: 'Desactiver le mode bypass', ja: 'バイパスモードを無効化', pt: 'Desativar modo bypass' },
       'perm.bypassDesc': { de: 'Wenn deaktiviert, kann niemand Permissions temporaer ueberspringen.', en: 'When disabled, no one can temporarily skip permissions.', es: 'Cuando esta desactivado, nadie puede omitir permisos temporalmente.', fr: 'Lorsque desactive, personne ne peut contourner temporairement les permissions.', ja: '無効にすると、誰もパーミッションを一時的にスキップできなくなります。', pt: 'Quando desativado, ninguem pode pular permissoes temporariamente.' },
       'perm.disableAutoMode': { de: 'Auto-Modus deaktivieren', en: 'Disable auto mode', es: 'Desactivar modo automatico', fr: 'Desactiver le mode auto', ja: '自動モードを無効化', pt: 'Desativar modo automatico' },
@@ -3710,6 +3819,18 @@
       'adv.skipDangerousPromptDesc': { de: 'Keine Bestaetigungs-Abfrage beim Wechsel in den Bypass-Permissions-Modus', en: 'No confirmation prompt when entering bypass permissions mode', es: 'Sin confirmacion al entrar en modo bypass de permisos', fr: 'Pas de confirmation lors du passage en mode bypass', ja: 'バイパス権限モードに入る際の確認なし', pt: 'Sem confirmacao ao entrar no modo bypass de permissoes' },
       'adv.extraMarketplaces': { de: 'Extra Marketplaces', en: 'Extra Marketplaces', es: 'Marketplaces adicionales', fr: 'Marketplaces supplementaires', ja: '追加マーケットプレイス', pt: 'Marketplaces adicionais' },
       'adv.extraMarketplacesDesc': { de: 'Zusaetzliche Plugin-Marketplace-Quellen (GitHub-Repositories)', en: 'Additional plugin marketplace sources (GitHub repositories)', es: 'Fuentes de marketplace de plugins adicionales (repositorios GitHub)', fr: 'Sources supplementaires de marketplace de plugins (depots GitHub)', ja: '追加プラグインマーケットプレイスソース（GitHubリポジトリ）', pt: 'Fontes adicionais de marketplace de plugins (repositorios GitHub)' },
+      'adv.managedHeading': { de: 'Managed / Enterprise', en: 'Managed / Enterprise', es: 'Gestionado / Enterprise', fr: 'Gere / Enterprise', ja: 'マネージド / エンタープライズ', pt: 'Gerenciado / Enterprise' },
+      'adv.managedHeadingDesc': { de: 'Nur in verwalteten (Enterprise-)Umgebungen wirksam.', en: 'Only effective in managed (enterprise) environments.', es: 'Solo efectivo en entornos gestionados (empresa).', fr: 'Effectif uniquement en environnements geres (entreprise).', ja: '管理（エンタープライズ）環境でのみ有効。', pt: 'Efetivo apenas em ambientes gerenciados (empresa).' },
+      'adv.enforceAvailableModels': { de: 'Verfügbare Modelle erzwingen', en: 'Enforce Available Models', es: 'Forzar modelos disponibles', fr: 'Imposer les modeles disponibles', ja: '利用可能なモデルを強制', pt: 'Forcar modelos disponiveis' },
+      'adv.enforceAvailableModelsDesc': { de: 'Managed-Einstellung: Erweitert die Allowlist der verfügbaren Modelle um die Standard-Option. Nur in verwalteten (Enterprise-)Umgebungen sinnvoll.', en: 'Managed setting: extends the available-models allowlist to include the default option. Only meaningful in managed (enterprise) environments.', es: 'Ajuste gestionado: extiende la lista de modelos disponibles para incluir la opcion predeterminada. Solo util en entornos gestionados (empresa).', fr: 'Parametre gere: etend la liste des modeles disponibles pour y inclure le modele par defaut. Utile uniquement en environnements geres (entreprise).', ja: 'マネージド設定: 利用可能なモデルの許可リストを既定オプションまで拡張。管理（エンタープライズ）環境でのみ有効。', pt: 'Ajuste gerenciado: estende a lista de modelos disponiveis para incluir a opcao padrao. Util apenas em ambientes gerenciados (empresa).' },
+      'adv.autoMode': { de: 'Auto-Mode-Klassifikator (autoMode)', en: 'Auto-Mode Classifier (autoMode)', es: 'Clasificador de modo automatico (autoMode)', fr: 'Classificateur du mode auto (autoMode)', ja: '自動モード分類器 (autoMode)', pt: 'Classificador do modo automatico (autoMode)' },
+      'adv.autoModeDesc': { de: 'Managed-Feintuning des Auto-Mode-Klassifikators (allow / soft_deny / hard_deny / environment). JSON-Objekt — nur in verwalteten Umgebungen relevant.', en: 'Managed fine-tuning of the auto-mode classifier (allow / soft_deny / hard_deny / environment). JSON object — only relevant in managed environments.', es: 'Ajuste fino gestionado del clasificador de modo automatico (allow / soft_deny / hard_deny / environment). Objeto JSON — solo relevante en entornos gestionados.', fr: 'Reglage fin gere du classificateur de mode auto (allow / soft_deny / hard_deny / environment). Objet JSON — pertinent uniquement en environnements geres.', ja: '自動モード分類器のマネージド微調整（allow / soft_deny / hard_deny / environment）。JSONオブジェクト — 管理環境でのみ関連。', pt: 'Ajuste fino gerenciado do classificador de modo automatico (allow / soft_deny / hard_deny / environment). Objeto JSON — relevante apenas em ambientes gerenciados.' },
+      'adv.strictMarketplaces': { de: 'Strikt erlaubte Marketplaces (strictKnownMarketplaces)', en: 'Strict Known Marketplaces (strictKnownMarketplaces)', es: 'Marketplaces estrictos permitidos (strictKnownMarketplaces)', fr: 'Marketplaces strictement autorises (strictKnownMarketplaces)', ja: '厳格な許可マーケットプレイス (strictKnownMarketplaces)', pt: 'Marketplaces estritamente permitidos (strictKnownMarketplaces)' },
+      'adv.strictMarketplacesDesc': { de: 'Managed-Einstellung: Nur diese Marketplaces sind erlaubt (ersetzt die Standardliste). JSON-Array.', en: 'Managed setting: only these marketplaces are allowed (replaces the default list). JSON array.', es: 'Ajuste gestionado: solo estos marketplaces estan permitidos (reemplaza la lista predeterminada). Array JSON.', fr: 'Parametre gere: seuls ces marketplaces sont autorises (remplace la liste par defaut). Tableau JSON.', ja: 'マネージド設定: これらのマーケットプレイスのみ許可（既定リストを置換）。JSON配列。', pt: 'Ajuste gerenciado: apenas estes marketplaces sao permitidos (substitui a lista padrao). Array JSON.' },
+      'adv.blockedMarketplaces': { de: 'Blockierte Marketplaces (blockedMarketplaces)', en: 'Blocked Marketplaces (blockedMarketplaces)', es: 'Marketplaces bloqueados (blockedMarketplaces)', fr: 'Marketplaces bloques (blockedMarketplaces)', ja: 'ブロックされたマーケットプレイス (blockedMarketplaces)', pt: 'Marketplaces bloqueados (blockedMarketplaces)' },
+      'adv.blockedMarketplacesDesc': { de: 'Managed-Einstellung: Diese Marketplaces werden blockiert. JSON-Array.', en: 'Managed setting: these marketplaces are blocked. JSON array.', es: 'Ajuste gestionado: estos marketplaces se bloquean. Array JSON.', fr: 'Parametre gere: ces marketplaces sont bloques. Tableau JSON.', ja: 'マネージド設定: これらのマーケットプレイスをブロック。JSON配列。', pt: 'Ajuste gerenciado: estes marketplaces sao bloqueados. Array JSON.' },
+      'adv.pluginSuggestionMarketplaces': { de: 'Marketplaces für Plugin-Vorschläge (pluginSuggestionMarketplaces)', en: 'Plugin Suggestion Marketplaces (pluginSuggestionMarketplaces)', es: 'Marketplaces para sugerencias de plugins (pluginSuggestionMarketplaces)', fr: 'Marketplaces pour suggestions de plugins (pluginSuggestionMarketplaces)', ja: 'プラグイン提案マーケットプレイス (pluginSuggestionMarketplaces)', pt: 'Marketplaces para sugestoes de plugins (pluginSuggestionMarketplaces)' },
+      'adv.pluginSuggestionMarketplacesDesc': { de: 'Managed-Einstellung: Marketplace-Namen, aus denen Plugin-Vorschläge stammen dürfen. JSON-Array von Strings.', en: 'Managed setting: marketplace names that plugin suggestions may come from. JSON array of strings.', es: 'Ajuste gestionado: nombres de marketplaces de los que provienen las sugerencias de plugins. Array JSON de strings.', fr: 'Parametre gere: noms de marketplaces pouvant fournir des suggestions de plugins. Tableau JSON de chaines.', ja: 'マネージド設定: プラグイン提案の取得元となるマーケットプレイス名。文字列のJSON配列。', pt: 'Ajuste gerenciado: nomes de marketplaces de onde as sugestoes de plugins podem vir. Array JSON de strings.' },
       'adv.modelPlaceholder': { de: 'z.B. claude-opus-4-6', en: 'e.g. claude-opus-4-6', es: 'p.ej. claude-opus-4-6', fr: 'ex. claude-opus-4-6', ja: '例: claude-opus-4-6', pt: 'ex. claude-opus-4-6' },
 
       // ─── Additional Notifications ───
@@ -3783,6 +3904,11 @@
 
       // ─── Hook Events ───
       'data.hook.SessionStart.desc': { de: 'Beim Start einer Session', en: 'When a session starts', es: 'Al iniciar una sesion', fr: 'Au demarrage d\'une session', ja: 'セッション開始時', pt: 'Ao iniciar uma sessao' },
+      'data.hook.Setup.desc': { de: 'Beim erstmaligen Einrichten', en: 'On initial setup', es: 'En la configuracion inicial', fr: 'Lors de la configuration initiale', ja: '初回セットアップ時', pt: 'Na configuracao inicial' },
+      'data.hook.UserPromptExpansion.desc': { de: 'Beim Expandieren von Prompt-Referenzen', en: 'When expanding prompt references', es: 'Al expandir referencias de prompt', fr: 'En developpant les references de prompt', ja: 'プロンプト参照の展開時', pt: 'Ao expandir referencias de prompt' },
+      'data.hook.PermissionDenied.desc': { de: 'Wenn eine Berechtigung verweigert wurde', en: 'When a permission is denied', es: 'Cuando se deniega un permiso', fr: 'Quand une permission est refusee', ja: 'パーミッションが拒否された時', pt: 'Quando uma permissao e negada' },
+      'data.hook.PostToolBatch.desc': { de: 'Nach einem Batch paralleler Tool-Aufrufe', en: 'After a batch of parallel tool calls', es: 'Despues de un lote de llamadas de herramientas en paralelo', fr: 'Apres un lot de commandes outils en parallele', ja: '並列ツール呼び出しのバッチ後', pt: 'Apos um lote de chamadas de ferramentas em paralelo' },
+      'data.hook.MessageDisplay.desc': { de: 'Bevor eine Nachricht angezeigt wird', en: 'Before a message is displayed', es: 'Antes de mostrar un mensaje', fr: 'Avant que le message soit affiche', ja: 'メッセージ表示前', pt: 'Antes de exibir uma mensagem' },
       'data.hook.UserPromptSubmit.desc': { de: 'Wenn der User einen Prompt abschickt', en: 'When the user submits a prompt', es: 'Cuando el usuario envia un prompt', fr: 'Quand l\'utilisateur soumet un prompt', ja: 'ユーザーがプロンプトを送信した時', pt: 'Quando o usuario envia um prompt' },
       'data.hook.PreToolUse.desc': { de: 'Vor dem Ausfuehren eines Tools', en: 'Before executing a tool', es: 'Antes de ejecutar una herramienta', fr: 'Avant l\'execution d\'un outil', ja: 'ツール実行前', pt: 'Antes de executar uma ferramenta' },
       'data.hook.PostToolUse.desc': { de: 'Nach dem Ausfuehren eines Tools', en: 'After executing a tool', es: 'Despues de ejecutar una herramienta', fr: 'Apres l\'execution d\'un outil', ja: 'ツール実行後', pt: 'Apos executar uma ferramenta' },
@@ -3982,6 +4108,10 @@
       'hooks.httpType': { de: 'HTTP — Webhook aufrufen', en: 'HTTP — Call webhook', es: 'HTTP — Llamar webhook', fr: 'HTTP — Appeler un webhook', ja: 'HTTP — Webhookを呼び出し', pt: 'HTTP — Chamar webhook' },
       'hooks.promptType': { de: 'Prompt — Claude-Prompt als Handler', en: 'Prompt — Claude prompt as handler', es: 'Prompt — Prompt de Claude como handler', fr: 'Prompt — Prompt Claude comme handler', ja: 'Prompt — Claudeプロンプトをハンドラーに', pt: 'Prompt — Prompt do Claude como handler' },
       'hooks.agentType': { de: 'Agent — Subagent als Handler', en: 'Agent — Subagent as handler', es: 'Agent — Subagente como handler', fr: 'Agent — Sous-agent comme handler', ja: 'Agent — サブエージェントをハンドラーに', pt: 'Agent — Subagente como handler' },
+      'hooks.mcpToolType': { de: 'MCP Tool — Tool eines MCP-Servers als Handler', en: 'MCP Tool — call an MCP server tool as handler', es: 'MCP Tool — herramienta de un servidor MCP como handler', fr: 'MCP Tool — outil de serveur MCP comme handler', ja: 'MCP Tool — MCPサーバーのツールをハンドラーに', pt: 'MCP Tool — ferramenta de um servidor MCP como handler' },
+      'hooks.mcpServerLabel': { de: 'MCP-Server', en: 'MCP Server', es: 'Servidor MCP', fr: 'Serveur MCP', ja: 'MCPサーバー', pt: 'Servidor MCP' },
+      'hooks.mcpToolLabel': { de: 'Tool', en: 'Tool', es: 'Herramienta', fr: 'Outil', ja: 'ツール', pt: 'Ferramenta' },
+      'hooks.mcpInputLabel': { de: 'Input (JSON, optional)', en: 'Input (JSON, optional)', es: 'Input (JSON, opcional)', fr: 'Input (JSON, optionnel)', ja: '入力 (JSON、任意)', pt: 'Input (JSON, opcional)' },
       'hooks.promptLabel': { de: 'Prompt', en: 'Prompt', es: 'Prompt', fr: 'Prompt', ja: 'プロンプト', pt: 'Prompt' },
       'hooks.promptPlaceholder': { de: 'Anweisung an Claude...', en: 'Instruction for Claude...', es: 'Instruccion para Claude...', fr: 'Instruction pour Claude...', ja: 'Claudeへの指示...', pt: 'Instrucao para o Claude...' },
       'hooks.hookModelLabel': { de: 'Model', en: 'Model', es: 'Modelo', fr: 'Modele', ja: 'モデル', pt: 'Modelo' },
@@ -4061,9 +4191,9 @@
       'wizard.langDesc': { de: 'In welcher Sprache moechtest du den Editor verwenden?', en: 'Which language would you like to use the editor in?', es: 'En que idioma quieres usar el editor?', fr: 'Dans quelle langue souhaitez-vous utiliser l\'editeur?', ja: 'エディタをどの言語で使用しますか？', pt: 'Em qual idioma voce quer usar o editor?' },
       'wizard.modelTitle': { de: 'Modell waehlen', en: 'Choose model', es: 'Elegir modelo', fr: 'Choisir le modele', ja: 'モデルを選択', pt: 'Escolher modelo' },
       'wizard.modelDesc': { de: 'Welches Claude-Modell soll verwendet werden?', en: 'Which Claude model should be used?', es: 'Que modelo de Claude se debe usar?', fr: 'Quel modele Claude utiliser?', ja: 'どのClaudeモデルを使用しますか？', pt: 'Qual modelo Claude deve ser usado?' },
-      'wizard.modelOpus': { de: 'Staerkstes Modell, beste Qualitaet', en: 'Strongest model, best quality', es: 'Modelo mas fuerte, mejor calidad', fr: 'Modele le plus puissant, meilleure qualite', ja: '最強モデル、最高品質', pt: 'Modelo mais forte, melhor qualidade' },
-      'wizard.modelSonnet': { de: 'Schnell und ausgewogen', en: 'Fast and balanced', es: 'Rapido y equilibrado', fr: 'Rapide et equilibre', ja: '高速でバランスが良い', pt: 'Rapido e equilibrado' },
-      'wizard.modelHaiku': { de: 'Schnellstes Modell, niedrigste Kosten', en: 'Fastest model, lowest cost', es: 'Modelo mas rapido, menor costo', fr: 'Modele le plus rapide, cout le plus bas', ja: '最速モデル、最低コスト', pt: 'Modelo mais rapido, menor custo' },
+      'wizard.modelOpus': { de: 'Opus 4.8 — stärkstes Modell, beste Qualität', en: 'Opus 4.8 — strongest model, best quality', es: 'Opus 4.8 — modelo mas potente, mejor calidad', fr: 'Opus 4.8 — modele le plus puissant, meilleure qualite', ja: 'Opus 4.8 — 最強モデル、最高品質', pt: 'Opus 4.8 — modelo mais potente, melhor qualidade' },
+      'wizard.modelSonnet': { de: 'Sonnet 5 — schnell und ausgewogen', en: 'Sonnet 5 — fast and balanced', es: 'Sonnet 5 — rapido y equilibrado', fr: 'Sonnet 5 — rapide et equilibre', ja: 'Sonnet 5 — 高速でバランスが良い', pt: 'Sonnet 5 — rapido e equilibrado' },
+      'wizard.modelHaiku': { de: 'Haiku 4.5 — schnellstes Modell, niedrigste Kosten', en: 'Haiku 4.5 — fastest model, lowest cost', es: 'Haiku 4.5 — modelo mas rapido, menor costo', fr: 'Haiku 4.5 — modele le plus rapide, cout le plus bas', ja: 'Haiku 4.5 — 最速モデル、最低コスト', pt: 'Haiku 4.5 — modelo mais rapido, menor custo' },
       'wizard.permTitle': { de: 'Permission-Modus', en: 'Permission Mode', es: 'Modo de permisos', fr: 'Mode de permissions', ja: 'パーミッションモード', pt: 'Modo de permissoes' },
       'wizard.permDesc': { de: 'Wie viel Freiheit soll Claude haben?', en: 'How much freedom should Claude have?', es: 'Cuanta libertad debe tener Claude?', fr: 'Combien de liberte Claude doit-il avoir?', ja: 'Claudeにどの程度の自由を与えますか？', pt: 'Quanta liberdade o Claude deve ter?' },
       'wizard.permDefault': { de: 'Standard', en: 'Standard', es: 'Estandar', fr: 'Standard', ja: '標準', pt: 'Padrao' },
@@ -4099,7 +4229,7 @@
       'shortcuts.close': { de: 'Schliessen', en: 'Close', es: 'Cerrar', fr: 'Fermer', ja: '閉じる', pt: 'Fechar' },
       // ─── Search Registry ───
       'search.model': { de: 'Model', en: 'Model', es: 'Modelo', fr: 'Modele', ja: 'モデル', pt: 'Modelo' },
-      'search.model.desc': { de: 'Claude Modell (Opus, Sonnet, Haiku)', en: 'Claude model (Opus, Sonnet, Haiku)', es: 'Modelo Claude (Opus, Sonnet, Haiku)', fr: 'Modele Claude (Opus, Sonnet, Haiku)', ja: 'Claudeモデル（Opus, Sonnet, Haiku）', pt: 'Modelo Claude (Opus, Sonnet, Haiku)' },
+      'search.model.desc': { de: 'Claude Modell (Opus 4.8, Sonnet 5, Haiku, Fable)', en: 'Claude model (Opus 4.8, Sonnet 5, Haiku, Fable)', es: 'Modelo Claude (Opus 4.8, Sonnet 5, Haiku, Fable)', fr: 'Modele Claude (Opus 4.8, Sonnet 5, Haiku, Fable)', ja: 'Claudeモデル（Opus 4.8, Sonnet 5, Haiku, Fable）', pt: 'Modelo Claude (Opus 4.8, Sonnet 5, Haiku, Fable)' },
       'search.effort': { de: 'Effort Level', en: 'Effort Level', es: 'Nivel de esfuerzo', fr: 'Niveau d\'effort', ja: 'エフォートレベル', pt: 'Nivel de esforco' },
       'search.effort.desc': { de: 'Denktiefe und Reasoning-Aufwand', en: 'Thinking depth and reasoning effort', es: 'Profundidad de razonamiento', fr: 'Profondeur de reflexion et effort', ja: '思考の深さと推論の労力', pt: 'Profundidade de raciocinio e esforco' },
       'search.outputStyle': { de: 'Output Style', en: 'Output Style', es: 'Estilo de salida', fr: 'Style de sortie', ja: '出力スタイル', pt: 'Estilo de saida' },
@@ -4354,6 +4484,7 @@
       'validation.hookCommandMissing': { de: ': Command fehlt.', en: ': Command missing.', es: ': Falta el comando.', fr: ': Commande manquante.', ja: ': コマンドがありません。', pt: ': Comando ausente.' },
       'validation.hookUrlMissing': { de: ': URL fehlt.', en: ': URL missing.', es: ': Falta la URL.', fr: ': URL manquante.', ja: ': URLがありません。', pt: ': URL ausente.' },
       'validation.hookPromptMissing': { de: ': Prompt/Agent-Handler benoetigt einen Prompt-Text.', en: ': Prompt/Agent handler requires a prompt text.', es: ': El handler Prompt/Agent requiere un texto de prompt.', fr: ': Le handler Prompt/Agent necessite un texte de prompt.', ja: ': Prompt/Agentハンドラーにはプロンプトテキストが必要です。', pt: ': O handler Prompt/Agent requer um texto de prompt.' },
+      'validation.hookMcpMissing': { de: ': MCP-Handler benötigt Server und Tool.', en: ': MCP handler requires server and tool.', es: ': El handler MCP requiere servidor y herramienta.', fr: ': Le handler MCP necessite serveur et outil.', ja: ': MCPハンドラーにはサーバーとツールが必要です。', pt: ': O handler MCP requer servidor e ferramenta.' },
       'validation.hookTimeoutInvalid': { de: ': Timeout muss eine positive Zahl sein.', en: ': Timeout must be a positive number.', es: ': El timeout debe ser un numero positivo.', fr: ': Le timeout doit etre un nombre positif.', ja: ': タイムアウトは正の数である必要があります。', pt: ': O timeout deve ser um numero positivo.' },
       'validation.mcpCommandMissing': { de: '": Command fehlt (stdio erfordert ein command).', en: '": Command missing (stdio requires a command).', es: '": Falta el comando (stdio requiere un command).', fr: '": Commande manquante (stdio necessite une commande).', ja: '": コマンドがありません（stdioにはcommandが必要です）。', pt: '": Comando ausente (stdio requer um command).' },
       'validation.mcpUrlMissing': { de: '": URL fehlt (', en: '": URL missing (', es: '": Falta la URL (', fr: '": URL manquante (', ja: '": URLがありません（', pt: '": URL ausente (' },
@@ -4405,6 +4536,7 @@
         newMcpName: '',
         newMcpType: 'stdio',
         newAvailableModel: '',
+        newFallbackModel: '',
         newFileSuggestionExclude: '',
         newModelOverrideKey: '',
         newModelOverrideValue: '',
@@ -4415,7 +4547,7 @@
         searchResults: [],
         searchActiveIndex: -1,
         settingsRegistry: [
-          { tab: 'general', label: 'search.model', desc: 'search.model.desc', keywords: ['model', 'opus', 'sonnet', 'haiku', 'modell'], id: 'setting-model' },
+          { tab: 'general', label: 'search.model', desc: 'search.model.desc', keywords: ['model', 'modell', 'opus', 'opus 4.8', 'sonnet', 'sonnet 5', 'haiku', 'fable', 'fable 5', 'best'], id: 'setting-model' },
           { tab: 'general', label: 'search.effort', desc: 'search.effort.desc', keywords: ['effort', 'high', 'medium', 'low', 'denktiefe'], id: 'setting-effort' },
           { tab: 'general', label: 'search.outputStyle', desc: 'search.outputStyle.desc', keywords: ['output', 'style', 'explanatory', 'learning', 'concise'], id: 'setting-output-style' },
           { tab: 'general', label: 'search.language', desc: 'search.language.desc', keywords: ['language', 'sprache', 'deutsch', 'english'], id: 'setting-language' },
@@ -4428,9 +4560,11 @@
           { tab: 'general', label: 'search.releaseChannel', desc: 'search.releaseChannel.desc', keywords: ['release', 'channel', 'stable', 'preview', 'kanal'], id: 'setting-release-channel' },
           { tab: 'general', label: 'search.fileSuggestions', desc: 'search.fileSuggestions.desc', keywords: ['file', 'suggestions', 'exclude', 'vorschlaege', 'dateien'], id: 'setting-file-suggestions' },
           { tab: 'general', label: 'search.modelOverrides', desc: 'search.modelOverrides.desc', keywords: ['model', 'overrides', 'subagent', 'editor', 'context'], id: 'setting-model-overrides' },
+          { tab: 'general', label: 'general.fallbackModel', desc: 'general.fallbackModelDesc', keywords: ['fallback', 'model', 'chain', 'overload', 'default'], id: 'setting-fallback-model' },
           { tab: 'companion-tools', label: 'search.companion', desc: 'search.companion.desc', keywords: ['companion', 'tools', 'happy', 'warp', 'obsidian', 'mobile', 'terminal', 'vault'], id: 'setting-companion-tools' },
           { tab: 'permissions', label: 'search.permPresets', desc: 'search.permPresets.desc', keywords: ['presets', 'vorlagen', 'safety', 'produktiv'], id: 'setting-perm-presets' },
           { tab: 'permissions', label: 'search.defaultMode', desc: 'search.defaultMode.desc', keywords: ['default', 'mode', 'bypassPermissions', 'acceptEdits', 'dontAsk', 'auto', 'plan'], id: 'setting-perm-default-mode' },
+          { tab: 'permissions', label: 'perm.classifyAllShell', desc: 'perm.classifyAllShellDesc', keywords: ['auto', 'mode', 'shell', 'classify', 'bash', 'automode'], id: 'setting-classify-all-shell' },
           { tab: 'permissions', label: 'search.bypass', desc: 'search.bypass.desc', keywords: ['bypass', 'deaktivieren'], id: 'setting-perm-bypass' },
           { tab: 'permissions', label: 'search.disableAutoMode', desc: 'search.disableAutoMode.desc', keywords: ['auto', 'mode', 'disable', 'deaktivieren'], id: 'setting-perm-disable-auto' },
           { tab: 'permissions', label: 'search.allowRules', desc: 'search.allowRules.desc', keywords: ['allow', 'erlaubt', 'permit', 'bash', 'read'], id: 'setting-perm-allow' },
@@ -4465,6 +4599,11 @@
           { tab: 'advanced', label: 'search.availModels', desc: 'search.availModels.desc', keywords: ['modelle', 'models', 'available'], id: 'setting-available-models' },
           { tab: 'advanced', label: 'adv.skipDangerousPrompt', desc: 'adv.skipDangerousPromptDesc', keywords: ['bypass', 'dangerous', 'permission', 'skip', 'warning'], id: 'setting-skip-dangerous' },
           { tab: 'advanced', label: 'adv.extraMarketplaces', desc: 'adv.extraMarketplacesDesc', keywords: ['marketplace', 'plugin', 'github', 'extra', 'custom'], id: 'setting-extra-marketplaces' },
+          { tab: 'advanced', label: 'adv.enforceAvailableModels', desc: 'adv.enforceAvailableModelsDesc', keywords: ['enforce', 'available', 'models', 'managed', 'allowlist'], id: 'setting-enforce-available-models' },
+          { tab: 'advanced', label: 'adv.autoMode', desc: 'adv.autoModeDesc', keywords: ['automode', 'auto', 'classifier', 'shell', 'managed'], id: 'setting-auto-mode' },
+          { tab: 'advanced', label: 'adv.strictMarketplaces', desc: 'adv.strictMarketplacesDesc', keywords: ['marketplace', 'strict', 'managed', 'allowlist'], id: 'setting-strict-marketplaces' },
+          { tab: 'advanced', label: 'adv.blockedMarketplaces', desc: 'adv.blockedMarketplacesDesc', keywords: ['marketplace', 'blocked', 'managed', 'deny'], id: 'setting-blocked-marketplaces' },
+          { tab: 'advanced', label: 'adv.pluginSuggestionMarketplaces', desc: 'adv.pluginSuggestionMarketplacesDesc', keywords: ['marketplace', 'plugin', 'suggestion', 'managed'], id: 'setting-plugin-suggestion-marketplaces' },
           { tab: 'memory', label: 'search.autoMemory', desc: 'search.autoMemory.desc', keywords: ['memory', 'auto', 'speicher', 'notizen', 'remember'], id: 'setting-auto-memory' },
           { tab: 'memory', label: 'search.autoDream', desc: 'search.autoDream.desc', keywords: ['dream', 'traum', 'consolidate', 'konsolidierung', 'rem', 'sleep'], id: 'setting-auto-dream' },
           { tab: 'memory', label: 'memory.historyTitle', desc: 'memory.historyDesc', keywords: ['history', 'verlauf', 'cleanup', 'days', 'tage', 'retention', 'aufbewahrung', '365', 'cleanupPeriodDays'], id: 'setting-memory-history' },
@@ -4550,19 +4689,18 @@
 
         mcpPresets: [
           { name: 'filesystem', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-filesystem', '/path/to/dir'] },
-          { name: 'github', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-github'], env: { GITHUB_PERSONAL_ACCESS_TOKEN: '' } },
-          { name: 'postgres', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-postgres', 'postgresql://localhost/mydb'] },
-          { name: 'sqlite', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-sqlite', './data.db'] },
-          { name: 'puppeteer', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-puppeteer'] },
-          { name: 'brave-search', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-brave-search'], env: { BRAVE_API_KEY: '' } },
+          { name: 'github', type: 'http', url: 'https://api.githubcopilot.com/mcp/' },
+          { name: 'postgres', type: 'stdio', command: 'npx', args: ['-y', '@bytebase/dbhub', '--dsn', 'postgres://user:pass@localhost:5432/db'] },
+          { name: 'sqlite', type: 'stdio', command: 'npx', args: ['-y', '@bytebase/dbhub', '--dsn', 'sqlite:///path/to/data.db'] },
+          { name: 'brave-search', type: 'stdio', command: 'npx', args: ['-y', '@brave/brave-search-mcp-server'], env: { BRAVE_API_KEY: '' } },
           { name: 'memory', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-memory'] },
           { name: 'sequential-thinking', type: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-sequential-thinking'] },
           { name: 'context7', type: 'stdio', command: 'npx', args: ['-y', '@upstash/context7-mcp'] },
           { name: 'tavily', type: 'http', url: 'https://mcp.tavily.com/mcp/?tavilyApiKey=YOUR_API_KEY', headers: { 'Accept': 'application/json, text/event-stream' } },
           { name: 'hue', type: 'stdio', command: 'node', args: ['path/to/hue-mcp/dist/index.js'], env: { HUE_BRIDGE_IP: '', HUE_API_KEY: '' } },
-          { name: 'slack', type: 'stdio', command: 'npx', args: ['-y', '@anthropic-ai/mcp-server-slack'], env: { SLACK_BOT_TOKEN: '' } },
-          { name: 'linear', type: 'stdio', command: 'npx', args: ['-y', '@anthropic-ai/mcp-server-linear'], env: { LINEAR_API_KEY: '' } },
-          { name: 'playwright', type: 'stdio', command: 'npx', args: ['-y', '@anthropic-ai/mcp-server-playwright'] },
+          { name: 'slack', type: 'http', url: 'https://mcp.slack.com/mcp' },
+          { name: 'linear', type: 'http', url: 'https://mcp.linear.app/mcp' },
+          { name: 'playwright', type: 'stdio', command: 'npx', args: ['-y', '@playwright/mcp@latest'] },
         ],
         activeSpinnerPack: null,
         hoverSpinnerPack: null,
@@ -4765,6 +4903,7 @@
 
         hookEventGroups: [
           { group: 'Lifecycle', events: [
+            { id: 'Setup', desc: 'Beim erstmaligen Einrichten' },
             { id: 'SessionStart', desc: 'Beim Start einer Session' },
             { id: 'InstructionsLoaded', desc: 'Nachdem CLAUDE.md Instruktionen geladen wurden' },
             { id: 'Stop', desc: 'Bevor die Session endet' },
@@ -4773,6 +4912,9 @@
           ]},
           { group: 'Prompts', events: [
             { id: 'UserPromptSubmit', desc: 'Bevor User-Prompt verarbeitet wird' },
+            { id: 'UserPromptExpansion', desc: 'Beim Expandieren von Prompt-Referenzen' },
+            { id: 'PermissionDenied', desc: 'Wenn eine Berechtigung verweigert wurde' },
+            { id: 'MessageDisplay', desc: 'Bevor eine Nachricht angezeigt wird' },
             { id: 'PermissionRequest', desc: 'Vor dem Permission-Dialog' },
             { id: 'Notification', desc: 'Wenn Claude Aufmerksamkeit braucht' },
             { id: 'Elicitation', desc: 'Wenn Claude eine Rueckfrage stellt' },
@@ -4782,6 +4924,7 @@
             { id: 'PreToolUse', desc: 'Vor der Ausfuehrung eines Tools (kann blockieren)' },
             { id: 'PostToolUse', desc: 'Nach erfolgreicher Tool-Ausfuehrung' },
             { id: 'PostToolUseFailure', desc: 'Nach fehlgeschlagener Tool-Ausfuehrung' },
+            { id: 'PostToolBatch', desc: 'Nach einem Batch paralleler Tool-Aufrufe' },
           ]},
           { group: 'Agents', events: [
             { id: 'SubagentStart', desc: 'Bevor ein Subagent startet' },
@@ -5367,6 +5510,12 @@
             if (data.autoDreamEnabled !== undefined) this.settings.autoDreamEnabled = data.autoDreamEnabled;
             if (data.skipDangerousModePermissionPrompt !== undefined) this.settings.skipDangerousModePermissionPrompt = data.skipDangerousModePermissionPrompt;
             if (data.extraKnownMarketplaces) this.settings.extraKnownMarketplaces = JSON.parse(JSON.stringify(data.extraKnownMarketplaces));
+            if (data.fallbackModel) this.settings.fallbackModel = [...data.fallbackModel];
+            if (data.enforceAvailableModels !== undefined) this.settings.enforceAvailableModels = data.enforceAvailableModels;
+            if (data.autoMode) this.settings.autoMode = JSON.parse(JSON.stringify(data.autoMode));
+            if (data.strictKnownMarketplaces) this.settings.strictKnownMarketplaces = [...data.strictKnownMarketplaces];
+            if (data.blockedMarketplaces) this.settings.blockedMarketplaces = [...data.blockedMarketplaces];
+            if (data.pluginSuggestionMarketplaces) this.settings.pluginSuggestionMarketplaces = [...data.pluginSuggestionMarketplaces];
             if (data.fastMode !== undefined) this.settings.fastMode = data.fastMode;
             if (data.voiceEnabled !== undefined) this.settings.voiceEnabled = data.voiceEnabled;
             if (data.editorMode) this.settings.editorMode = data.editorMode;
@@ -5389,7 +5538,9 @@
               'autoMemoryEnabled', 'autoMemoryDirectory',
               'autoDreamEnabled', 'skipDangerousModePermissionPrompt', 'extraKnownMarketplaces',
               'fastMode', 'voiceEnabled', 'editorMode', 'theme', 'releaseChannel',
-              'fileSuggestions', 'modelOverrides'
+              'fileSuggestions', 'modelOverrides',
+              'fallbackModel', 'enforceAvailableModels', 'autoMode',
+              'strictKnownMarketplaces', 'blockedMarketplaces', 'pluginSuggestionMarketplaces'
             ]);
             this._extraProps = {};
             for (const [key, value] of Object.entries(data)) {
@@ -5483,6 +5634,12 @@
           if (Object.keys(s.env).length) out.env = { ...s.env };
           if (s.skipDangerousModePermissionPrompt) out.skipDangerousModePermissionPrompt = true;
           if (Object.keys(s.extraKnownMarketplaces).length) out.extraKnownMarketplaces = JSON.parse(JSON.stringify(s.extraKnownMarketplaces));
+          if (s.fallbackModel?.length) out.fallbackModel = [...s.fallbackModel];
+          if (s.enforceAvailableModels) out.enforceAvailableModels = true;
+          if (Object.keys(s.autoMode || {}).length) out.autoMode = JSON.parse(JSON.stringify(s.autoMode));
+          if (s.strictKnownMarketplaces?.length) out.strictKnownMarketplaces = [...s.strictKnownMarketplaces];
+          if (s.blockedMarketplaces?.length) out.blockedMarketplaces = [...s.blockedMarketplaces];
+          if (s.pluginSuggestionMarketplaces?.length) out.pluginSuggestionMarketplaces = [...s.pluginSuggestionMarketplaces];
           if (s.fastMode) out.fastMode = true;
           if (s.voiceEnabled) out.voiceEnabled = true;
           if (s.editorMode && s.editorMode !== 'normal') out.editorMode = s.editorMode;
@@ -5500,6 +5657,15 @@
             }
           }
           return JSON.stringify(out, null, 2);
+        },
+
+        setJsonField(key, value) {
+          try { this.settings[key] = JSON.parse(value); this.markUnsaved(); } catch (e) {}
+        },
+
+        setHookInput(hook, value) {
+          const v = value.trim();
+          try { hook.input = v ? JSON.parse(v) : undefined; this.markUnsaved(); } catch (e) {}
         },
 
         addPermRule(type) {
@@ -5667,6 +5833,13 @@
           }
         },
 
+        addFallbackModel() {
+          const m = this.newFallbackModel.trim();
+          if (m && this.settings.fallbackModel.length < 3 && !this.settings.fallbackModel.includes(m)) {
+            this.settings.fallbackModel.push(m); this.newFallbackModel = ''; this.markUnsaved();
+          }
+        },
+
         addSpinnerVerb() {
           if (this.newSpinnerVerb && !this.settings.spinnerVerbs.verbs.includes(this.newSpinnerVerb)) {
             this.settings.spinnerVerbs.verbs.push(this.newSpinnerVerb); this.newSpinnerVerb = ''; this.markUnsaved();
@@ -5806,7 +5979,7 @@
           const s = this.settings;
 
           // Model validation
-          const validModels = ['claude-sonnet-4-5-20250514', 'claude-opus-4-5-20250514', 'claude-haiku-4-5-20251001', 'claude-sonnet-4-6', 'claude-opus-4-6', 'claude-haiku-4-5', 'sonnet', 'opus', 'haiku', 'opusplan'];
+          const validModels = ['claude-sonnet-4-5-20250514', 'claude-opus-4-5-20250514', 'claude-haiku-4-5-20251001', 'claude-sonnet-4-6', 'claude-opus-4-6', 'claude-haiku-4-5', 'sonnet', 'opus', 'haiku', 'opusplan', 'fable', 'best', 'default', 'sonnet[1m]', 'opus[1m]', 'claude-fable-5', 'claude-opus-4-8', 'claude-opus-4-7', 'claude-sonnet-5', 'claude-sonnet-4-5', 'claude-opus-4-5'];
           if (s.model && !validModels.includes(s.model)) {
             errors.push({ tab: 'general', field: 'model', severity: 'warn', message: this.t('validation.unknownModel') + s.model + this.t('validation.unknownModelSuffix') });
           }
@@ -5887,6 +6060,9 @@
                 }
                 if ((hook.type === 'prompt' || hook.type === 'agent') && !hook.prompt) {
                   errors.push({ tab: 'hooks', field: 'hooks', severity: 'error', message: event + this.t('validation.hookPrefix') + (gi + 1) + '.' + (hi + 1) + this.t('validation.hookPromptMissing') });
+                }
+                if (hook.type === 'mcp_tool' && (!hook.server || !hook.tool)) {
+                  errors.push({ tab: 'hooks', field: 'hooks', severity: 'error', message: event + this.t('validation.hookPrefix') + (gi + 1) + '.' + (hi + 1) + this.t('validation.hookMcpMissing') });
                 }
                 if (hook.timeout !== undefined && hook.timeout !== '' && (isNaN(hook.timeout) || hook.timeout < 0)) {
                   errors.push({ tab: 'hooks', field: 'hooks', severity: 'warn', message: event + this.t('validation.hookPrefix') + (gi + 1) + '.' + (hi + 1) + this.t('validation.hookTimeoutInvalid') });
