@@ -657,7 +657,7 @@
             <div id="setting-effort" class="settings-group">
               <label class="setting-label" x-text="t('general.effort')"></label>
               <p class="setting-desc" x-text="t('general.effortDesc')"></p>
-              <div class="grid grid-cols-3 gap-3 mt-2">
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
                 <!-- Low -->
                 <button @click="settings.effortLevel = 'low'; markUnsaved()"
                   class="group relative rounded-2xl p-4 text-left transition-all duration-200 border-2"
@@ -717,29 +717,55 @@
                 <!-- High -->
                 <button @click="settings.effortLevel = 'high'; markUnsaved()"
                   class="group relative rounded-2xl p-4 text-left transition-all duration-200 border-2"
-                  :class="(settings.effortLevel === 'high' || !settings.effortLevel)
+                  :class="settings.effortLevel === 'high'
                     ? 'border-accent/60 bg-accent/8 shadow-[0_0_20px_rgba(245,158,11,0.1)]'
                     : 'border-[rgba(255,255,255,0.06)] bg-bg-elevated/50 hover:border-[rgba(255,255,255,0.12)] hover:bg-bg-elevated'">
                   <div class="flex items-center gap-2 mb-2">
                     <div class="w-8 h-8 rounded-xl flex items-center justify-center text-lg"
-                      :class="(settings.effortLevel === 'high' || !settings.effortLevel) ? 'bg-accent/15 text-accent' : 'bg-[rgba(255,255,255,0.05)] text-fg-dim'">
+                      :class="settings.effortLevel === 'high' ? 'bg-accent/15 text-accent' : 'bg-[rgba(255,255,255,0.05)] text-fg-dim'">
                       <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
                     </div>
-                    <span class="font-display font-semibold text-sm" :class="(settings.effortLevel === 'high' || !settings.effortLevel) ? 'text-accent' : 'text-fg'">High</span>
-                    <span x-show="!settings.effortLevel" class="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-accent/10 text-accent/70" x-text="t('general.effortDefaultBadge')"></span>
+                    <span class="font-display font-semibold text-sm" :class="settings.effortLevel === 'high' ? 'text-accent' : 'text-fg'">High</span>
                   </div>
-                  <p class="text-[11px] leading-relaxed" :class="(settings.effortLevel === 'high' || !settings.effortLevel) ? 'text-amber-300/70' : 'text-fg-dim'" x-text="t('general.effortHighCard')"></p>
-                  <!-- Speed bar -->
+                  <p class="text-[11px] leading-relaxed" :class="settings.effortLevel === 'high' ? 'text-amber-300/70' : 'text-fg-dim'" x-text="t('general.effortHighCard')"></p>
                   <div class="mt-3 flex items-center gap-2">
-                    <span class="text-[10px] font-mono uppercase tracking-wider" :class="(settings.effortLevel === 'high' || !settings.effortLevel) ? 'text-accent/60' : 'text-fg-dim/50'" x-text="t('general.effortSpeed')"></span>
+                    <span class="text-[10px] font-mono uppercase tracking-wider" :class="settings.effortLevel === 'high' ? 'text-accent/60' : 'text-fg-dim/50'" x-text="t('general.effortSpeed')"></span>
                     <div class="flex-1 h-1 rounded-full bg-[rgba(255,255,255,0.05)] overflow-hidden">
-                      <div class="h-full rounded-full transition-all duration-500" :class="(settings.effortLevel === 'high' || !settings.effortLevel) ? 'w-1/3 bg-accent/40' : 'w-1/3 bg-[rgba(255,255,255,0.08)]'"></div>
+                      <div class="h-full rounded-full transition-all duration-500" :class="settings.effortLevel === 'high' ? 'w-1/3 bg-accent/40' : 'w-1/3 bg-[rgba(255,255,255,0.08)]'"></div>
                     </div>
                   </div>
                   <div class="flex items-center gap-2 mt-1">
-                    <span class="text-[10px] font-mono uppercase tracking-wider" :class="(settings.effortLevel === 'high' || !settings.effortLevel) ? 'text-accent/60' : 'text-fg-dim/50'" x-text="t('general.effortDepth')"></span>
+                    <span class="text-[10px] font-mono uppercase tracking-wider" :class="settings.effortLevel === 'high' ? 'text-accent/60' : 'text-fg-dim/50'" x-text="t('general.effortDepth')"></span>
                     <div class="flex-1 h-1 rounded-full bg-[rgba(255,255,255,0.05)] overflow-hidden">
-                      <div class="h-full rounded-full transition-all duration-500" :class="(settings.effortLevel === 'high' || !settings.effortLevel) ? 'w-full bg-accent/60' : 'w-full bg-[rgba(255,255,255,0.08)]'"></div>
+                      <div class="h-full rounded-full transition-all duration-500" :class="settings.effortLevel === 'high' ? 'w-3/4 bg-accent/60' : 'w-3/4 bg-[rgba(255,255,255,0.08)]'"></div>
+                    </div>
+                  </div>
+                </button>
+                <!-- XHigh -->
+                <button @click="settings.effortLevel = 'xhigh'; markUnsaved()"
+                  class="group relative rounded-2xl p-4 text-left transition-all duration-200 border-2"
+                  :class="(settings.effortLevel === 'xhigh' || !settings.effortLevel)
+                    ? 'border-rose-400/60 bg-rose-400/8 shadow-[0_0_20px_rgba(251,113,133,0.1)]'
+                    : 'border-[rgba(255,255,255,0.06)] bg-bg-elevated/50 hover:border-[rgba(255,255,255,0.12)] hover:bg-bg-elevated'">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center text-lg"
+                      :class="(settings.effortLevel === 'xhigh' || !settings.effortLevel) ? 'bg-rose-400/15 text-rose-400' : 'bg-[rgba(255,255,255,0.05)] text-fg-dim'">
+                      <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/></svg>
+                    </div>
+                    <span class="font-display font-semibold text-sm" :class="(settings.effortLevel === 'xhigh' || !settings.effortLevel) ? 'text-rose-400' : 'text-fg'">XHigh</span>
+                    <span x-show="!settings.effortLevel" class="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-rose-400/10 text-rose-400/80" x-text="t('general.effortDefaultBadge')"></span>
+                  </div>
+                  <p class="text-[11px] leading-relaxed" :class="(settings.effortLevel === 'xhigh' || !settings.effortLevel) ? 'text-rose-300/70' : 'text-fg-dim'" x-text="t('general.effortXHighCard')"></p>
+                  <div class="mt-3 flex items-center gap-2">
+                    <span class="text-[10px] font-mono uppercase tracking-wider" :class="(settings.effortLevel === 'xhigh' || !settings.effortLevel) ? 'text-rose-400/60' : 'text-fg-dim/50'" x-text="t('general.effortSpeed')"></span>
+                    <div class="flex-1 h-1 rounded-full bg-[rgba(255,255,255,0.05)] overflow-hidden">
+                      <div class="h-full rounded-full transition-all duration-500" :class="(settings.effortLevel === 'xhigh' || !settings.effortLevel) ? 'w-1/6 bg-rose-400/40' : 'w-1/6 bg-[rgba(255,255,255,0.08)]'"></div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="text-[10px] font-mono uppercase tracking-wider" :class="(settings.effortLevel === 'xhigh' || !settings.effortLevel) ? 'text-rose-400/60' : 'text-fg-dim/50'" x-text="t('general.effortDepth')"></span>
+                    <div class="flex-1 h-1 rounded-full bg-[rgba(255,255,255,0.05)] overflow-hidden">
+                      <div class="h-full rounded-full transition-all duration-500" :class="(settings.effortLevel === 'xhigh' || !settings.effortLevel) ? 'w-full bg-rose-400/60' : 'w-full bg-[rgba(255,255,255,0.08)]'"></div>
                     </div>
                   </div>
                 </button>
@@ -3168,7 +3194,7 @@
           <h3 class="font-display font-bold text-xl text-white" x-text="t('wizard.modelTitle')"></h3>
           <p class="text-sm text-fg-muted mt-2" x-text="t('wizard.modelDesc')"></p>
           <div class="mt-4 space-y-2">
-            <template x-for="m in [{id:'opus',label:'Opus',descKey:'wizard.modelOpus'},{id:'sonnet',label:'Sonnet',descKey:'wizard.modelSonnet'},{id:'haiku',label:'Haiku',descKey:'wizard.modelHaiku'}]" :key="m.id">
+            <template x-for="m in [{id:'fable',label:'Fable',descKey:'wizard.modelFable'},{id:'opus',label:'Opus',descKey:'wizard.modelOpus'},{id:'sonnet',label:'Sonnet',descKey:'wizard.modelSonnet'},{id:'haiku',label:'Haiku',descKey:'wizard.modelHaiku'}]" :key="m.id">
               <button @click="settings.model = m.id; markUnsaved()"
                       class="w-full text-left p-3 rounded-xl border transition-all"
                       :class="settings.model === m.id ? 'border-accent/40 bg-accent/5' : 'border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.15)]'">
@@ -3431,9 +3457,10 @@
       'general.effortLow': { de: 'Low — Schnelle, knappe Antworten', en: 'Low — Quick, brief answers', es: 'Low — Respuestas rapidas y breves', fr: 'Low — Reponses rapides et breves', ja: 'Low — 素早く簡潔な回答', pt: 'Low — Respostas rapidas e breves' },
       'general.effortMedium': { de: 'Medium — Ausgewogen', en: 'Medium — Balanced', es: 'Medium — Equilibrado', fr: 'Medium — Equilibre', ja: 'Medium — バランス型', pt: 'Medium — Equilibrado' },
       'general.effortHigh': { de: 'High — Gruendlich und detailliert', en: 'High — Thorough and detailed', es: 'High — Minucioso y detallado', fr: 'High — Approfondi et detaille', ja: 'High — 徹底的で詳細', pt: 'High — Minucioso e detalhado' },
-      'general.effortLowCard': { de: 'Schnelle, knappe Antworten. Ideal fuer einfache Fragen und Routine-Tasks.', en: 'Quick, brief answers. Ideal for simple questions and routine tasks.', es: 'Respuestas rapidas y breves. Ideal para preguntas simples y tareas rutinarias.', fr: 'Reponses rapides et breves. Ideal pour les questions simples et taches routinieres.', ja: '素早く簡潔な回答。簡単な質問やルーティンタスクに最適。', pt: 'Respostas rapidas e breves. Ideal para perguntas simples e tarefas rotineiras.' },
-      'general.effortMediumCard': { de: 'Ausgewogenes Verhaeltnis aus Geschwindigkeit und Gruendlichkeit. Guter Allrounder.', en: 'Balanced speed and thoroughness. A good all-rounder.', es: 'Velocidad y minuciosidad equilibradas. Un buen todoterreno.', fr: 'Equilibre entre rapidite et rigueur. Un bon compromis.', ja: 'スピードと徹底さのバランス。万能型。', pt: 'Velocidade e rigor equilibrados. Um bom tudo-em-um.' },
-      'general.effortHighCard': { de: 'Maximales Reasoning und Denktiefe. Beste Ergebnisse bei komplexen Aufgaben.', en: 'Maximum reasoning and thinking depth. Best results for complex tasks.', es: 'Razonamiento y profundidad maximos. Mejores resultados para tareas complejas.', fr: 'Raisonnement et profondeur maximaux. Meilleurs resultats pour taches complexes.', ja: '最大限の推論と思考深度。複雑なタスクに最適な結果。', pt: 'Raciocinio e profundidade maximos. Melhores resultados para tarefas complexas.' },
+      'general.effortLowCard': { de: 'Schnelle, knappe Antworten. Ideal für einfache Fragen und Routine-Tasks.', en: 'Quick, brief answers. Ideal for simple questions and routine tasks.', es: 'Respuestas rapidas y breves. Ideal para preguntas simples y tareas rutinarias.', fr: 'Reponses rapides et breves. Ideal pour les questions simples et taches routinieres.', ja: '素早く簡潔な回答。簡単な質問やルーティンタスクに最適。', pt: 'Respostas rapidas e breves. Ideal para perguntas simples e tarefas rotineiras.' },
+      'general.effortMediumCard': { de: 'Ausgewogenes Verhältnis aus Geschwindigkeit und Gründlichkeit. Guter Allrounder.', en: 'Balanced speed and thoroughness. A good all-rounder.', es: 'Velocidad y minuciosidad equilibradas. Un buen todoterreno.', fr: 'Equilibre entre rapidite et rigueur. Un bon compromis.', ja: 'スピードと徹底さのバランス。万能型。', pt: 'Velocidade e rigor equilibrados. Um bom tudo-em-um.' },
+      'general.effortHighCard': { de: 'Gründliches Reasoning — guter Standard für die meisten anspruchsvollen Aufgaben.', en: 'Thorough reasoning — a solid default for most intelligence-sensitive work.', es: 'Razonamiento minucioso — un buen valor por defecto para la mayoria de tareas exigentes.', fr: 'Raisonnement approfondi — un bon choix par defaut pour la plupart des taches exigeantes.', ja: '徹底的な推論 — ほとんどの高度なタスクに適した標準設定。', pt: 'Raciocinio minucioso — um bom padrao para a maioria das tarefas exigentes.' },
+      'general.effortXHighCard': { de: 'Höchste Denktiefe. In Claude Code der Standard für Coding & agentische Tasks.', en: 'Maximum thinking depth. The default in Claude Code for coding & agentic tasks.', es: 'Profundidad de razonamiento maxima. Valor por defecto en Claude Code para coding y tareas agenticas.', fr: 'Profondeur de reflexion maximale. Defaut dans Claude Code pour le coding et les taches agentiques.', ja: '最大の思考深度。Claude Codeではコーディングとエージェントタスクの標準。', pt: 'Profundidade de raciocinio maxima. Padrao no Claude Code para coding e tarefas agenticas.' },
       'general.effortSpeed': { de: 'Speed', en: 'Speed', es: 'Velocidad', fr: 'Vitesse', ja: 'スピード', pt: 'Velocidade' },
       'general.effortDepth': { de: 'Tiefe', en: 'Depth', es: 'Profundidad', fr: 'Profondeur', ja: '深度', pt: 'Profundidade' },
       'general.effortDefaultBadge': { de: 'Standard', en: 'Default', es: 'Predeterminado', fr: 'Par defaut', ja: 'デフォルト', pt: 'Padrao' },
@@ -4193,6 +4220,7 @@
       'wizard.modelDesc': { de: 'Welches Claude-Modell soll verwendet werden?', en: 'Which Claude model should be used?', es: 'Que modelo de Claude se debe usar?', fr: 'Quel modele Claude utiliser?', ja: 'どのClaudeモデルを使用しますか？', pt: 'Qual modelo Claude deve ser usado?' },
       'wizard.modelOpus': { de: 'Opus 4.8 — stärkstes Modell, beste Qualität', en: 'Opus 4.8 — strongest model, best quality', es: 'Opus 4.8 — modelo mas potente, mejor calidad', fr: 'Opus 4.8 — modele le plus puissant, meilleure qualite', ja: 'Opus 4.8 — 最強モデル、最高品質', pt: 'Opus 4.8 — modelo mais potente, melhor qualidade' },
       'wizard.modelSonnet': { de: 'Sonnet 5 — schnell und ausgewogen', en: 'Sonnet 5 — fast and balanced', es: 'Sonnet 5 — rapido y equilibrado', fr: 'Sonnet 5 — rapide et equilibre', ja: 'Sonnet 5 — 高速でバランスが良い', pt: 'Sonnet 5 — rapido e equilibrado' },
+      'wizard.modelFable': { de: 'Fable 5 — leistungsstärkstes Modell, für anspruchsvolles Reasoning', en: 'Fable 5 — most capable model, for demanding reasoning', es: 'Fable 5 — el modelo mas capaz, para razonamiento exigente', fr: 'Fable 5 — le modele le plus performant, pour raisonnement exigeant', ja: 'Fable 5 — 最も高性能なモデル、高度な推論向け', pt: 'Fable 5 — o modelo mais capaz, para raciocinio exigente' },
       'wizard.modelHaiku': { de: 'Haiku 4.5 — schnellstes Modell, niedrigste Kosten', en: 'Haiku 4.5 — fastest model, lowest cost', es: 'Haiku 4.5 — modelo mas rapido, menor costo', fr: 'Haiku 4.5 — modele le plus rapide, cout le plus bas', ja: 'Haiku 4.5 — 最速モデル、最低コスト', pt: 'Haiku 4.5 — modelo mais rapido, menor custo' },
       'wizard.permTitle': { de: 'Permission-Modus', en: 'Permission Mode', es: 'Modo de permisos', fr: 'Mode de permissions', ja: 'パーミッションモード', pt: 'Modo de permissoes' },
       'wizard.permDesc': { de: 'Wie viel Freiheit soll Claude haben?', en: 'How much freedom should Claude have?', es: 'Cuanta libertad debe tener Claude?', fr: 'Combien de liberte Claude doit-il avoir?', ja: 'Claudeにどの程度の自由を与えますか？', pt: 'Quanta liberdade o Claude deve ter?' },
@@ -4476,7 +4504,7 @@
       'validation.invalidPermMode': { de: 'Ungueltiger Permission Mode: "', en: 'Invalid permission mode: "', es: 'Modo de permiso invalido: "', fr: 'Mode de permission invalide: "', ja: '無効なパーミッションモード: "', pt: 'Modo de permissao invalido: "' },
       'validation.invalidPermModeSuffix': { de: '". Erlaubt: default, acceptEdits, plan, bypassPermissions, dontAsk, auto.', en: '". Allowed: default, acceptEdits, plan, bypassPermissions, dontAsk, auto.', es: '". Permitidos: default, acceptEdits, plan, bypassPermissions, dontAsk, auto.', fr: '". Autorise: default, acceptEdits, plan, bypassPermissions, dontAsk, auto.', ja: '"。許可: default, acceptEdits, plan, bypassPermissions, dontAsk, auto。', pt: '". Permitidos: default, acceptEdits, plan, bypassPermissions, dontAsk, auto.' },
       'validation.invalidEffort': { de: 'Ungueltiger Effort-Level: "', en: 'Invalid effort level: "', es: 'Nivel de esfuerzo invalido: "', fr: 'Niveau d\'effort invalide: "', ja: '無効なエフォートレベル: "', pt: 'Nivel de esforco invalido: "' },
-      'validation.invalidEffortSuffix': { de: '". Erlaubt: low, medium, high.', en: '". Allowed: low, medium, high.', es: '". Permitidos: low, medium, high.', fr: '". Autorise: low, medium, high.', ja: '"。許可: low, medium, high。', pt: '". Permitidos: low, medium, high.' },
+      'validation.invalidEffortSuffix': { de: '". Erlaubt: low, medium, high, xhigh.', en: '". Allowed: low, medium, high, xhigh.', es: '". Permitidos: low, medium, high, xhigh.', fr: '". Autorise: low, medium, high, xhigh.', ja: '"。許可: low, medium, high, xhigh。', pt: '". Permitidos: low, medium, high, xhigh.' },
       'validation.emptyRule': { de: ' ist leer.', en: ' is empty.', es: ' esta vacio.', fr: ' est vide.', ja: ' が空です。', pt: ' esta vazio.' },
       'validation.duplicateRule': { de: 'Doppelte ', en: 'Duplicate ', es: 'Regla duplicada de ', fr: 'Regle en double ', ja: '重複した', pt: 'Regra duplicada de ' },
       'validation.duplicateRuleSuffix': { de: ' Rule: "', en: ' rule: "', es: ': "', fr: ': "', ja: 'ルール: "', pt: ': "' },
@@ -4548,7 +4576,7 @@
         searchActiveIndex: -1,
         settingsRegistry: [
           { tab: 'general', label: 'search.model', desc: 'search.model.desc', keywords: ['model', 'modell', 'opus', 'opus 4.8', 'sonnet', 'sonnet 5', 'haiku', 'fable', 'fable 5', 'best'], id: 'setting-model' },
-          { tab: 'general', label: 'search.effort', desc: 'search.effort.desc', keywords: ['effort', 'high', 'medium', 'low', 'denktiefe'], id: 'setting-effort' },
+          { tab: 'general', label: 'search.effort', desc: 'search.effort.desc', keywords: ['effort', 'xhigh', 'high', 'medium', 'low', 'denktiefe'], id: 'setting-effort' },
           { tab: 'general', label: 'search.outputStyle', desc: 'search.outputStyle.desc', keywords: ['output', 'style', 'explanatory', 'learning', 'concise'], id: 'setting-output-style' },
           { tab: 'general', label: 'search.language', desc: 'search.language.desc', keywords: ['language', 'sprache', 'deutsch', 'english'], id: 'setting-language' },
           { tab: 'general', label: 'search.thinking', desc: 'search.thinking.desc', keywords: ['thinking', 'denken', 'reasoning'], id: 'setting-thinking' },
@@ -5991,7 +6019,7 @@
           }
 
           // Effort level
-          const validEffort = ['', 'low', 'medium', 'high'];
+          const validEffort = ['', 'low', 'medium', 'high', 'xhigh'];
           if (s.effortLevel && !validEffort.includes(s.effortLevel)) {
             errors.push({ tab: 'general', field: 'effortLevel', severity: 'error', message: this.t('validation.invalidEffort') + s.effortLevel + this.t('validation.invalidEffortSuffix') });
           }
