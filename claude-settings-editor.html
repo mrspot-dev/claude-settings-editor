@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Claude Code Settings Editor</title>
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.8/dist/cdn.min.js" integrity="sha384-NArNwzWsUSF+kY2lgW4YriEkjLqi+J+za6HrENUn/3nZqkBnWbxV22kCJEK5Uu6n" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js" integrity="sha384-X9kJyAubVxnP0hcA+AMMs21U445qsnqhnUF8EBlEpP3a42Kh/JwWjlv2ZcvGfphb" crossorigin="anonymous"></script>
@@ -242,7 +243,7 @@
         </h1>
         <div class="overflow-hidden transition-all duration-300"
              :class="sidebarCollapsed ? 'max-h-0 opacity-0' : 'max-h-12 opacity-100'">
-          <p class="text-[10px] text-fg-dim/40 mt-1.5 font-mono whitespace-nowrap">v1.2 · made with 💛</p>
+          <p class="text-[10px] text-fg-dim/40 mt-1.5 font-mono whitespace-nowrap" x-text="t('app.version')"></p>
           <p class="text-[10px] text-fg-dim/40 mt-0.5 font-mono whitespace-nowrap">by <a href="https://github.com/mrspot-dev" target="_blank" class="text-fg-muted hover:text-accent transition-colors">mrspot-dev</a></p>
         </div>
       </div>
@@ -3385,7 +3386,7 @@
 
     const T = {
       // ─── App Shell ───
-      'app.version': { de: 'v1.3 · made with <3', en: 'v1.3 · made with <3', es: 'v1.3 · hecho con <3', fr: 'v1.3 · fait avec <3', ja: 'v1.3 · made with <3', pt: 'v1.3 · feito com <3' },
+      'app.version': { de: 'v1.3.1 · made with 💛', en: 'v1.3.1 · made with 💛', es: 'v1.3.1 · hecho con 💛', fr: 'v1.3.1 · fait avec 💛', ja: 'v1.3.1 · made with 💛', pt: 'v1.3.1 · feito com 💛' },
       'app.by': { de: 'von', en: 'by', es: 'por', fr: 'par', ja: '作成者', pt: 'por' },
       'sidebar.collapse': { de: 'Sidebar einklappen', en: 'Collapse sidebar', es: 'Contraer barra lateral', fr: 'Replier la barre laterale', ja: 'サイドバーを折りたたむ', pt: 'Recolher barra lateral' },
       'sidebar.expand': { de: 'Sidebar ausklappen', en: 'Expand sidebar', es: 'Expandir barra lateral', fr: 'Deplier la barre laterale', ja: 'サイドバーを展開する', pt: 'Expandir barra lateral' },
@@ -3440,10 +3441,10 @@
       // ─── Tab: General ───
       'general.model': { de: 'Model', en: 'Model', es: 'Modelo', fr: 'Modele', ja: 'モデル', pt: 'Modelo' },
       'general.modelDesc': { de: 'Das Standard-Modell fuer Claude Code. Aliases zeigen immer auf die neueste Version. Leer = Opus (staerkstes Modell).', en: 'The default model for Claude Code. Aliases always point to the latest version. Empty = Opus (strongest model).', es: 'El modelo predeterminado para Claude Code. Los alias siempre apuntan a la ultima version. Vacio = Opus (modelo mas fuerte).', fr: 'Le modele par defaut pour Claude Code. Les alias pointent toujours vers la derniere version. Vide = Opus (modele le plus puissant).', ja: 'Claude Codeのデフォルトモデル。エイリアスは常に最新バージョンを指します。空欄 = Opus（最強モデル）。', pt: 'O modelo padrao para Claude Code. Os alias sempre apontam para a versao mais recente. Vazio = Opus (modelo mais forte).' },
-      'general.modelOpusDefault': { de: 'Standard (Account-Default — meist Opus 4.8 bzw. Sonnet 5)', en: 'Default (account default — usually Opus 4.8 or Sonnet 5)', es: 'Predeterminado (predet. de la cuenta — normalmente Opus 4.8 o Sonnet 5)', fr: 'Par defaut (defaut du compte — generalement Opus 4.8 ou Sonnet 5)', ja: 'デフォルト（アカウント既定 — 通常はOpus 4.8またはSonnet 5）', pt: 'Padrao (padrao da conta — geralmente Opus 4.8 ou Sonnet 5)' },
+      'general.modelOpusDefault': { de: 'Standard (Account-Default — meist Opus 5 bzw. Sonnet 5)', en: 'Default (account default — usually Opus 5 or Sonnet 5)', es: 'Predeterminado (predet. de la cuenta — normalmente Opus 5 o Sonnet 5)', fr: 'Par defaut (defaut du compte — generalement Opus 5 ou Sonnet 5)', ja: 'デフォルト（アカウント既定 — 通常はOpus 5またはSonnet 5）', pt: 'Padrao (padrao da conta — geralmente Opus 5 ou Sonnet 5)' },
       'general.modelBest': { de: 'Best — stärkstes verfügbares Modell (Fable 5, sonst neuestes Opus)', en: 'Best — strongest available model (Fable 5, otherwise newest Opus)', es: 'Best — modelo mas potente disponible (Fable 5, si no el Opus mas reciente)', fr: 'Best — modele le plus puissant disponible (Fable 5, sinon le dernier Opus)', ja: 'Best — 利用可能な最強モデル（Fable 5、なければ最新のOpus）', pt: 'Best — modelo mais potente disponivel (Fable 5, senao o Opus mais recente)' },
       'general.modelFable': { de: 'Fable 5 — leistungsstärkstes Modell, für anspruchsvolles Reasoning & lange Agenten-Läufe', en: 'Fable 5 — most capable model, for demanding reasoning & long agent runs', es: 'Fable 5 — el modelo mas capaz, para razonamiento exigente y ejecuciones largas de agentes', fr: 'Fable 5 — le modele le plus performant, pour raisonnement exigeant et longues sessions agentiques', ja: 'Fable 5 — 最も高性能なモデル、高度な推論と長時間のエージェント実行向け', pt: 'Fable 5 — o modelo mais capaz, para raciocinio exigente e execucoes longas de agentes' },
-      'general.modelOpus': { de: 'Opus — aktuell Opus 4.8 (hoch autonom, 1M Kontext)', en: 'Opus — currently Opus 4.8 (highly autonomous, 1M context)', es: 'Opus — actualmente Opus 4.8 (muy autonomo, contexto 1M)', fr: 'Opus — actuellement Opus 4.8 (tres autonome, contexte 1M)', ja: 'Opus — 現在Opus 4.8（高い自律性、1Mコンテキスト）', pt: 'Opus — atualmente Opus 4.8 (altamente autonomo, contexto 1M)' },
+      'general.modelOpus': { de: 'Opus — aktuell Opus 5 (hoch autonom, 1M Kontext)', en: 'Opus — currently Opus 5 (highly autonomous, 1M context)', es: 'Opus — actualmente Opus 5 (muy autonomo, contexto 1M)', fr: 'Opus — actuellement Opus 5 (tres autonome, contexte 1M)', ja: 'Opus — 現在Opus 5（高い自律性、1Mコンテキスト）', pt: 'Opus — atualmente Opus 5 (altamente autonomo, contexto 1M)' },
       'general.modelSonnet': { de: 'Sonnet — aktuell Sonnet 5 (schnell & ausgewogen, nahe Opus-Qualität)', en: 'Sonnet — currently Sonnet 5 (fast & balanced, near Opus quality)', es: 'Sonnet — actualmente Sonnet 5 (rapido y equilibrado, cerca de la calidad Opus)', fr: 'Sonnet — actuellement Sonnet 5 (rapide et equilibre, proche de la qualite Opus)', ja: 'Sonnet — 現在Sonnet 5（高速でバランス型、Opusに近い品質）', pt: 'Sonnet — atualmente Sonnet 5 (rapido e equilibrado, perto da qualidade Opus)' },
       'general.modelHaiku': { de: 'Haiku 4.5 — am schnellsten & günstigsten, für einfache Aufgaben', en: 'Haiku 4.5 — fastest & cheapest, for simple tasks', es: 'Haiku 4.5 — el mas rapido y economico, para tareas simples', fr: 'Haiku 4.5 — le plus rapide et le moins cher, pour les taches simples', ja: 'Haiku 4.5 — 最速で最安、シンプルなタスク向け', pt: 'Haiku 4.5 — mais rapido e barato, para tarefas simples' },
       'general.modelOpusPlan': { de: 'OpusPlan — Opus plant im Plan-Mode, Sonnet baut in der Ausführung', en: 'OpusPlan — Opus plans in plan mode, Sonnet builds during execution', es: 'OpusPlan — Opus planifica en modo plan, Sonnet construye en la ejecucion', fr: 'OpusPlan — Opus planifie en mode plan, Sonnet construit en execution', ja: 'OpusPlan — OpusがプランモードでプランしSonnetが実行でビルド', pt: 'OpusPlan — Opus planeja no modo plano, Sonnet constroi na execucao' },
@@ -4218,7 +4219,7 @@
       'wizard.langDesc': { de: 'In welcher Sprache moechtest du den Editor verwenden?', en: 'Which language would you like to use the editor in?', es: 'En que idioma quieres usar el editor?', fr: 'Dans quelle langue souhaitez-vous utiliser l\'editeur?', ja: 'エディタをどの言語で使用しますか？', pt: 'Em qual idioma voce quer usar o editor?' },
       'wizard.modelTitle': { de: 'Modell waehlen', en: 'Choose model', es: 'Elegir modelo', fr: 'Choisir le modele', ja: 'モデルを選択', pt: 'Escolher modelo' },
       'wizard.modelDesc': { de: 'Welches Claude-Modell soll verwendet werden?', en: 'Which Claude model should be used?', es: 'Que modelo de Claude se debe usar?', fr: 'Quel modele Claude utiliser?', ja: 'どのClaudeモデルを使用しますか？', pt: 'Qual modelo Claude deve ser usado?' },
-      'wizard.modelOpus': { de: 'Opus 4.8 — stärkstes Modell, beste Qualität', en: 'Opus 4.8 — strongest model, best quality', es: 'Opus 4.8 — modelo mas potente, mejor calidad', fr: 'Opus 4.8 — modele le plus puissant, meilleure qualite', ja: 'Opus 4.8 — 最強モデル、最高品質', pt: 'Opus 4.8 — modelo mais potente, melhor qualidade' },
+      'wizard.modelOpus': { de: 'Opus 5 — stärkstes Modell, beste Qualität', en: 'Opus 5 — strongest model, best quality', es: 'Opus 5 — modelo mas potente, mejor calidad', fr: 'Opus 5 — modele le plus puissant, meilleure qualite', ja: 'Opus 5 — 最強モデル、最高品質', pt: 'Opus 5 — modelo mais potente, melhor qualidade' },
       'wizard.modelSonnet': { de: 'Sonnet 5 — schnell und ausgewogen', en: 'Sonnet 5 — fast and balanced', es: 'Sonnet 5 — rapido y equilibrado', fr: 'Sonnet 5 — rapide et equilibre', ja: 'Sonnet 5 — 高速でバランスが良い', pt: 'Sonnet 5 — rapido e equilibrado' },
       'wizard.modelFable': { de: 'Fable 5 — leistungsstärkstes Modell, für anspruchsvolles Reasoning', en: 'Fable 5 — most capable model, for demanding reasoning', es: 'Fable 5 — el modelo mas capaz, para razonamiento exigente', fr: 'Fable 5 — le modele le plus performant, pour raisonnement exigeant', ja: 'Fable 5 — 最も高性能なモデル、高度な推論向け', pt: 'Fable 5 — o modelo mais capaz, para raciocinio exigente' },
       'wizard.modelHaiku': { de: 'Haiku 4.5 — schnellstes Modell, niedrigste Kosten', en: 'Haiku 4.5 — fastest model, lowest cost', es: 'Haiku 4.5 — modelo mas rapido, menor costo', fr: 'Haiku 4.5 — modele le plus rapide, cout le plus bas', ja: 'Haiku 4.5 — 最速モデル、最低コスト', pt: 'Haiku 4.5 — modelo mais rapido, menor custo' },
@@ -4257,7 +4258,7 @@
       'shortcuts.close': { de: 'Schliessen', en: 'Close', es: 'Cerrar', fr: 'Fermer', ja: '閉じる', pt: 'Fechar' },
       // ─── Search Registry ───
       'search.model': { de: 'Model', en: 'Model', es: 'Modelo', fr: 'Modele', ja: 'モデル', pt: 'Modelo' },
-      'search.model.desc': { de: 'Claude Modell (Opus 4.8, Sonnet 5, Haiku, Fable)', en: 'Claude model (Opus 4.8, Sonnet 5, Haiku, Fable)', es: 'Modelo Claude (Opus 4.8, Sonnet 5, Haiku, Fable)', fr: 'Modele Claude (Opus 4.8, Sonnet 5, Haiku, Fable)', ja: 'Claudeモデル（Opus 4.8, Sonnet 5, Haiku, Fable）', pt: 'Modelo Claude (Opus 4.8, Sonnet 5, Haiku, Fable)' },
+      'search.model.desc': { de: 'Claude Modell (Opus 5, Sonnet 5, Haiku, Fable)', en: 'Claude model (Opus 5, Sonnet 5, Haiku, Fable)', es: 'Modelo Claude (Opus 5, Sonnet 5, Haiku, Fable)', fr: 'Modele Claude (Opus 5, Sonnet 5, Haiku, Fable)', ja: 'Claudeモデル（Opus 5, Sonnet 5, Haiku, Fable）', pt: 'Modelo Claude (Opus 5, Sonnet 5, Haiku, Fable)' },
       'search.effort': { de: 'Effort Level', en: 'Effort Level', es: 'Nivel de esfuerzo', fr: 'Niveau d\'effort', ja: 'エフォートレベル', pt: 'Nivel de esforco' },
       'search.effort.desc': { de: 'Denktiefe und Reasoning-Aufwand', en: 'Thinking depth and reasoning effort', es: 'Profundidad de razonamiento', fr: 'Profondeur de reflexion et effort', ja: '思考の深さと推論の労力', pt: 'Profundidade de raciocinio e esforco' },
       'search.outputStyle': { de: 'Output Style', en: 'Output Style', es: 'Estilo de salida', fr: 'Style de sortie', ja: '出力スタイル', pt: 'Estilo de saida' },
@@ -6007,7 +6008,7 @@
           const s = this.settings;
 
           // Model validation
-          const validModels = ['claude-sonnet-4-5-20250514', 'claude-opus-4-5-20250514', 'claude-haiku-4-5-20251001', 'claude-sonnet-4-6', 'claude-opus-4-6', 'claude-haiku-4-5', 'sonnet', 'opus', 'haiku', 'opusplan', 'fable', 'best', 'default', 'sonnet[1m]', 'opus[1m]', 'claude-fable-5', 'claude-opus-4-8', 'claude-opus-4-7', 'claude-sonnet-5', 'claude-sonnet-4-5', 'claude-opus-4-5'];
+          const validModels = ['claude-sonnet-4-5-20250514', 'claude-opus-4-5-20250514', 'claude-haiku-4-5-20251001', 'claude-sonnet-4-6', 'claude-opus-4-6', 'claude-haiku-4-5', 'sonnet', 'opus', 'haiku', 'opusplan', 'fable', 'best', 'default', 'sonnet[1m]', 'opus[1m]', 'claude-fable-5', 'claude-opus-5', 'claude-mythos-5', 'claude-opus-4-8', 'claude-opus-4-7', 'claude-sonnet-5', 'claude-sonnet-4-5', 'claude-opus-4-5'];
           if (s.model && !validModels.includes(s.model)) {
             errors.push({ tab: 'general', field: 'model', severity: 'warn', message: this.t('validation.unknownModel') + s.model + this.t('validation.unknownModelSuffix') });
           }
