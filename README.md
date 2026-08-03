@@ -19,6 +19,12 @@
 
 ## Quick Start
 
+**Try it online:** [mrspot-dev.github.io/claude-settings-editor](https://mrspot-dev.github.io/claude-settings-editor/)
+
+The hosted version runs entirely in your browser. Your `settings.json` is read and written directly on your own machine through the File System Access API — nothing is uploaded. It saves you the download when you just want a look.
+
+For regular use, prefer a local copy. A file you downloaded changes only when you replace it, while a hosted page always serves whatever is currently deployed — worth keeping in mind for a file that may contain API keys.
+
 **Option A — Manual:**
 1. Download `claude-settings-editor.html`
 2. Open in any Chromium browser (Chrome, Edge, Arc)
