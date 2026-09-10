@@ -1,2 +1,5 @@
 # Interne Planungs- und Design-Dokumente — bleiben lokal
 /docs/
+
+# Claude Code docs carry no license statement — keep the local copy out of the repo
+/tools/sources/settings-reference.md
