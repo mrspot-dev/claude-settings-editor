@@ -56,3 +56,10 @@ test('prototype keys are ignored', () => {
   const doc = JSON.parse('{"__proto__": {"x": 1}, "constructor": 1}');
   assert.deepEqual(doctorFindings(doc, MAP, { skipEnum: [], hints: {} }), []);
 });
+
+test('diffSchemaKeys compares remote top-level keys with embedded inSchema keys', () => {
+  const diffSchemaKeys = ex.extractFunction(lf, 'diffSchemaKeys');
+  const map = { a: { inSchema: true }, b: { inSchema: true }, c: { inSchema: false }, 'x.y': { inSchema: true } };
+  const r = diffSchemaKeys(['a', 'd', '__proto__', 'constructor', '$schema'], map);
+  assert.deepEqual(r, { added: ['d'], removed: ['b'] });
+});
