@@ -3810,6 +3810,8 @@
       'notify.savedAs': { de: 'Gespeichert als:', en: 'Saved as:', es: 'Guardado como:', fr: 'Enregistre sous:', ja: '名前を付けて保存:', pt: 'Salvo como:' },
       'notify.fileLoaded': { de: 'Datei geladen:', en: 'File loaded:', es: 'Archivo cargado:', fr: 'Fichier charge:', ja: 'ファイルを読み込みました:', pt: 'Arquivo carregado:' },
       'notify.legacyKeysDropped': { de: 'Veraltete Schlüssel entfernt, die Claude Code nicht kennt (Speichern schreibt die bereinigte Datei): ', en: 'Removed obsolete keys unknown to Claude Code (save writes the cleaned file): ', es: 'Claves obsoletas eliminadas que Claude Code no conoce (guardar escribe el archivo limpio): ', fr: 'Clés obsolètes supprimées, inconnues de Claude Code (enregistrer écrit le fichier nettoyé) : ', ja: 'Claude Code が認識しない廃止キーを削除しました（保存すると整理済みファイルが書き込まれます）: ', pt: 'Chaves obsoletas removidas que o Claude Code não conhece (salvar grava o arquivo limpo): ' },
+      'notify.localNotShared': { de: 'settings.local.json wird nicht geteilt oder gebündelt — sie enthält typischerweise Tokens.', en: 'settings.local.json is never shared or bundled — it typically holds tokens.', es: 'settings.local.json no se comparte ni se empaqueta — suele contener tokens.', fr: 'settings.local.json n’est jamais partagé ni empaqueté — il contient souvent des jetons.', ja: 'settings.local.json は共有もバンドルもされません — 通常トークンを含むためです。', pt: 'settings.local.json nunca é compartilhado nem empacotado — costuma conter tokens.' },
+      'notify.envStripped': { de: '(env-Block ausgelassen, er kann Secrets enthalten)', en: '(env block left out, it may contain secrets)', es: '(bloque env omitido, puede contener secretos)', fr: '(bloc env omis, il peut contenir des secrets)', ja: '（env ブロックは除外、機密情報を含む可能性）', pt: '(bloco env omitido, pode conter segredos)' },
       'notify.jsonCopied': { de: 'JSON in Zwischenablage kopiert!', en: 'JSON copied to clipboard!', es: 'JSON copiado al portapapeles!', fr: 'JSON copie dans le presse-papiers!', ja: 'JSONをクリップボードにコピーしました！', pt: 'JSON copiado para area de transferencia!' },
       'notify.jsonDownloaded': { de: 'JSON heruntergeladen!', en: 'JSON downloaded!', es: 'JSON descargado!', fr: 'JSON telecharge!', ja: 'JSONをダウンロードしました！', pt: 'JSON baixado!' },
       'notify.reset': { de: 'Zurueckgesetzt!', en: 'Reset!', es: 'Restablecido!', fr: 'Reinitialise!', ja: 'リセットしました！', pt: 'Redefinido!' },
@@ -5324,11 +5326,21 @@
           localStorage.setItem('claude-settings-sidebar-collapsed', this.sidebarCollapsed);
         },
 
+        // Spec 5.3: nothing that carries secrets leaves the machine via share URL or bundle
+        _shareableDoc() {
+          if ((this.fileName || '').toLowerCase() === 'settings.local.json') { this.notify(this.t('notify.localNotShared'), 'error'); return null; }
+          const doc = JSON.parse(this.cleanJson());
+          const envStripped = Object.prototype.hasOwnProperty.call(doc, 'env');
+          delete doc.env;
+          return { doc, envStripped };
+        },
+
         async exportBundle() {
+          const shareable = this._shareableDoc(); if (!shareable) return;
           const bundle = {
             version: 1,
             exportedAt: new Date().toISOString(),
-            settings: JSON.parse(this.cleanJson()),
+            settings: shareable.doc,
             customTemplates: this.customTemplates,
             customSpinnerPacks: this.customSpinnerPacks
           };
@@ -5349,7 +5361,7 @@
               a.href = url; a.download = 'claude-settings-bundle.json'; a.click();
               URL.revokeObjectURL(url);
             }
-            this.notify(this.t('notify.bundleExported') + ' (Settings + ' + this.customTemplates.length + ' Templates + ' + this.customSpinnerPacks.length + ' Spinner Packs)');
+            this.notify(this.t('notify.bundleExported') + ' (Settings + ' + this.customTemplates.length + ' Templates + ' + this.customSpinnerPacks.length + ' Spinner Packs)' + (shareable.envStripped ? ' ' + this.t('notify.envStripped') : ''));
           } catch (e) { if (e.name !== 'AbortError') this.notify(this.t('notify.exportFailed') + ' ' + e.message, 'error'); }
         },
 
@@ -5804,7 +5816,6 @@
           if (s.availableModels.length) out.availableModels = [...s.availableModels];
           if (s.autoMemoryEnabled === false) out.autoMemoryEnabled = false;
           if (s.autoMemoryDirectory) out.autoMemoryDirectory = s.autoMemoryDirectory;
-          if (Object.keys(s.env).length) out.env = { ...s.env };
           if (s.skipDangerousModePermissionPrompt) out.skipDangerousModePermissionPrompt = true;
           if (Object.keys(s.extraKnownMarketplaces).length) out.extraKnownMarketplaces = JSON.parse(JSON.stringify(s.extraKnownMarketplaces));
           if (s.fallbackModel?.length) out.fallbackModel = [...s.fallbackModel];
@@ -6668,11 +6679,12 @@
         // === SHARE VIA URL ===
         shareViaUrl() {
           try {
-            const json = this.cleanJson();
+            const shareable = this._shareableDoc(); if (!shareable) return;
+            const json = JSON.stringify(shareable.doc, null, 2);
             const encoded = btoa(unescape(encodeURIComponent(json)));
             const url = window.location.origin + window.location.pathname + '#settings=' + encoded;
             navigator.clipboard.writeText(url).then(() => {
-              this.notify(this.t('notify.urlShared'));
+              this.notify(this.t('notify.urlShared') + (shareable.envStripped ? ' ' + this.t('notify.envStripped') : ''));
             }, () => {
               // Fallback: show URL in prompt
               prompt('Share-URL:', url);
