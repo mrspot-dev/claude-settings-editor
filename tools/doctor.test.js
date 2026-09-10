@@ -72,3 +72,13 @@ test('embedded SCHEMA_MAP facts: fastMode is not deprecated, language has no enu
   assert.deepEqual(map.keys.minimumVersion.enum, []);
 });
 
+
+test('the doctor raises nothing but the mcpServers hint on a document made of every editor key', () => {
+  const map = ex.extractSchemaMap(lf).keys;
+  const known = [...lf.match(/const knownKeys = new Set\(\[([\s\S]*?)\]\)/)[1].matchAll(/'([^']+)'/g)].map(m => m[1]);
+  const sample = (info) => info.enum && info.enum.length ? info.enum[0] : ({ string: 'x', boolean: true, number: 1, integer: 1, object: {}, array: [] })[info.type || 'string'];
+  const doc = {};
+  for (const k of known) doc[k] = map[k] ? sample(map[k]) : {};
+  const findings = doctorFindings(doc, map, { skipEnum: ['effortLevel', 'maxEffortLevel', 'editorMode', 'theme', 'teammateMode', 'autoUpdatesChannel', 'outputStyle'], hints: { mcpServers: true } });
+  assert.deepEqual(findings.filter(f => f.kind !== 'hint' && f.kind !== 'managed'), [], JSON.stringify(findings));
+});

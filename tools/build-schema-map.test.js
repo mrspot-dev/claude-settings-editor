@@ -127,3 +127,19 @@ Two choices.
   assert.deepEqual(f.language.enum, []);
   assert.deepEqual(f.pair.enum, ['a', 'b']);
 });
+
+test('a closed set inside an object type belongs to the nested field, not to the key', () => {
+  const md = `# Settings reference
+
+### \`modelSettings\`
+
+Save an effort level per model.
+
+* **Scope**: [\`Any file\`](#scopes)
+* **Type**: object mapping a model name to an object with an \`effortLevel\` field, one of \`"low"\`, \`"medium"\`
+* **Default**: unset
+`;
+  const f = gen.parseReference(md);
+  assert.equal(f.modelSettings.type, 'object');
+  assert.deepEqual(f.modelSettings.enum, []);
+});
