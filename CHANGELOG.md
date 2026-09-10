@@ -3,6 +3,31 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.3.2] — 2026-09-10
+
+Alignment with the official settings schema (schemastore, state 2.1.219) and the Claude Code docs (2.1.267).
+
+### Fixed
+- `teamateMode` typo (10 occurrences) — the exported key never matched the real `teammateMode`, so the setting was silently ignored
+- `fileSuggestions` (plural, with `enable`/`exclude`) was invented; replaced by the real `fileSuggestion` `{ type: "command", command }` with a single script input
+- Output styles: `verbose`, `formal` and `casual` never existed; the real built-ins are `Proactive`, `Concise` (2.1.237+), `Explanatory` and `Learning`, capitalised as documented. Lowercase legacy values are migrated on import.
+- `releaseChannel` and `autoDreamEnabled` removed — neither exists in Claude Code (`autoUpdatesChannel` is the real update-channel key and was already present)
+- Obsolete keys found in an imported file are dropped with a notice instead of being round-tripped; the file is marked unsaved so the next save writes the cleaned version
+
+### Added
+- Model list: Fable 5.1 (`fable` alias resolves to it since 2.1.257), `claude-fable-5-1`, `fable[1m]`, `opusplan[1m]`
+- Permission modes `manual` (alias of `default` since 2.1.200) and `delegate` (agent team leads, experimental)
+- `teammateMode`: `iterm2` option, explicit "default (in-process)" entry instead of a hard-coded `auto`
+- Hook event `DirectoryAdded`
+- Note in the MCP tab that `mcpServers` lives in `.mcp.json` / `~/.claude.json`, not in `settings.json`
+
+## [1.3.1] — 2026-08-03
+
+### Fixed
+- Version line was hard-coded to v1.2 and never read the maintained i18n key
+- Opus 5 added to model descriptions and `validModels`
+- Favicon from `logo.svg`
+
 ## [1.3] — 2026-07-14
 
 ### Changed
