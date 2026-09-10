@@ -1,0 +1,7 @@
+claude-code-settings.schema.json is a copy of
+https://www.schemastore.org/claude-code-settings.json
+from the SchemaStore project (https://github.com/SchemaStore/schemastore),
+licensed under the Apache License, Version 2.0
+(https://www.apache.org/licenses/LICENSE-2.0).
+The "desc" strings inside SCHEMA_MAP in claude-settings-editor.html are
+derived from this file. Copyright SchemaStore contributors.
