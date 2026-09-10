@@ -31,7 +31,7 @@ function schemaVersionOf(text) {
 }
 
 function parseReference(md) {
-  const parts = String(md).replace(/\r\n/g, '\n').split(/^### `([A-Za-z.]+)`[ \t]*$/m);
+  const parts = String(md).replace(/\r\n/g, '\n').split(/^### `([A-Za-z0-9.]+)`[ \t]*$/m);
   const facts = {};
   for (let i = 1; i < parts.length; i += 2) {
     const key = parts[i];
