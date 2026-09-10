@@ -103,3 +103,27 @@ test('schemaVersionOf picks the highest v2.x.y marker', () => {
   assert.equal(gen.schemaVersionOf('added in v2.1.111 and v2.1.219, before v2.1.9'), '2.1.219');
   assert.equal(gen.schemaVersionOf('none'), '');
 });
+
+test('enum is only harvested from closed sets, not from example values', () => {
+  const md = `# Settings reference
+
+### \`language\`
+
+Pick a language.
+
+* **Scope**: [\`Any file\`](#scopes)
+* **Type**: string, any language name, such as \`"japanese"\`, \`"spanish"\`
+* **Default**: unset
+
+### \`pair\`
+
+Two choices.
+
+* **Scope**: [\`Any file\`](#scopes)
+* **Type**: string, either \`"a"\` or \`"b"\`
+* **Default**: \`"a"\`
+`;
+  const f = gen.parseReference(md);
+  assert.deepEqual(f.language.enum, []);
+  assert.deepEqual(f.pair.enum, ['a', 'b']);
+});

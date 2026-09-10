@@ -11,7 +11,7 @@ GUI-Editor für Claude Code `settings.json`-Dateien. Erklärt jede Einstellung a
 ## Kommandos
 - **Öffnen (manuell):** `claude-settings-editor.html` in einem Chromium-Browser öffnen (File System Access API braucht Chromium — Firefox/Safari nicht voll unterstützt).
 - **Öffnen (Auto-Detect):** `python open-editor.py`
-- Kein Build/Test/Lint-Tooling vorhanden — Änderungen direkt im Browser verifizieren (Live-Reload durch Neuladen der HTML-Datei).
+- Kein Build-Schritt für Nutzer; Werkzeugkette nur für Pflegende (Tests, Selbst-Check, Generator, siehe unten). UI-Änderungen zusätzlich im Browser verifizieren (Neuladen der HTML-Datei).
 - **Tests:** `node --test tools/*.test.js` (Node 26, node:test)
 - **Selbst-Check:** `node tools/self-check.js` (Exit 1 bei harten Befunden — vor jedem Commit)
 - **Schema-Extrakt erneuern:** `node tools/build-schema-map.js --fetch` (schreibt SCHEMA_MAP in die HTML; `tools/sources/settings-reference.md` bleibt gitignored)

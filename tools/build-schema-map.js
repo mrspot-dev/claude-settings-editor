@@ -41,7 +41,10 @@ function parseReference(md) {
     const typeBlock = (body.match(/^\* \*\*Type\*\*: [\s\S]*?(?=\n\* \*\*|\n\n)/m) || [''])[0];
     const typeWord = ((typeBlock.match(/\*\*Type\*\*: ([A-Za-z]+)/) || [])[1] || '').toLowerCase();
     const defLine = (body.match(/^\* \*\*Default\*\*: ([^\n]+)/m) || [])[1] || '';
-    const enumVals = [...typeBlock.matchAll(/`"([^"`]+)"`/g)].map(m => m[1]).filter((v, i, a) => a.indexOf(v) === i);
+    // A closed set describes the key itself only when the key holds a string; on an object or array
+    // key the "one of" list belongs to a nested field (modelSettings.effortLevel, spinnerVerbs.mode).
+    const closedSet = /\b(?:one of|either|the string)\b/i.test(typeBlock) && !(TYPES.includes(typeWord) && typeWord !== 'string');
+    const enumVals = closedSet ? [...typeBlock.matchAll(/`"([^"`]+)"`/g)].map(m => m[1]).filter((v, i, a) => a.indexOf(v) === i) : [];
     const since = (body.match(/Requires Claude Code v(\d+\.\d+\.\d+)/) || [])[1] || '';
     const env = [...body.matchAll(ENV_RE)].map(m => m[1]).filter((v, i, a) => a.indexOf(v) === i).slice(0, 4);
     facts[key] = {
@@ -71,7 +74,7 @@ function buildMap(schema, facts, meta) {
       default: f ? f.default : (p && Object.prototype.hasOwnProperty.call(p, 'default') ? JSON.stringify(p.default) : ''),
       since: f ? f.since : '',
       env: f ? f.env : [],
-      deprecated: /deprecated/i.test(desc),
+      deprecated: !!p && (p.deprecated === true || /^\s*(?:\*\*)?DEPRECATED\b/i.test(desc)),
       desc,
       inSchema: !!p,
       inReference: !!f,

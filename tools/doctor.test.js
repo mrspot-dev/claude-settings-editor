@@ -63,3 +63,12 @@ test('diffSchemaKeys compares remote top-level keys with embedded inSchema keys'
   const r = diffSchemaKeys(['a', 'd', '__proto__', 'constructor', '$schema'], map);
   assert.deepEqual(r, { added: ['d'], removed: ['b'] });
 });
+
+test('embedded SCHEMA_MAP facts: fastMode is not deprecated, language has no enum', () => {
+  const map = ex.extractSchemaMap(lf);
+  assert.equal(map.keys.fastMode.deprecated, false);
+  assert.equal(map.keys.includeCoAuthoredBy.deprecated, true);
+  assert.deepEqual(map.keys.language.enum, []);
+  assert.deepEqual(map.keys.minimumVersion.enum, []);
+});
+
