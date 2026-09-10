@@ -107,6 +107,8 @@ On Windows, you can also double-click `open-editor.bat`.
 - **Global Search** — find any setting across all tabs (`/` shortcut)
 - **Undo/Redo** — 50-step history with debounced snapshots (`Ctrl+Z` / `Ctrl+Y`)
 - **MCP Server Status Check** — test button to verify HTTP/SSE server connectivity
+- **Settings Doctor** — flags unknown, deprecated, mistyped and managed-only keys with one-click fixes
+- **Schema Sync** — one click compares the embedded key table with the official schema
 
 ### Permission Presets
 
