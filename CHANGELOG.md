@@ -3,6 +3,17 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.3.3] — 2026-09-10
+
+Effort keys that the Claude Code changelog (2.1.251 / 2.1.267) introduced after the SchemaStore schema (2.1.219) was last updated.
+
+### Added
+- `maxEffortLevel` — caps the effort of every session on every provider; lower levels stay available, `max` means no cap
+- `modelSettings` — per-model `effortLevel` and `maxEffortLevel`, the object Claude Code writes when you confirm a level with `/effort`; rows with two selects per model
+- `ultracode` — start sessions at `xhigh` with ultracode on
+- Validation for the cap enum and for each `modelSettings` entry; search entries for both groups
+- Effort description now states that `max` is session-only and that a `modelSettings` entry beats the global level
+
 ## [1.3.2] — 2026-09-10
 
 Alignment with the official settings schema (schemastore, state 2.1.219) and the Claude Code docs (2.1.267).

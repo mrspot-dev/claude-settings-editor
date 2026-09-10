@@ -773,6 +773,58 @@
               </div>
             </div>
 
+            <div id="setting-effort-cap" class="settings-group">
+              <label for="input-max-effort" class="setting-label" x-text="t('general.maxEffort')"></label>
+              <p class="setting-desc" x-text="t('general.maxEffortDesc')"></p>
+              <select id="input-max-effort" x-model="settings.maxEffortLevel" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.maxEffortLevel }">
+                <option value="" x-text="t('general.maxEffortNone')"></option>
+                <option value="low">low</option>
+                <option value="medium">medium</option>
+                <option value="high">high</option>
+                <option value="xhigh">xhigh</option>
+                <option value="max" x-text="t('general.maxEffortMax')"></option>
+              </select>
+              <div class="flex items-start justify-between mt-4">
+                <div class="flex-1">
+                  <span class="setting-label" id="label-ultracode" x-text="t('general.ultracode')"></span>
+                  <p class="setting-desc" x-text="t('general.ultracodeDesc')"></p>
+                </div>
+                <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.ultracode }" @click="settings.ultracode = !settings.ultracode; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-ultracode" :aria-checked="settings.ultracode" @keydown.enter="settings.ultracode = !settings.ultracode; markUnsaved()" @keydown.space.prevent="settings.ultracode = !settings.ultracode; markUnsaved()"></div>
+              </div>
+            </div>
+
+            <div id="setting-model-settings" class="settings-group">
+              <label class="setting-label" x-text="t('general.modelSettings')"></label>
+              <p class="setting-desc" x-text="t('general.modelSettingsDesc')"></p>
+              <div class="space-y-2 mt-3">
+                <template x-for="(entry, key) in settings.modelSettings" :key="'ms-'+key">
+                  <div class="flex items-center gap-2 group">
+                    <code class="font-mono text-sm font-semibold text-cyan-400 w-48 flex-shrink-0 truncate" x-text="key"></code>
+                    <select :value="entry.effortLevel || ''" @change="setModelSetting(key, 'effortLevel', $event.target.value)" class="setting-input flex-1 !text-sm font-mono" :aria-label="t('general.modelSettingsEffort')">
+                      <option value="" x-text="t('general.modelSettingsEffortNone')"></option>
+                      <option value="low">low</option>
+                      <option value="medium">medium</option>
+                      <option value="high">high</option>
+                      <option value="xhigh">xhigh</option>
+                    </select>
+                    <select :value="entry.maxEffortLevel || ''" @change="setModelSetting(key, 'maxEffortLevel', $event.target.value)" class="setting-input flex-1 !text-sm font-mono" :aria-label="t('general.modelSettingsCap')">
+                      <option value="" x-text="t('general.modelSettingsCapNone')"></option>
+                      <option value="low">low</option>
+                      <option value="medium">medium</option>
+                      <option value="high">high</option>
+                      <option value="xhigh">xhigh</option>
+                      <option value="max" x-text="t('general.maxEffortMax')"></option>
+                    </select>
+                    <button @click="const tmp = {...settings.modelSettings}; delete tmp[key]; settings.modelSettings = tmp; markUnsaved()" class="text-fg-dim hover:text-red-400 text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                  </div>
+                </template>
+              </div>
+              <div class="flex items-center gap-2 mt-3">
+                <input type="text" x-model="newModelSettingKey" @keydown.enter="addModelSetting()" :placeholder="t('general.modelSettingsKeyPlaceholder')" :aria-label="t('general.modelSettings')" class="setting-input flex-1 font-mono">
+                <button @click="addModelSetting()" class="btn-primary px-3 py-2 text-xs font-mono font-medium rounded-xl bg-cyan-500 text-white">+</button>
+              </div>
+            </div>
+
             <div id="setting-output-style" class="settings-group">
               <label for="input-output-style" class="setting-label" x-text="t('general.outputStyle')"></label>
               <p class="setting-desc" x-text="t('general.outputStyleDesc')"></p>
@@ -3308,6 +3360,7 @@
     function defaultSettings() {
       return {
         model: '', effortLevel: '', outputStyle: '', language: '',
+        maxEffortLevel: '', ultracode: false, modelSettings: {},
         alwaysThinkingEnabled: false, autoUpdatesChannel: 'latest',
         permissions: { allow: [], ask: [], deny: [], additionalDirectories: [], defaultMode: 'default', disableBypassPermissionsMode: '', disableAutoMode: '' },
         enabledPlugins: {}, hooks: {}, mcpServers: {},
@@ -3343,7 +3396,7 @@
 
     const T = {
       // ─── App Shell ───
-      'app.version': { de: 'v1.3.2 · made with 💛', en: 'v1.3.2 · made with 💛', es: 'v1.3.2 · hecho con 💛', fr: 'v1.3.2 · fait avec 💛', ja: 'v1.3.2 · made with 💛', pt: 'v1.3.2 · feito com 💛' },
+      'app.version': { de: 'v1.3.3 · made with 💛', en: 'v1.3.3 · made with 💛', es: 'v1.3.3 · hecho con 💛', fr: 'v1.3.3 · fait avec 💛', ja: 'v1.3.3 · made with 💛', pt: 'v1.3.3 · feito com 💛' },
       'app.by': { de: 'von', en: 'by', es: 'por', fr: 'par', ja: '作成者', pt: 'por' },
       'sidebar.collapse': { de: 'Sidebar einklappen', en: 'Collapse sidebar', es: 'Contraer barra lateral', fr: 'Replier la barre laterale', ja: 'サイドバーを折りたたむ', pt: 'Recolher barra lateral' },
       'sidebar.expand': { de: 'Sidebar ausklappen', en: 'Expand sidebar', es: 'Expandir barra lateral', fr: 'Deplier la barre laterale', ja: 'サイドバーを展開する', pt: 'Expandir barra lateral' },
@@ -3410,7 +3463,7 @@
       'general.fallbackModelPlaceholder': { de: 'z.B. opus, sonnet, default', en: 'e.g. opus, sonnet, default', es: 'p.ej. opus, sonnet, default', fr: 'p.ex. opus, sonnet, default', ja: '例: opus, sonnet, default', pt: 'ex. opus, sonnet, default' },
       'general.configHint': { de: 'Tipp: Diese Einstellungen lassen sich auch direkt im Terminal setzen — /config öffnet das eingebaute TUI, /config <key>=<value> setzt einen Wert nicht-interaktiv.', en: 'Tip: These settings can also be set directly in the terminal — /config opens the built-in TUI, /config <key>=<value> sets a value non-interactively.', es: 'Consejo: Estos ajustes tambien se pueden configurar directamente en la terminal — /config abre el TUI integrado, /config <key>=<value> establece un valor de forma no interactiva.', fr: 'Astuce: Ces parametres peuvent aussi etre definis directement dans le terminal — /config ouvre le TUI integre, /config <key>=<value> definit une valeur de maniere non interactive.', ja: 'ヒント: これらの設定はターミナルからも直接設定できます — /config は組み込みTUIを開き、/config <key>=<value> は値を非対話的に設定します。', pt: 'Dica: Estas configuracoes tambem podem ser definidas diretamente no terminal — /config abre o TUI integrado, /config <key>=<value> define um valor de forma nao interativa.' },
       'general.effort': { de: 'Effort Level', en: 'Effort Level', es: 'Nivel de esfuerzo', fr: 'Niveau d\'effort', ja: 'エフォートレベル', pt: 'Nivel de esforco' },
-      'general.effortDesc': { de: 'Wie viel Denkaufwand Claude in Antworten steckt. "low" = knapp und schnell. "high" = tieferes Reasoning.', en: 'How much thinking effort Claude puts into answers. "low" = brief and fast. "high" = deeper reasoning.', es: 'Cuanto esfuerzo de razonamiento pone Claude en las respuestas. "low" = breve y rapido. "high" = razonamiento mas profundo.', fr: 'Combien d\'effort de reflexion Claude met dans les reponses. "low" = bref et rapide. "high" = raisonnement approfondi.', ja: 'Claudeが回答にかける思考量。「low」= 簡潔で高速。「high」= より深い推論。', pt: 'Quanto esforco de raciocinio o Claude coloca nas respostas. "low" = breve e rapido. "high" = raciocinio mais profundo.' },
+      'general.effortDesc': { de: 'Standard-Denkaufwand für Modelle ohne eigenen Eintrag in modelSettings. low = knapp und schnell, xhigh = tiefstes speicherbares Reasoning. max gilt nur je Sitzung (/effort oder CLAUDE_CODE_EFFORT_LEVEL).', en: 'Default thinking effort for models without their own modelSettings entry. low = brief and fast, xhigh = deepest storable reasoning. max is session-only (/effort or CLAUDE_CODE_EFFORT_LEVEL).', es: 'Esfuerzo de razonamiento por defecto para modelos sin entrada propia en modelSettings. low = breve y rápido, xhigh = razonamiento más profundo almacenable. max solo por sesión (/effort o CLAUDE_CODE_EFFORT_LEVEL).', fr: 'Effort de réflexion par défaut pour les modèles sans entrée propre dans modelSettings. low = bref et rapide, xhigh = raisonnement le plus profond enregistrable. max ne vaut que pour la session (/effort ou CLAUDE_CODE_EFFORT_LEVEL).', ja: 'modelSettings に独自エントリのないモデルの既定の思考エフォート。low = 簡潔で高速、xhigh = 保存可能な最も深い推論。max はセッション限定（/effort または CLAUDE_CODE_EFFORT_LEVEL）。', pt: 'Esforço de raciocínio padrão para modelos sem entrada própria em modelSettings. low = breve e rápido, xhigh = raciocínio mais profundo armazenável. max vale só por sessão (/effort ou CLAUDE_CODE_EFFORT_LEVEL).' },
       'general.effortDefault': { de: 'Standard (high)', en: 'Default (high)', es: 'Predeterminado (high)', fr: 'Par defaut (high)', ja: 'デフォルト（high）', pt: 'Padrao (high)' },
       'general.effortLow': { de: 'Low — Schnelle, knappe Antworten', en: 'Low — Quick, brief answers', es: 'Low — Respuestas rapidas y breves', fr: 'Low — Reponses rapides et breves', ja: 'Low — 素早く簡潔な回答', pt: 'Low — Respostas rapidas e breves' },
       'general.effortMedium': { de: 'Medium — Ausgewogen', en: 'Medium — Balanced', es: 'Medium — Equilibrado', fr: 'Medium — Equilibre', ja: 'Medium — バランス型', pt: 'Medium — Equilibrado' },
@@ -3422,6 +3475,19 @@
       'general.effortSpeed': { de: 'Speed', en: 'Speed', es: 'Velocidad', fr: 'Vitesse', ja: 'スピード', pt: 'Velocidade' },
       'general.effortDepth': { de: 'Tiefe', en: 'Depth', es: 'Profundidad', fr: 'Profondeur', ja: '深度', pt: 'Profundidade' },
       'general.effortDefaultBadge': { de: 'Standard', en: 'Default', es: 'Predeterminado', fr: 'Par defaut', ja: 'デフォルト', pt: 'Padrao' },
+      'general.maxEffort': { de: 'Effort-Obergrenze (maxEffortLevel)', en: 'Effort cap (maxEffortLevel)', es: 'Límite de esfuerzo (maxEffortLevel)', fr: 'Plafond d’effort (maxEffortLevel)', ja: 'エフォート上限（maxEffortLevel）', pt: 'Limite de esforço (maxEffortLevel)' },
+      'general.maxEffortDesc': { de: 'Deckelt den Effort jeder Sitzung, auch /effort, --effort und den Modell-Default; niedrigere Stufen bleiben wählbar. Gilt auf jedem Provider, auch Bedrock, Vertex und Foundry. Über mehrere Dateien gewinnt die niedrigste Grenze (ab v2.1.267).', en: 'Caps the effort of every session, including /effort, --effort and the model default; lower levels stay available. Holds on every provider, including Bedrock, Vertex and Foundry. Across files the lowest cap wins (v2.1.267+).', es: 'Limita el esfuerzo de cada sesión, incluidos /effort, --effort y el valor por defecto del modelo; los niveles inferiores siguen disponibles. Se aplica en todos los proveedores, incluidos Bedrock, Vertex y Foundry. Entre archivos gana el límite más bajo (v2.1.267+).', fr: 'Plafonne l’effort de chaque session, y compris /effort, --effort et la valeur par défaut du modèle ; les niveaux inférieurs restent disponibles. S’applique sur tous les fournisseurs, dont Bedrock, Vertex et Foundry. Entre fichiers, le plafond le plus bas l’emporte (v2.1.267+).', ja: 'すべてのセッションのエフォートに上限を設けます（/effort、--effort、モデルの既定値も対象）。低いレベルは引き続き選択可能。Bedrock、Vertex、Foundry を含む全プロバイダーで有効。複数ファイルでは最も低い上限が優先（v2.1.267以降）。', pt: 'Limita o esforço de cada sessão, incluindo /effort, --effort e o padrão do modelo; níveis inferiores continuam disponíveis. Vale em todos os provedores, inclusive Bedrock, Vertex e Foundry. Entre arquivos, o limite mais baixo vence (v2.1.267+).' },
+      'general.maxEffortNone': { de: 'Keine Obergrenze (Standard)', en: 'No cap (default)', es: 'Sin límite (predeterminado)', fr: 'Aucun plafond (défaut)', ja: '上限なし（デフォルト）', pt: 'Sem limite (padrão)' },
+      'general.maxEffortMax': { de: 'max — ausdrücklich keine Obergrenze', en: 'max — explicitly no cap', es: 'max — explícitamente sin límite', fr: 'max — explicitement aucun plafond', ja: 'max — 明示的に上限なし', pt: 'max — explicitamente sem limite' },
+      'general.ultracode': { de: 'Ultracode', en: 'Ultracode', es: 'Ultracode', fr: 'Ultracode', ja: 'Ultracode', pt: 'Ultracode' },
+      'general.ultracodeDesc': { de: 'Sitzungen starten mit xhigh und Ultracode: Claude plant für jede größere Aufgabe selbst einen dynamischen Workflow (nur wenn Workflows freigeschaltet sind und keine Obergrenze unter xhigh greift). Übersteuert effortLevel und modelSettings.', en: 'Sessions start at xhigh with ultracode on: Claude plans a dynamic workflow for each substantive task itself (only when workflows are enabled for you and no cap below xhigh applies). Overrides effortLevel and modelSettings.', es: 'Las sesiones empiezan en xhigh con ultracode: Claude planifica por sí mismo un flujo de trabajo dinámico para cada tarea sustancial (solo si los workflows están habilitados y ningún límite por debajo de xhigh se aplica). Anula effortLevel y modelSettings.', fr: 'Les sessions démarrent en xhigh avec ultracode : Claude planifie lui-même un workflow dynamique pour chaque tâche importante (seulement si les workflows sont activés et qu’aucun plafond inférieur à xhigh ne s’applique). Prime sur effortLevel et modelSettings.', ja: 'セッションを xhigh かつ Ultracode で開始します。Claude は大きなタスクごとに自ら動的ワークフローを計画します（ワークフローが有効で、xhigh 未満の上限がない場合のみ）。effortLevel と modelSettings より優先。', pt: 'As sessões começam em xhigh com ultracode: o Claude planeja sozinho um workflow dinâmico para cada tarefa relevante (apenas se workflows estiverem habilitados e nenhum limite abaixo de xhigh se aplicar). Sobrepõe effortLevel e modelSettings.' },
+      'general.modelSettings': { de: 'Effort je Modell (modelSettings)', en: 'Effort per model (modelSettings)', es: 'Esfuerzo por modelo (modelSettings)', fr: 'Effort par modèle (modelSettings)', ja: 'モデル別エフォート（modelSettings）', pt: 'Esforço por modelo (modelSettings)' },
+      'general.modelSettingsDesc': { de: 'Gespeicherte Effort-Stufe und Obergrenze je Modell. Claude Code schreibt hier selbst hinein, wenn du eine Stufe per /effort oder im /model-Wähler bestätigst. Der Eintrag eines Modells schlägt das globale effortLevel; Schlüssel ist der kanonische Name (z.B. claude-opus-5), Aliase und [1m]-Varianten werden zugeordnet. Ab v2.1.251, Obergrenze ab v2.1.267.', en: 'Saved effort level and cap per model. Claude Code writes here itself when you confirm a level with /effort or in the /model picker. A model entry beats the global effortLevel; the key is the canonical name (e.g. claude-opus-5), aliases and [1m] variants map to it. v2.1.251+, cap v2.1.267+.', es: 'Nivel de esfuerzo y límite guardados por modelo. Claude Code escribe aquí por sí mismo cuando confirmas un nivel con /effort o en el selector /model. La entrada de un modelo prevalece sobre effortLevel global; la clave es el nombre canónico (p. ej. claude-opus-5), los alias y variantes [1m] se asignan a ella. v2.1.251+, límite v2.1.267+.', fr: 'Niveau d’effort et plafond enregistrés par modèle. Claude Code écrit ici lui-même quand vous confirmez un niveau avec /effort ou dans le sélecteur /model. L’entrée d’un modèle prime sur effortLevel global ; la clé est le nom canonique (ex. claude-opus-5), les alias et variantes [1m] y sont rattachés. v2.1.251+, plafond v2.1.267+.', ja: 'モデルごとに保存されたエフォートレベルと上限。/effort や /model ピッカーでレベルを確定すると Claude Code が自動で書き込みます。モデルのエントリはグローバルな effortLevel より優先。キーは正規名（例: claude-opus-5）で、エイリアスや [1m] 変種も対応付けられます。v2.1.251以降、上限は v2.1.267以降。', pt: 'Nível de esforço e limite salvos por modelo. O Claude Code escreve aqui sozinho quando você confirma um nível com /effort ou no seletor /model. A entrada de um modelo vence o effortLevel global; a chave é o nome canônico (ex. claude-opus-5), aliases e variantes [1m] são mapeados para ela. v2.1.251+, limite v2.1.267+.' },
+      'general.modelSettingsEffort': { de: 'Effort-Stufe', en: 'Effort level', es: 'Nivel de esfuerzo', fr: 'Niveau d’effort', ja: 'エフォートレベル', pt: 'Nível de esforço' },
+      'general.modelSettingsEffortNone': { de: 'Stufe: keine', en: 'Level: none', es: 'Nivel: ninguno', fr: 'Niveau : aucun', ja: 'レベル: なし', pt: 'Nível: nenhum' },
+      'general.modelSettingsCap': { de: 'Obergrenze', en: 'Cap', es: 'Límite', fr: 'Plafond', ja: '上限', pt: 'Limite' },
+      'general.modelSettingsCapNone': { de: 'Obergrenze: keine', en: 'Cap: none', es: 'Límite: ninguno', fr: 'Plafond : aucun', ja: '上限: なし', pt: 'Limite: nenhum' },
+      'general.modelSettingsKeyPlaceholder': { de: 'claude-opus-5', en: 'claude-opus-5', es: 'claude-opus-5', fr: 'claude-opus-5', ja: 'claude-opus-5', pt: 'claude-opus-5' },
       'general.outputStyle': { de: 'Output Style', en: 'Output Style', es: 'Estilo de salida', fr: 'Style de sortie', ja: '出力スタイル', pt: 'Estilo de saida' },
       'general.outputStyleDesc': { de: 'Eingebauter Antwortstil oder eigener Stil aus ~/.claude/output-styles/ bzw. .claude/output-styles/. Schreibweise wie in der Doku (z.B. "Explanatory").', en: 'Built-in response style or a custom style from ~/.claude/output-styles/ or .claude/output-styles/. Use the documented capitalisation (e.g. "Explanatory").', es: 'Estilo de respuesta integrado o estilo propio desde ~/.claude/output-styles/ o .claude/output-styles/. Usa las mayúsculas documentadas (p. ej. "Explanatory").', fr: 'Style de réponse intégré ou style personnalisé depuis ~/.claude/output-styles/ ou .claude/output-styles/. Respectez la casse documentée (ex. « Explanatory »).', ja: '組み込みの応答スタイル、または ~/.claude/output-styles/ や .claude/output-styles/ のカスタムスタイル。大文字小文字はドキュメント通りに（例: "Explanatory"）。', pt: 'Estilo de resposta integrado ou estilo próprio de ~/.claude/output-styles/ ou .claude/output-styles/. Use as maiúsculas documentadas (ex. "Explanatory").' },
       'general.outputStyleDefault': { de: 'Standard (kein Style)', en: 'Default (no style)', es: 'Predeterminado (sin estilo)', fr: 'Par defaut (pas de style)', ja: 'デフォルト（スタイルなし）', pt: 'Padrao (sem estilo)' },
@@ -4214,6 +4280,10 @@
       'search.model.desc': { de: 'Claude Modell (Opus 5, Sonnet 5, Haiku, Fable 5.1)', en: 'Claude model (Opus 5, Sonnet 5, Haiku, Fable 5.1)', es: 'Modelo Claude (Opus 5, Sonnet 5, Haiku, Fable 5.1)', fr: 'Modele Claude (Opus 5, Sonnet 5, Haiku, Fable 5.1)', ja: 'Claudeモデル（Opus 5, Sonnet 5, Haiku, Fable 5.1）', pt: 'Modelo Claude (Opus 5, Sonnet 5, Haiku, Fable 5.1)' },
       'search.effort': { de: 'Effort Level', en: 'Effort Level', es: 'Nivel de esfuerzo', fr: 'Niveau d\'effort', ja: 'エフォートレベル', pt: 'Nivel de esforco' },
       'search.effort.desc': { de: 'Denktiefe und Reasoning-Aufwand', en: 'Thinking depth and reasoning effort', es: 'Profundidad de razonamiento', fr: 'Profondeur de reflexion et effort', ja: '思考の深さと推論の労力', pt: 'Profundidade de raciocinio e esforco' },
+      'search.effortCap': { de: 'Effort-Obergrenze / Ultracode', en: 'Effort cap / Ultracode', es: 'Límite de esfuerzo / Ultracode', fr: 'Plafond d’effort / Ultracode', ja: 'エフォート上限 / Ultracode', pt: 'Limite de esforço / Ultracode' },
+      'search.effortCap.desc': { de: 'Obergrenze für Effort und Ultracode-Start', en: 'Effort cap and ultracode at startup', es: 'Límite de esfuerzo y ultracode al inicio', fr: 'Plafond d’effort et ultracode au démarrage', ja: 'エフォート上限と起動時の Ultracode', pt: 'Limite de esforço e ultracode no início' },
+      'search.modelSettings': { de: 'Effort je Modell', en: 'Effort per model', es: 'Esfuerzo por modelo', fr: 'Effort par modèle', ja: 'モデル別エフォート', pt: 'Esforço por modelo' },
+      'search.modelSettings.desc': { de: 'Gespeicherte Effort-Stufe und Obergrenze je Modell (modelSettings)', en: 'Saved effort level and cap per model (modelSettings)', es: 'Nivel de esfuerzo y límite guardados por modelo (modelSettings)', fr: 'Niveau d’effort et plafond enregistrés par modèle (modelSettings)', ja: 'モデルごとのエフォートと上限（modelSettings）', pt: 'Nível de esforço e limite salvos por modelo (modelSettings)' },
       'search.outputStyle': { de: 'Output Style', en: 'Output Style', es: 'Estilo de salida', fr: 'Style de sortie', ja: '出力スタイル', pt: 'Estilo de saida' },
       'search.outputStyle.desc': { de: 'Stil der Antworten', en: 'Response style', es: 'Estilo de respuestas', fr: 'Style des reponses', ja: '回答のスタイル', pt: 'Estilo das respostas' },
       'search.language': { de: 'Language', en: 'Language', es: 'Idioma', fr: 'Langue', ja: '言語', pt: 'Idioma' },
@@ -4457,6 +4527,9 @@
       'validation.invalidPermModeSuffix': { de: '". Erlaubt: default, acceptEdits, plan, bypassPermissions, dontAsk, auto.', en: '". Allowed: default, acceptEdits, plan, bypassPermissions, dontAsk, auto.', es: '". Permitidos: default, acceptEdits, plan, bypassPermissions, dontAsk, auto.', fr: '". Autorise: default, acceptEdits, plan, bypassPermissions, dontAsk, auto.', ja: '"。許可: default, acceptEdits, plan, bypassPermissions, dontAsk, auto。', pt: '". Permitidos: default, acceptEdits, plan, bypassPermissions, dontAsk, auto.' },
       'validation.invalidEffort': { de: 'Ungueltiger Effort-Level: "', en: 'Invalid effort level: "', es: 'Nivel de esfuerzo invalido: "', fr: 'Niveau d\'effort invalide: "', ja: '無効なエフォートレベル: "', pt: 'Nivel de esforco invalido: "' },
       'validation.invalidEffortSuffix': { de: '". Erlaubt: low, medium, high, xhigh.', en: '". Allowed: low, medium, high, xhigh.', es: '". Permitidos: low, medium, high, xhigh.', fr: '". Autorise: low, medium, high, xhigh.', ja: '"。許可: low, medium, high, xhigh。', pt: '". Permitidos: low, medium, high, xhigh.' },
+      'validation.invalidMaxEffort': { de: 'Ungültige Effort-Obergrenze: "', en: 'Invalid effort cap: "', es: 'Límite de esfuerzo inválido: "', fr: 'Plafond d’effort invalide : "', ja: '無効なエフォート上限: "', pt: 'Limite de esforço inválido: "' },
+      'validation.invalidMaxEffortSuffix': { de: '". Erlaubt: low, medium, high, xhigh, max.', en: '". Allowed: low, medium, high, xhigh, max.', es: '". Permitidos: low, medium, high, xhigh, max.', fr: '". Autorisés : low, medium, high, xhigh, max.', ja: '"。許可: low, medium, high, xhigh, max。', pt: '". Permitidos: low, medium, high, xhigh, max.' },
+      'validation.invalidModelEffort': { de: 'Ungültige Effort-Angabe in modelSettings — ', en: 'Invalid effort value in modelSettings — ', es: 'Valor de esfuerzo inválido en modelSettings — ', fr: 'Valeur d’effort invalide dans modelSettings — ', ja: 'modelSettings のエフォート値が無効 — ', pt: 'Valor de esforço inválido em modelSettings — ' },
       'validation.emptyRule': { de: ' ist leer.', en: ' is empty.', es: ' esta vacio.', fr: ' est vide.', ja: ' が空です。', pt: ' esta vazio.' },
       'validation.duplicateRule': { de: 'Doppelte ', en: 'Duplicate ', es: 'Regla duplicada de ', fr: 'Regle en double ', ja: '重複した', pt: 'Regra duplicada de ' },
       'validation.duplicateRuleSuffix': { de: ' Rule: "', en: ' rule: "', es: ': "', fr: ': "', ja: 'ルール: "', pt: ': "' },
@@ -4516,6 +4589,7 @@
         newAvailableModel: '',
         newFallbackModel: '',
         newModelOverrideKey: '',
+        newModelSettingKey: '',
         newModelOverrideValue: '',
         newMcpAllowedEnvVar: {},
 
@@ -4526,6 +4600,8 @@
         settingsRegistry: [
           { tab: 'general', label: 'search.model', desc: 'search.model.desc', keywords: ['model', 'modell', 'opus', 'opus 4.8', 'sonnet', 'sonnet 5', 'haiku', 'fable', 'fable 5', 'fable 5.1', 'best'], id: 'setting-model' },
           { tab: 'general', label: 'search.effort', desc: 'search.effort.desc', keywords: ['effort', 'xhigh', 'high', 'medium', 'low', 'denktiefe'], id: 'setting-effort' },
+          { tab: 'general', label: 'search.effortCap', desc: 'search.effortCap.desc', keywords: ['maxEffortLevel', 'cap', 'ultracode', 'obergrenze', 'deckel', 'effort'], id: 'setting-effort-cap' },
+          { tab: 'general', label: 'search.modelSettings', desc: 'search.modelSettings.desc', keywords: ['modelSettings', 'effort', 'per model', 'je modell', 'cap', 'obergrenze'], id: 'setting-model-settings' },
           { tab: 'general', label: 'search.outputStyle', desc: 'search.outputStyle.desc', keywords: ['output', 'style', 'proactive', 'concise', 'explanatory', 'learning'], id: 'setting-output-style' },
           { tab: 'general', label: 'search.language', desc: 'search.language.desc', keywords: ['language', 'sprache', 'deutsch', 'english'], id: 'setting-language' },
           { tab: 'general', label: 'search.thinking', desc: 'search.thinking.desc', keywords: ['thinking', 'denken', 'reasoning'], id: 'setting-thinking' },
@@ -5432,6 +5508,9 @@
             const s = this.settings;
             if (data.model) s.model = data.model;
             if (data.effortLevel) s.effortLevel = data.effortLevel;
+            if (data.maxEffortLevel) s.maxEffortLevel = data.maxEffortLevel;
+            if (data.ultracode !== undefined) s.ultracode = data.ultracode;
+            if (data.modelSettings) s.modelSettings = JSON.parse(JSON.stringify(data.modelSettings));
             if (data.outputStyle) { const legacyStyles = { explanatory: 'Explanatory', learning: 'Learning', concise: 'Concise' }; s.outputStyle = legacyStyles[data.outputStyle] || data.outputStyle; }
             if (data.language) s.language = data.language;
             if (data.alwaysThinkingEnabled !== undefined) s.alwaysThinkingEnabled = data.alwaysThinkingEnabled;
@@ -5499,7 +5578,7 @@
             if (data.modelOverrides) this.settings.modelOverrides = JSON.parse(JSON.stringify(data.modelOverrides));
             // Preserve unknown properties for roundtrip fidelity
             const knownKeys = new Set([
-              'model', 'effortLevel', 'outputStyle', 'language', 'alwaysThinkingEnabled',
+              'model', 'effortLevel', 'maxEffortLevel', 'ultracode', 'modelSettings', 'outputStyle', 'language', 'alwaysThinkingEnabled',
               'autoUpdatesChannel', 'permissions', 'enabledPlugins', 'hooks', 'sandbox',
               'env', 'spinnerVerbs', 'spinnerTipsEnabled', 'showTurnDuration',
               'prefersReducedMotion', 'statusLine', 'attribution', 'cleanupPeriodDays',
@@ -5530,6 +5609,9 @@
           const s = settingsOverride || this.settings; const out = {};
           if (s.model) out.model = s.model;
           if (s.effortLevel) out.effortLevel = s.effortLevel;
+          if (s.maxEffortLevel) out.maxEffortLevel = s.maxEffortLevel;
+          if (s.ultracode) out.ultracode = true;
+          if (Object.keys(s.modelSettings || {}).length) out.modelSettings = JSON.parse(JSON.stringify(s.modelSettings));
           if (s.outputStyle) out.outputStyle = s.outputStyle;
           if (s.language) out.language = s.language;
           if (s.alwaysThinkingEnabled) out.alwaysThinkingEnabled = true;
@@ -5630,6 +5712,19 @@
           return JSON.stringify(out, null, 2);
         },
 
+        addModelSetting() {
+          const key = (this.newModelSettingKey || '').trim();
+          if (!key || this.settings.modelSettings[key]) return;
+          this.settings.modelSettings = { ...this.settings.modelSettings, [key]: { effortLevel: 'high' } };
+          this.newModelSettingKey = '';
+          this.markUnsaved();
+        },
+        setModelSetting(key, field, value) {
+          const entry = { ...this.settings.modelSettings[key] };
+          if (value) entry[field] = value; else delete entry[field];
+          this.settings.modelSettings = { ...this.settings.modelSettings, [key]: entry };
+          this.markUnsaved();
+        },
         setJsonField(key, value) {
           try { this.settings[key] = JSON.parse(value); this.markUnsaved(); } catch (e) {}
         },
@@ -5964,6 +6059,14 @@
           const validEffort = ['', 'low', 'medium', 'high', 'xhigh'];
           if (s.effortLevel && !validEffort.includes(s.effortLevel)) {
             errors.push({ tab: 'general', field: 'effortLevel', severity: 'error', message: this.t('validation.invalidEffort') + s.effortLevel + this.t('validation.invalidEffortSuffix') });
+          }
+          const validEffortCap = ['', 'low', 'medium', 'high', 'xhigh', 'max'];
+          if (s.maxEffortLevel && !validEffortCap.includes(s.maxEffortLevel)) {
+            errors.push({ tab: 'general', field: 'maxEffortLevel', severity: 'error', message: this.t('validation.invalidMaxEffort') + s.maxEffortLevel + this.t('validation.invalidMaxEffortSuffix') });
+          }
+          for (const [name, entry] of Object.entries(s.modelSettings || {})) {
+            if (entry.effortLevel && !validEffort.includes(entry.effortLevel)) errors.push({ tab: 'general', field: 'modelSettings', severity: 'error', message: this.t('validation.invalidModelEffort') + name + ': ' + entry.effortLevel });
+            if (entry.maxEffortLevel && !validEffortCap.includes(entry.maxEffortLevel)) errors.push({ tab: 'general', field: 'modelSettings', severity: 'error', message: this.t('validation.invalidModelEffort') + name + ': ' + entry.maxEffortLevel });
           }
 
           // Editor mode
