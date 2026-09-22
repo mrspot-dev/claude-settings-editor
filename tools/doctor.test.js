@@ -82,3 +82,19 @@ test('the doctor raises nothing but the mcpServers hint on a document made of ev
   const findings = doctorFindings(doc, map, { skipEnum: ['effortLevel', 'maxEffortLevel', 'editorMode', 'theme', 'teammateMode', 'autoUpdatesChannel', 'outputStyle'], hints: { mcpServers: true } });
   assert.deepEqual(findings.filter(f => f.kind !== 'hint' && f.kind !== 'managed'), [], JSON.stringify(findings));
 });
+
+test('opus55EffortHint: a top-level effortLevel without an Opus 5.5 entry yields a modelSettings fix', () => {
+  const hint = ex.extractFunction(lf, 'opus55EffortHint');
+  assert.deepEqual(hint({ effortLevel: 'high' }), { type: 'modelSetting', key: 'claude-opus-5-5', effortLevel: 'high' });
+  assert.deepEqual(hint({ effortLevel: 'xhigh', modelSettings: { 'claude-opus-5': { effortLevel: 'low' } } }), { type: 'modelSetting', key: 'claude-opus-5-5', effortLevel: 'xhigh' });
+  assert.equal(hint({ effortLevel: 'high', modelSettings: { 'claude-opus-5-5': { maxEffortLevel: 'high' } } }), null);
+  assert.equal(hint({}), null);
+  assert.equal(hint({ modelSettings: {} }), null);
+});
+
+test('voice: the editor writes the voice object, never the deprecated voiceEnabled', () => {
+  const known = [...lf.match(/const knownKeys = new Set\(\[([\s\S]*?)\]\)/)[1].matchAll(/'([^']+)'/g)].map(m => m[1]);
+  assert.ok(known.includes('voice'));
+  assert.ok(!known.includes('voiceEnabled'));
+  assert.ok(known.includes('bashEditDiffEnabled'));
+});

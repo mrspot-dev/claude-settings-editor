@@ -3,6 +3,25 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.5.0] — 2026-09-23
+
+Claude Opus 5.5 and Fable 5.1 (Claude Code 2.1.280), plus the rest of the changelog since 2.1.267.
+
+### Added
+- Doctor hint with one-click fix: a top-level `effortLevel` no longer applies to Opus 5.5 when it sits in the user settings file (2.1.280). The fix copies the level into `modelSettings["claude-opus-5-5"]`. The browser can't tell which file is open, so the hint is an info finding worded conditionally.
+- `bashEditDiffEnabled` (2.1.269) in the Advanced tab as a three-way choice: unset (auto and bypass mode only), on in every mode, off.
+- Environment suggestions `ANTHROPIC_DEFAULT_OPUS_MODEL` and `ANTHROPIC_DEFAULT_FABLE_MODEL`.
+- `claude-opus-5-5` and `claude-mythos-5-1` accepted as model IDs.
+
+### Changed
+- Model texts in all six languages: `opus` and the account default resolve to Opus 5.5 on every plan, including Pro and Team Standard; Opus 5.5 defaults to effort `medium`; `fable` resolves to Fable 5 in Claude apps gateway sessions.
+- Fast mode description corrected: same model and quality, only faster output at a higher price (Opus 5.5: $8/$40 per MTok), runs on Opus 5.5, Opus 5 and Opus 4.8, on subscription plans only through usage credits. The old text claimed less detail.
+- Voice now writes the `voice` object. An imported `voiceEnabled` (deprecated since 2.1.92) is moved into `voice.enabled` with a notice; `voice.enabled` wins when both are set, and `mode`/`autoSubmit` survive the round trip.
+- `SCHEMA_MAP` regenerated (234 keys, reference of 2026-09-22).
+
+### Fixed
+- The generator now recognises keys the reference marks as removed or deprecated through a leading warning block. Seven keys are flagged instead of one, among them `taskOutputMaxChars` (removed in 2.1.277), `teammateDefaultModel` and `voiceEnabled`. Only a warning that opens the section counts, so a later mention can't flag a key.
+
 ## [1.4] — 2026-09-10
 
 Data layer and doctor (design 2026-08-03, part A).
