@@ -47,6 +47,8 @@ function parseReference(md) {
     const enumVals = closedSet ? [...typeBlock.matchAll(/`"([^"`]+)"`/g)].map(m => m[1]).filter((v, i, a) => a.indexOf(v) === i) : [];
     const since = (body.match(/Requires Claude Code v(\d+\.\d+\.\d+)/) || [])[1] || '';
     const env = [...body.matchAll(ENV_RE)].map(m => m[1]).filter((v, i, a) => a.indexOf(v) === i).slice(0, 4);
+    // Only a warning that opens the section counts; a substring search flagged fastMode in v1.4.
+    const deprecated = /^\s*<Warning>\s*(?:Removed in|Deprecated)\b/.test(body);
     facts[key] = {
       scope: SCOPES[scopeRaw] || 'unknown',
       type: TYPES.includes(typeWord) ? typeWord : '',
@@ -54,6 +56,7 @@ function parseReference(md) {
       default: defLine.replace(/\*\*/g, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/`/g, '').trim().slice(0, 80),
       since,
       env,
+      deprecated,
     };
   }
   return facts;
@@ -74,7 +77,7 @@ function buildMap(schema, facts, meta) {
       default: f ? f.default : (p && Object.prototype.hasOwnProperty.call(p, 'default') ? JSON.stringify(p.default) : ''),
       since: f ? f.since : '',
       env: f ? f.env : [],
-      deprecated: !!p && (p.deprecated === true || /^\s*(?:\*\*)?DEPRECATED\b/i.test(desc)),
+      deprecated: (!!p && (p.deprecated === true || /^\s*(?:\*\*)?DEPRECATED\b/i.test(desc))) || (!!f && f.deprecated === true),
       desc,
       inSchema: !!p,
       inReference: !!f,

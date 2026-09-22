@@ -143,3 +143,43 @@ Save an effort level per model.
   assert.equal(f.modelSettings.type, 'object');
   assert.deepEqual(f.modelSettings.enum, []);
 });
+
+test('a leading Removed/Deprecated warning marks the key deprecated; a later mention does not', () => {
+  const md = `# Settings reference
+
+### \`taskOutputMaxChars\`
+
+<Warning>
+  Removed in v2.1.277, together with the \`TaskOutput\` tool it sized. Setting it has no effect on current versions.
+</Warning>
+
+Through v2.1.276, you set this key to the number of characters.
+
+### \`voiceEnabled\`
+
+<Warning>
+  Deprecated since v2.1.92, when the voice object replaced it. Claude Code still reads it.
+</Warning>
+
+* **Scope**: [\`Any file\`](#scopes)
+* **Type**: Boolean
+
+### \`fastMode\`
+
+Enable fast mode. The older opus-only setting was removed in v2.1.100.
+
+<Warning>
+  Fast mode bills to usage credits.
+</Warning>
+
+* **Scope**: [\`Any file\`](#scopes)
+* **Type**: Boolean
+`;
+  const f = gen.parseReference(md);
+  assert.equal(f.taskOutputMaxChars.deprecated, true);
+  assert.equal(f.voiceEnabled.deprecated, true);
+  assert.equal(f.fastMode.deprecated, false);
+  const map = gen.buildMap({ properties: {} }, f, {});
+  assert.equal(map.keys.taskOutputMaxChars.deprecated, true);
+  assert.equal(map.keys.fastMode.deprecated, false);
+});
