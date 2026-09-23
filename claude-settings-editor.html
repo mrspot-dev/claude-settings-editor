@@ -979,6 +979,11 @@
                 <span x-text="t('general.restartWizardBtn')"></span>
               </button>
             </div>
+            <!-- Generic fields (v1.8): extraFields() entries of this tab -->
+            <div x-show="extraFieldsFor('general', 'more').length" class="space-y-3">
+              <h3 class="font-display font-semibold text-sm text-fg" x-text="t('extra.moreTitle')"></h3>
+              <template x-for="f in extraFieldsFor('general', 'more')" :key="f.key"><div x-extra-field="f"></div></template>
+            </div>
           </div>
 
           <!-- ═══ TAB: Permissions ═══ -->
@@ -1309,6 +1314,11 @@
                 </div>
               </div>
             </template>
+            <!-- Generic fields (v1.8): extraFields() entries of this tab -->
+            <div x-show="extraFieldsFor('plugins', 'more').length" class="space-y-3">
+              <h3 class="font-display font-semibold text-sm text-fg" x-text="t('extra.moreTitle')"></h3>
+              <template x-for="f in extraFieldsFor('plugins', 'more')" :key="f.key"><div x-extra-field="f"></div></template>
+            </div>
           </div>
 
           <!-- ═══ TAB: Hooks ═══ -->
@@ -1940,6 +1950,11 @@
                 </div>
               </div>
             </div>
+            <!-- Generic fields (v1.8): extraFields() entries of this tab -->
+            <div x-show="extraFieldsFor('display', 'more').length" class="space-y-3">
+              <h3 class="font-display font-semibold text-sm text-fg" x-text="t('extra.moreTitle')"></h3>
+              <template x-for="f in extraFieldsFor('display', 'more')" :key="f.key"><div x-extra-field="f"></div></template>
+            </div>
           </div>
 
           <!-- ═══ TAB: Attribution ═══ -->
@@ -2227,6 +2242,11 @@
               <div x-show="syncState.status === 'ok' && syncState.removed.length" class="mt-2 text-xs font-mono text-red-300"><span x-text="t('sync.removedKeys') + ' (' + syncState.removed.length + '): '"></span><span x-text="syncState.removed.join(', ')"></span></div>
               <div x-show="syncState.status === 'error'" class="mt-3 text-xs font-mono text-red-300" x-text="t('sync.failed') + ' ' + syncState.error"></div>
               <p class="text-[11px] text-fg-dim mt-3" x-text="t('sync.referenceNote')"></p>
+            </div>
+            <!-- Generic fields (v1.8): extraFields() entries of this tab -->
+            <div x-show="extraFieldsFor('advanced', 'more').length" class="space-y-3">
+              <h3 class="font-display font-semibold text-sm text-fg" x-text="t('extra.moreTitle')"></h3>
+              <template x-for="f in extraFieldsFor('advanced', 'more')" :key="f.key"><div x-extra-field="f"></div></template>
             </div>
           </div>
 
@@ -3174,6 +3194,35 @@
 
           </div>
 
+          <!-- ═══ TAB: Managed ═══ -->
+          <div x-show="activeTab === 'managed'" class="tab-content space-y-6" role="tabpanel">
+            <div id="setting-managed-banner" class="settings-group" :class="managedFile ? 'border-emerald-500/30' : 'border-amber-500/30'">
+              <div class="flex items-start justify-between gap-4">
+                <div class="flex-1">
+                  <label id="label-managed-file" class="setting-label" x-text="t('managed.fileSwitch')"></label>
+                  <p class="setting-desc" x-text="managedFile ? t('managed.bannerOn') : t('managed.bannerOff')"></p>
+                </div>
+                <div class="toggle bg-bg-elevated mt-1 flex-shrink-0"
+                     :class="{ 'active': managedFile, 'opacity-50': (fileName || '').toLowerCase() === 'managed-settings.json' }"
+                     @click="toggleManagedFile()" tabindex="0" role="switch" aria-labelledby="label-managed-file" :aria-checked="managedFile"
+                     @keydown.enter="toggleManagedFile()" @keydown.space.prevent="toggleManagedFile()"></div>
+              </div>
+              <p class="text-xs font-semibold text-fg mt-3" x-text="t('managed.pathsTitle')"></p>
+              <ul class="text-xs text-fg-muted font-mono mt-1 space-y-0.5 break-all">
+                <li>macOS: /Library/Application Support/ClaudeCode/managed-settings.json</li>
+                <li>Linux, WSL: /etc/claude-code/managed-settings.json</li>
+                <li>Windows: C:\Program Files\ClaudeCode\managed-settings.json</li>
+              </ul>
+              <p class="text-xs text-fg-dim mt-2" x-text="t('managed.marketplaceNote')"></p>
+            </div>
+            <template x-for="g in managedGroups" :key="g">
+              <div class="space-y-3">
+                <h3 class="font-display font-semibold text-sm text-fg" x-text="t('managed.group.' + g)"></h3>
+                <template x-for="f in extraFieldsFor('managed', g)" :key="f.key"><div x-extra-field="f"></div></template>
+              </div>
+            </template>
+          </div>
+
         </div>
       </div>
 
@@ -3793,6 +3842,84 @@
         el.appendChild(details);
         const view = evaluateLater('factsView(' + expression + ')');
         effect(() => view(v => renderFacts(details, v)));
+      });
+
+      // Directive x-extra-field (its expression yields one entry of extraFields()): label, scope badge, curated
+      // sentence, control and fact sheet of a generic v1.8 field. Built with textContent only (spec 5.1).
+      Alpine.directive('extra-field', (el, { expression }, { evaluate, effect }) => {
+        const f = evaluate(expression);
+        const app = Alpine.$data(el);
+        const info = SCHEMA_MAP.keys[f.key] || {};
+        const id = 'extra-' + f.key.replace(/\./g, '-');
+        const make = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text) n.textContent = text; return n; };
+        el.id = id;
+        el.className = 'settings-group';
+        const head = make('div', 'flex items-start justify-between gap-4');
+        const body = make('div', 'flex-1 min-w-0');
+        const label = make('label', 'setting-label font-mono', f.key);
+        label.id = id + '-label';
+        // outside the Managed tab the scope matters: these keys work from the user file, not from project files
+        const badge = f.tab === 'managed' ? null : make('span', 'ml-2 align-middle text-[10px] font-sans font-medium px-1.5 py-0.5 rounded-md bg-sky-400/10 text-sky-300 border border-sky-400/20');
+        if (badge) label.appendChild(badge);
+        const desc = make('p', 'setting-desc');
+        const facts = make('details', 'key-facts mt-2');
+        body.append(label, desc, facts);
+        head.appendChild(body);
+        el.appendChild(head);
+        const err = make('p', 'text-xs text-red-400 mt-1');
+        err.hidden = true;
+        const current = () => (app.settings.extras || {})[f.key];
+        let control;
+        if (f.control === 'toggle') {
+          control = make('div', 'toggle bg-bg-elevated mt-1 flex-shrink-0');
+          control.tabIndex = 0;
+          control.setAttribute('role', 'switch');
+          control.setAttribute('aria-labelledby', label.id);
+          const flip = () => app.setExtra(f.key, extraToggleNext(f, current()));
+          control.addEventListener('click', flip);
+          control.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } });
+          head.appendChild(control);
+        } else {
+          control = f.control === 'select' ? make('select', 'setting-input mt-2')
+            : f.control === 'text' || f.control === 'number' ? make('input', 'setting-input mt-2 font-mono text-xs')
+            : make('textarea', 'setting-input w-full mt-2 font-mono text-xs');
+          // a plain text input: type="number" hands over "" for bad input, which would unset the value silently
+          if (f.control === 'number') control.inputMode = 'decimal';
+          if (control.tagName === 'TEXTAREA') control.rows = f.control === 'list' ? 3 : 5;
+          control.id = id + '-input';
+          label.htmlFor = control.id;
+          control.addEventListener('change', () => {
+            const r = parseExtraInput(f, control.value);
+            err.hidden = !r.error;
+            if (r.error === 'json') err.textContent = app.t('extra.invalidJson');
+            else if (r.error) err.textContent = app.t('extra.invalidNumber');
+            else app.setExtra(f.key, r.value);
+          });
+          body.append(control, err);
+        }
+        effect(() => {
+          const v = current();
+          desc.textContent = app.t('extra.' + f.key);
+          if (badge) badge.textContent = app.t('facts.scope.' + info.scope);
+          renderFacts(facts, app.factsView(f.key));
+          if (f.control === 'toggle') {
+            const on = v === undefined ? !!f.on : v === true;
+            control.classList.toggle('active', on);
+            control.setAttribute('aria-checked', String(on));
+            return;
+          }
+          if (f.control === 'select') {
+            const opts = (f.options || info.enum || []).slice();
+            if (v !== undefined && !opts.includes(v)) opts.push(String(v)); // a loaded spelling the list does not offer stays visible
+            const unset = make('option', '', app.t('extra.unset'));
+            unset.value = '';
+            control.replaceChildren(unset, ...opts.map(o => { const n = make('option', '', o); n.value = o; return n; }));
+            // the options were just rebuilt, so the choice must be set again even while the select has focus
+            control.value = v === undefined ? '' : String(v);
+            return;
+          }
+          if (document.activeElement !== control) { control.value = extraDisplay(f, v); err.hidden = true; }
+        });
       });
     });
 
@@ -4658,6 +4785,23 @@
       'doctor.wrongType': { de: 'Falscher Typ bei ', en: 'Wrong type for ', es: 'Tipo incorrecto en ', fr: 'Type incorrect pour ', ja: '型が不正: ', pt: 'Tipo incorreto em ' },
       'doctor.notInEnum': { de: 'Wert nicht erlaubt: ', en: 'Value not allowed: ', es: 'Valor no permitido: ', fr: 'Valeur non autorisée : ', ja: '許可されていない値: ', pt: 'Valor não permitido: ' },
       'doctor.managedOnly': { de: 'Wirkt nur aus der Managed-Konfiguration (Tab Managed), hier wirkungslos: ', en: 'Only takes effect from managed sources (Managed tab), no effect here: ', es: 'Solo actúa desde fuentes gestionadas (pestaña Managed), sin efecto aquí: ', fr: 'N’agit que depuis les sources gérées (onglet Managed), sans effet ici : ', ja: '管理ソースからのみ有効（Managed タブ）、ここでは無効: ', pt: 'Só vale a partir de fontes gerenciadas (aba Managed), sem efeito aqui: ' },
+      'tab.managed.desc': { de: 'Einstellungen, die nur aus einer verteilten Managed-Konfiguration wirken', en: 'Settings that only take effect from a deployed managed configuration', es: 'Ajustes que solo actúan desde una configuración gestionada desplegada', fr: 'Réglages qui n’agissent que depuis une configuration gérée déployée', ja: '配布された管理設定からのみ有効になる設定', pt: 'Configurações que só valem a partir de uma configuração gerenciada distribuída' },
+      'managed.fileSwitch': { de: 'Diese Datei ist eine Managed-Datei', en: 'This file is a managed file', es: 'Este archivo es un archivo gestionado', fr: 'Ce fichier est un fichier géré', ja: 'このファイルは管理ファイルです', pt: 'Este arquivo é um arquivo gerenciado' },
+      'managed.bannerOff': { de: 'Diese Einstellungen wirken nur aus der Managed-Konfiguration: managed-settings.json und managed-settings.d/ im Systemverzeichnis, ein MDM-Profil oder die Einstellungen aus der claude.ai-Konsole. In einer User- oder Projektdatei stehen sie wirkungslos.', en: 'These settings only take effect from managed sources: managed-settings.json and managed-settings.d/ in the system directory, an MDM profile, or server-managed settings from the claude.ai console. In a user or project file they do nothing.', es: 'Estos ajustes solo actúan desde fuentes gestionadas: managed-settings.json y managed-settings.d/ en el directorio del sistema, un perfil MDM o la configuración del servidor desde la consola de claude.ai. En un archivo de usuario o de proyecto no tienen efecto.', fr: 'Ces réglages n’agissent que depuis des sources gérées : managed-settings.json et managed-settings.d/ dans le répertoire système, un profil MDM ou les réglages serveur de la console claude.ai. Dans un fichier utilisateur ou projet, ils sont sans effet.', ja: 'これらの設定は管理ソースからのみ有効です：システムディレクトリの managed-settings.json と managed-settings.d/、MDM プロファイル、または claude.ai コンソールのサーバー管理設定。ユーザーファイルやプロジェクトファイルでは効果がありません。', pt: 'Estas configurações só valem a partir de fontes gerenciadas: managed-settings.json e managed-settings.d/ no diretório do sistema, um perfil MDM ou as configurações do servidor no console do claude.ai. Em um arquivo de usuário ou de projeto, não têm efeito.' },
+      'managed.bannerOn': { de: 'Managed-Datei: Die Einstellungen hier greifen. Ungültiges JSON in einer Managed-Datei verhindert den Start von Claude Code.', en: 'Managed file: the settings here take effect. Invalid JSON in a managed file stops Claude Code from starting.', es: 'Archivo gestionado: los ajustes de aquí tienen efecto. Un JSON no válido en un archivo gestionado impide que Claude Code arranque.', fr: 'Fichier géré : les réglages ici s’appliquent. Un JSON invalide dans un fichier géré empêche Claude Code de démarrer.', ja: '管理ファイル：ここでの設定が有効になります。管理ファイルの JSON が不正だと Claude Code は起動しません。', pt: 'Arquivo gerenciado: as configurações aqui valem. Um JSON inválido em um arquivo gerenciado impede o Claude Code de iniciar.' },
+      'managed.pathsTitle': { de: 'Systemverzeichnisse', en: 'System directories', es: 'Directorios del sistema', fr: 'Répertoires système', ja: 'システムディレクトリ', pt: 'Diretórios do sistema' },
+      'managed.marketplaceNote': { de: 'Ebenfalls nur Managed: strictKnownMarketplaces, blockedMarketplaces und pluginSuggestionMarketplaces im Tab Advanced.', en: 'Also managed only: strictKnownMarketplaces, blockedMarketplaces and pluginSuggestionMarketplaces in the Advanced tab.', es: 'También solo gestionados: strictKnownMarketplaces, blockedMarketplaces y pluginSuggestionMarketplaces en la pestaña Advanced.', fr: 'Également réservés au géré : strictKnownMarketplaces, blockedMarketplaces et pluginSuggestionMarketplaces dans l’onglet Advanced.', ja: 'Advanced タブの strictKnownMarketplaces、blockedMarketplaces、pluginSuggestionMarketplaces も管理専用です。', pt: 'Também só gerenciados: strictKnownMarketplaces, blockedMarketplaces e pluginSuggestionMarketplaces na aba Advanced.' },
+      'managed.group.lockdown': { de: 'Sperren', en: 'Lockdown', es: 'Bloqueos', fr: 'Verrouillages', ja: 'ロック', pt: 'Bloqueios' },
+      'managed.group.plugins': { de: 'Plugins und Kanäle', en: 'Plugins and channels', es: 'Plugins y canales', fr: 'Plugins et canaux', ja: 'プラグインとチャネル', pt: 'Plugins e canais' },
+      'managed.group.login': { de: 'Anmeldung und Version', en: 'Login and version', es: 'Inicio de sesión y versión', fr: 'Connexion et version', ja: 'ログインとバージョン', pt: 'Login e versão' },
+      'managed.group.policy': { de: 'Richtlinien', en: 'Policy sources', es: 'Fuentes de directivas', fr: 'Sources de stratégie', ja: 'ポリシーのソース', pt: 'Fontes de política' },
+      'managed.group.desktop': { de: 'Desktop und Browser', en: 'Desktop and browser', es: 'Escritorio y navegador', fr: 'Bureau et navigateur', ja: 'デスクトップとブラウザ', pt: 'Desktop e navegador' },
+      'managed.group.cost': { de: 'Kosten', en: 'Cost', es: 'Costes', fr: 'Coûts', ja: 'コスト', pt: 'Custos' },
+      'managed.group.sandbox': { de: 'Sandbox', en: 'Sandbox', es: 'Sandbox', fr: 'Sandbox', ja: 'サンドボックス', pt: 'Sandbox' },
+      'extra.moreTitle': { de: 'Weitere Einstellungen', en: 'More settings', es: 'Más ajustes', fr: 'Autres réglages', ja: 'その他の設定', pt: 'Mais configurações' },
+      'extra.unset': { de: '— nicht gesetzt —', en: '— not set —', es: '— sin definir —', fr: '— non défini —', ja: '— 未設定 —', pt: '— não definido —' },
+      'extra.invalidJson': { de: 'Kein gültiges JSON, der bisherige Wert bleibt.', en: 'Not valid JSON; the previous value stays.', es: 'JSON no válido; se mantiene el valor anterior.', fr: 'JSON invalide ; la valeur précédente reste.', ja: '有効な JSON ではありません。以前の値のままです。', pt: 'JSON inválido; o valor anterior permanece.' },
+      'extra.invalidNumber': { de: 'Keine Zahl, der bisherige Wert bleibt.', en: 'Not a number; the previous value stays.', es: 'No es un número; se mantiene el valor anterior.', fr: 'Pas un nombre ; la valeur précédente reste.', ja: '数値ではありません。以前の値のままです。', pt: 'Não é um número; o valor anterior permanece.' },
       'doctor.autoIgnoredHere': { de: 'Auto Mode und der autoMode-Block wirken aus settings.local.json nicht. Nach ~/.claude/settings.json verschieben.', en: 'Auto mode and the autoMode block have no effect from settings.local.json. Move them to ~/.claude/settings.json.', es: 'El modo auto y el bloque autoMode no tienen efecto desde settings.local.json. Muévelos a ~/.claude/settings.json.', fr: 'Le mode auto et le bloc autoMode sont sans effet depuis settings.local.json. Déplacez-les vers ~/.claude/settings.json.', ja: 'auto モードと autoMode ブロックは settings.local.json では無効です。~/.claude/settings.json に移してください。', pt: 'O modo auto e o bloco autoMode não têm efeito a partir de settings.local.json. Mova-os para ~/.claude/settings.json.' },
       'doctor.mcpServersHint': { de: 'mcpServers wird nicht aus settings.json gelesen — gehört in .mcp.json oder ~/.claude.json', en: 'mcpServers is not read from settings.json — it belongs in .mcp.json or ~/.claude.json', es: 'mcpServers no se lee desde settings.json — va en .mcp.json o ~/.claude.json', fr: 'mcpServers n’est pas lu depuis settings.json — il va dans .mcp.json ou ~/.claude.json', ja: 'mcpServers は settings.json から読み込まれません — .mcp.json か ~/.claude.json に置きます', pt: 'mcpServers não é lido do settings.json — fica em .mcp.json ou ~/.claude.json' },
       'doctor.apply': { de: 'beheben', en: 'fix', es: 'corregir', fr: 'corriger', ja: '修正', pt: 'corrigir' },
@@ -5049,6 +5193,7 @@
         fileName: '',
         // file name the user marked as managed (a managed-settings.d drop-in can have any name); null = none
         managedMarkedFor: null,
+        managedGroups: ['lockdown', 'plugins', 'login', 'policy', 'desktop', 'cost', 'sandbox'],
         get managedFile() {
           return (this.fileName || '').toLowerCase() === 'managed-settings.json' || (this.managedMarkedFor !== null && this.managedMarkedFor === this.fileName);
         },
@@ -5145,6 +5290,8 @@
           { tab: 'advanced', label: 'sync.title', desc: 'sync.desc', keywords: ['schema', 'sync', 'stand', 'update', 'schemastore', 'doctor', 'doktor'], id: 'setting-schema-sync' },
           { tab: 'memory', label: 'search.sessionMemory', desc: 'search.sessionMemory.desc', keywords: ['session', 'compact', 'summary', 'zusammenfassung'], id: 'setting-session-memory' },
           { tab: 'memory', label: 'search.claudeMd', desc: 'search.claudeMd.desc', keywords: ['claude.md', 'instructions', 'regeln', 'rules', 'hierarchy'], id: 'setting-claudemd-overview' },
+          // generic v1.8 fields: the key is the label (t() returns an unknown key as is), the curated sentence the description
+          ...extraFields().map(f => ({ tab: f.tab, label: f.key, desc: 'extra.' + f.key, keywords: [f.key.toLowerCase()], id: 'extra-' + f.key.replace(/\./g, '-') })),
         ],
 
         // === Settings Diff ===
@@ -5432,6 +5579,7 @@
           { id: 'attribution', label: 'Attribution', desc: 'Commit- und PR-Attribution konfigurieren', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>' },
           { id: 'advanced', label: 'Advanced', desc: 'Auth, Performance und erweiterte Optionen', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>' },
           { id: 'memory', label: 'Memory', desc: 'Auto Memory, Auto Dream und Session Memory', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>' },
+          { id: 'managed', label: 'Managed', desc: 'Einstellungen, die nur aus einer verteilten Managed-Konfiguration wirken', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>' },
           { id: 'separator' },
           { id: 'design-prompts', label: 'Design Prompts', desc: '30 kuratierte Design-Aesthetiken mit AI-ready Prompts', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>' },
           { id: 'terminal-prompts', label: 'Terminal Prompts', desc: 'Prompts für Claude Code CLI und CLAUDE.md Snippets', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>' },
@@ -5636,6 +5784,22 @@
           return Object.prototype.hasOwnProperty.call(SCHEMA_MAP.keys, key) ? SCHEMA_MAP.keys[key] : null;
         },
         // ─── i18n Helper ───
+        extraFieldsFor(tab, group) {
+          return extraFields().filter(f => f.tab === tab && (!group || f.group === group));
+        },
+
+        setExtra(key, value) {
+          const { [key]: _old, ...rest } = this.settings.extras || {};
+          this.settings.extras = value === undefined ? rest : { ...rest, [key]: value };
+          this.markUnsaved();
+        },
+
+        toggleManagedFile() {
+          if ((this.fileName || '').toLowerCase() === 'managed-settings.json') return; // named so, it is managed
+          this.managedMarkedFor = this.managedFile ? null : this.fileName;
+          this.validateSettings();
+        },
+
         factsView(key) {
           const f = keyFacts(key, SCHEMA_MAP.keys);
           if (!f) return null;
@@ -5673,7 +5837,7 @@
             'general': 'tab.general.desc', 'permissions': 'tab.permissions.desc', 'plugins': 'tab.plugins.desc',
             'hooks': 'tab.hooks.desc', 'mcp': 'tab.mcp.desc', 'sandbox': 'tab.sandbox.desc',
             'env': 'tab.env.desc', 'display': 'tab.display.desc', 'attribution': 'tab.attribution.desc',
-            'advanced': 'tab.advanced.desc', 'memory': 'memory.desc', 'design-prompts': 'tab.designPrompts.desc', 'terminal-prompts': 'tab.terminalPrompts.desc'
+            'advanced': 'tab.advanced.desc', 'memory': 'memory.desc', 'managed': 'tab.managed.desc', 'design-prompts': 'tab.designPrompts.desc', 'terminal-prompts': 'tab.terminalPrompts.desc'
           };
           return map[tabId] ? this.t(map[tabId]) : '';
         },

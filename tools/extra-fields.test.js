@@ -99,3 +99,64 @@ test('extraDisplay renders what parseExtraInput reads back', () => {
   assert.equal(extraDisplay(F('claudeMd'), undefined), '');
   assert.equal(extraDisplay(F('sshHostAllowlist'), [{ host: 1 }]), '[\n  {\n    "host": 1\n  }\n]', 'a list of objects shows as JSON');
 });
+
+const { lf, editor } = require('./editor-harness.js');
+
+test('extraFieldsFor splits the list by tab and group; every managed group is rendered', () => {
+  const app = editor();
+  assert.equal(app.extraFieldsFor('managed').length, 31);
+  assert.equal(app.managedGroups.reduce((n, g) => n + app.extraFieldsFor('managed', g).length, 0), 31);
+  assert.deepEqual(app.extraFieldsFor('general', 'more').map(f => f.key), ['modelPicker', 'vimInsertModeRemaps']);
+  assert.equal(app.extraFieldsFor('permissions', 'automode').length, 2);
+});
+
+test('setExtra sets and unsets without delete on the reactive object', () => {
+  const app = editor();
+  const before = app.settings.extras;
+  app.setExtra('claudeMd', 'x');
+  assert.notEqual(app.settings.extras, before, 'a new object, so Alpine sees the change');
+  assert.deepEqual(app.settings.extras, { claudeMd: 'x' });
+  app.setExtra('claudeMd', undefined);
+  assert.deepEqual(app.settings.extras, {});
+  assert.equal(app.unsaved, true);
+});
+
+test('undo and redo restore generic fields', () => {
+  const app = editor();
+  app.$nextTick = (fn) => fn(); // Alpine magic, absent in Node
+  app.pushHistory();
+  app.setExtra('claudeMd', 'x');
+  app.pushHistory();
+  app.undo();
+  assert.deepEqual(app.settings.extras, {});
+  app.redo();
+  assert.deepEqual(app.settings.extras, { claudeMd: 'x' });
+});
+
+test('toggleManagedFile marks the open file, and a file named managed-settings.json stays managed', () => {
+  const app = editor();
+  app.fileName = '50-security.json';
+  assert.equal(app.managedFile, false);
+  app.toggleManagedFile();
+  assert.equal(app.managedFile, true);
+  app.fileName = 'settings.json';
+  assert.equal(app.managedFile, false, 'the mark belongs to the file it was set for');
+  app.fileName = 'managed-settings.json';
+  app.toggleManagedFile();
+  assert.equal(app.managedFile, true);
+});
+
+test('the Managed tab exists with a description, and the search finds generic fields', () => {
+  const app = editor();
+  assert.ok(app.tabs.some(t => t.id === 'managed'));
+  assert.equal(app.tabDesc('managed'), 'tab.managed.desc');
+  app.searchQuery = 'claudemd';
+  app.updateSearchResults();
+  assert.ok(app.searchResults.some(r => r.id === 'extra-claudeMd' && r.tab === 'managed'));
+  assert.equal(app.settingsRegistry.filter(r => r.id.startsWith('extra-')).length, 45);
+});
+
+test('the Managed tab and every subject tab with "more" fields render their block', () => {
+  assert.ok(lf.includes("extraFieldsFor('managed', g)"));
+  for (const tab of new Set(extraFields().filter(f => f.group === 'more').map(f => f.tab))) assert.ok(lf.includes(`extraFieldsFor('${tab}', 'more')`), tab);
+});

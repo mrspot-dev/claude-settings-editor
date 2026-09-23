@@ -86,3 +86,10 @@ test('generic fields: wiring in loadJson, cleanJson and knownKeys is checked, an
   assert.ok(r2.hard.includes('extras: not written in cleanJson'), r2.hard.join(' | '));
   assert.ok(r2.hard.includes('extras: extraTopKeys() missing in knownKeys'), r2.hard.join(' | '));
 });
+
+test('generic fields: a field that names a tab the editor does not have is a hard finding', () => {
+  const wired = { defaults: "model: '', extras: {}", mapKeys: '"model":{},"claudeMd":{}', known: "'model', ...extraTopKeys()", load: 'if (data.model) s.model = data.model; s.extras = readExtras(data, extraFields());', clean: 'if (s.model) out.model = s.model; applyExtras(out, s.extras || {}, extraFields());' };
+  const withTab = (tab) => mini(wired).replace('<script>', "<script>\n    const tabs = [{ id: 'managed', label: 'M' }];\n    function extraFields() {\n      return [{ key: 'claudeMd', tab: '" + tab + "' }];\n    }\n");
+  assert.ok(sc.selfCheck(withTab('nowhere')).hard.includes('extras: claudeMd names the unknown tab nowhere'));
+  assert.ok(!sc.selfCheck(withTab('managed')).hard.some(h => h.includes('unknown tab')));
+});

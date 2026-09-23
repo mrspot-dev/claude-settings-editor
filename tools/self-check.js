@@ -6,7 +6,7 @@
 const ex = require('./extract.js');
 
 const EDITOR_ONLY_KEYS = ['mcpServers']; // deliberately editable here, explained in the MCP tab, not an official settings.json key
-const DYNAMIC_PREFIXES = ['data.', 'design.', 'terminal.', 'builder.', 'facts.', 'extra.'];
+const DYNAMIC_PREFIXES = ['data.', 'design.', 'terminal.', 'builder.', 'facts.', 'extra.', 'managed.group.'];
 // settings.extras holds the generic v1.8 fields under their key paths; they are checked through extraFields() instead
 const INTERNAL_KEYS = ['extras'];
 
@@ -53,7 +53,9 @@ function selfCheck(lf) {
     if (!/readExtras\(data, extraFields\(\)\)/.test(load)) hard.push('extras: not read in loadJson');
     if (!/applyExtras\(out, s\.extras/.test(clean)) hard.push('extras: not written in cleanJson');
     if (!/\.\.\.extraTopKeys\(\)/.test(knownBlock)) hard.push('extras: extraTopKeys() missing in knownKeys');
+    const tabIds = [...lf.matchAll(/{ id: '([a-z-]+)', label:/g)].map(m => m[1]);
     for (const f of fields) {
+      if (!tabIds.includes(f.tab)) hard.push(`extras: ${f.key} names the unknown tab ${f.tab}`);
       if (!map.keys[f.key]) hard.push(`extras: ${f.key} is not in SCHEMA_MAP`);
       if (known.includes(f.key)) hard.push(`extras: ${f.key} is also listed by hand in knownKeys`);
     }
