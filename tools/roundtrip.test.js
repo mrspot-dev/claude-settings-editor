@@ -72,3 +72,18 @@ test('a reset forgets the imported extras', () => {
   app.resetSettingsSilent();
   assert.deepEqual(JSON.parse(app.cleanJson()), {});
 });
+
+test('an explicit sandbox.enabled: false survives, it can override a lower layer', () => {
+  assert.deepEqual(trip({ sandbox: { enabled: false } }).out, { sandbox: { enabled: false } });
+});
+
+test('share and bundle leave out env and keys unknown to the reference, but keep known extras', () => {
+  const { app } = trip({ model: 'opus', autoCompactEnabled: false, myToken: 'abc', env: { X: '1' } });
+  const { doc, note } = app._shareableDoc();
+  assert.deepEqual(doc, { model: 'opus', autoCompactEnabled: false });
+  assert.ok(note.includes('notify.envStripped') && note.includes('myToken'), note);
+});
+
+test('share of a clean document carries no note', () => {
+  assert.equal(trip({ model: 'opus' }).app._shareableDoc().note, '');
+});

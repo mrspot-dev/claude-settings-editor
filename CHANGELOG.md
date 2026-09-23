@@ -3,6 +3,17 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.6.2] — 2026-09-23
+
+Share and bundle keep unknown keys at home, and an explicit sandbox off switch survives.
+
+### Fixed
+- **Share URL and settings bundle carried keys the settings reference does not know.** Since 1.4 both leave out `env`, but unknown top-level keys went along untouched, and such a key can hold a token as easily as `env` can. They are now left out as well, and the notice names them. Keys the reference documents but the editor has no field for (for example `autoCompactEnabled`) are still shared.
+- **An explicit `"sandbox": { "enabled": false }` was dropped on save.** It is not the same as a missing key: in a project or local file it switches off a sandbox that a lower layer turns on. A `false` read from the file is now written back. Turning the sandbox off in the editor after it was on still removes the key, as before.
+
+### Removed
+- `fileScope`, a leftover of the removed file scope badge: it was set in three places and read nowhere.
+
 ## [1.6.1] — 2026-09-23
 
 Security-relevant round-trip fix for `permissions`, `sandbox` and `statusLine`.
