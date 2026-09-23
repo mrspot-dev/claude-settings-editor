@@ -183,3 +183,44 @@ Enable fast mode. The older opus-only setting was removed in v2.1.100.
   assert.equal(map.keys.taskOutputMaxChars.deprecated, true);
   assert.equal(map.keys.fastMode.deprecated, false);
 });
+
+test('parseOverrides: env variables from the per-session overrides line, with their relation to the key', () => {
+  const p = gen.parseOverrides;
+  assert.deepEqual(p("* **Per-session overrides**: `--effort` takes precedence over this key for one session, and [`CLAUDE_CODE_EFFORT_LEVEL`](/docs/en/env-vars) takes precedence over both"),
+    [{ env: 'CLAUDE_CODE_EFFORT_LEVEL', kind: 'precedence' }]);
+  assert.deepEqual(p("* **Per-session overrides**: [`CLAUDE_CODE_DISABLE_FAST_MODE`](/docs/en/env-vars) turns fast mode off for one session, and this key can't turn it back on"),
+    [{ env: 'CLAUDE_CODE_DISABLE_FAST_MODE', kind: 'off' }]);
+  assert.deepEqual(p("* **Per-session overrides**: [`FORCE_PROMPT_CACHING_5M`](/docs/en/env-vars) takes precedence over everything else, then [`CLAUDE_CODE_PROMPT_CACHE_TTL`](/docs/en/env-vars), then this key, and last [`ENABLE_PROMPT_CACHING_1H`](/docs/en/env-vars)"),
+    [{ env: 'FORCE_PROMPT_CACHING_5M', kind: 'precedence' }, { env: 'CLAUDE_CODE_PROMPT_CACHE_TTL', kind: 'precedence' }]);
+  assert.deepEqual(p("* **Per-session overrides**: `--advisor` takes precedence over this key for one session. [`CLAUDE_CODE_DISABLE_ADVISOR_TOOL`](/docs/en/env-vars) turns the advisor off, and this key can't turn it back on"),
+    [{ env: 'CLAUDE_CODE_DISABLE_ADVISOR_TOOL', kind: 'off' }]);
+  assert.deepEqual(p("* **Per-session overrides**: [`CLAUDE_CODE_NO_FLICKER`](/docs/en/env-vars) and [`CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN`](/docs/en/env-vars) take precedence over this key for one session: `CLAUDE_CODE_NO_FLICKER=1` turns fullscreen on, and `CLAUDE_CODE_NO_FLICKER=0` or `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN=1` turns it off; when both are set, Claude Code turns it off"),
+    [{ env: 'CLAUDE_CODE_NO_FLICKER', kind: 'precedence' }, { env: 'CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN', kind: 'precedence' }]);
+  assert.deepEqual(p("* **Per-session overrides**: `--model` takes precedence over [`ANTHROPIC_MODEL`](/docs/en/env-vars), and both take precedence over this key for one session, including over a managed `model`; an [`availableModels`](#availablemodels) list still applies to the pick"),
+    [{ env: 'ANTHROPIC_MODEL', kind: 'precedence' }]);
+  assert.deepEqual(p("* **Per-session overrides**: [`CLAUDE_CODE_IDE_SKIP_AUTO_INSTALL`](/docs/en/env-vars) set to `1` skips the install for one session even when this key is `true`"),
+    [{ env: 'CLAUDE_CODE_IDE_SKIP_AUTO_INSTALL', kind: 'off', when: '1' }]);
+  assert.deepEqual(p("* **Per-session overrides**: [`ENABLE_CLAUDEAI_MCP_SERVERS`](/docs/en/env-vars) set to `false` turns connectors off for one session; whichever of the two turns them off, the other can't turn them back on"),
+    [{ env: 'ENABLE_CLAUDEAI_MCP_SERVERS', kind: 'off', when: 'false' }]);
+  assert.deepEqual(p("* **Per-session overrides**: `--agent` takes precedence over this key for one session"), []);
+  assert.deepEqual(p(''), []);
+});
+
+test('parseReference and buildMap carry overrides', () => {
+  const md = `# Settings reference
+
+### \`fastMode\`
+
+Enable fast mode.
+
+* **Scope**: [\`Any file\`](#scopes)
+* **Type**: Boolean
+* **Default**: unset
+* **Per-session overrides**: [\`CLAUDE_CODE_DISABLE_FAST_MODE\`](/docs/en/env-vars) turns fast mode off for one session, and this key can't turn it back on
+`;
+  const f = gen.parseReference(md);
+  assert.deepEqual(f.fastMode.overrides, [{ env: 'CLAUDE_CODE_DISABLE_FAST_MODE', kind: 'off' }]);
+  const map = gen.buildMap({ properties: { other: { type: 'string' } } }, f, {});
+  assert.deepEqual(map.keys.fastMode.overrides, [{ env: 'CLAUDE_CODE_DISABLE_FAST_MODE', kind: 'off' }]);
+  assert.deepEqual(map.keys.other.overrides, []);
+});

@@ -89,7 +89,7 @@ On Windows, you can also double-click `open-editor.bat`.
 | Skills & Plugins | Toggle 80+ plugins with categories, search, availability badges, 35+ custom skills |
 | Hooks | 25 events in 7 groups, 4 handler types (command, http, prompt, agent), conditional `if` + `shell` |
 | MCP Servers | stdio/http/sse config, env vars, headers, 14 quick-add presets, status check |
-| Sandbox | Mode (restrict/monitor), filesystem allow/deny/read paths, network domains |
+| Sandbox | On/off switch, filesystem allow/deny/read paths, network domains; unknown sandbox keys are kept on save |
 | Environment | Custom environment variables |
 | Display & UI | Spinner verbs (8 themed packs + custom), status line, motion preferences |
 | Attribution | Commit and PR attribution strings, each hideable, and the session link in commits |
@@ -98,6 +98,8 @@ On Windows, you can also double-click `open-editor.bat`.
 | Companion Tools | 14 recommended tools for the Claude Code workflow (Happy Coder, Warp, LazyGit, etc.) |
 | Design Prompts | 30 curated design styles with AI prompts and color palettes + [designprompts.dev](https://www.designprompts.dev/) |
 | Terminal Prompts | 26 prompts in 9 categories + CLAUDE.md Builder |
+
+Every setting in the General, Permissions, Sandbox, Display, Attribution and Advanced tabs carries a collapsible **Details and facts** block with the key's scope, type, allowed values, default and overriding environment variables, taken from the embedded key table, plus a link to the Claude Code settings reference. The Environment tab flags variables in `env` that override a key in the same file.
 
 ### Editing Tools
 - **Drag & Drop** — reorder permission rules, hook groups, sandbox paths by dragging

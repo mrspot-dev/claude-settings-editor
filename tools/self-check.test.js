@@ -68,3 +68,8 @@ test('the real editor passes with zero hard findings', () => {
   assert.deepEqual(r.hard, []);
   assert.ok(r.stats.defaultKeys > 40);
 });
+
+test('an x-facts key that SCHEMA_MAP does not know is a hard finding; a dynamic head is not', () => {
+  const r = sc.selfCheck(mini({ groups: '<div id="setting-model" class="settings-group"><p class="setting-desc" x-text="t(\'a.x\')"></p><div x-facts="\'nope\'"></div><div x-facts="\'model\'"></div><div x-facts="\'sandbox.filesystem.\' + list.key"></div></div>' }));
+  assert.deepEqual(r.hard.filter(h => h.startsWith('x-facts')), ['x-facts: nope is not in SCHEMA_MAP']);
+});

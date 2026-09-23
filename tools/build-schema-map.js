@@ -30,6 +30,27 @@ function schemaVersionOf(text) {
   return found.sort((a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); return (x[0] - y[0]) || (x[1] - y[1]) || (x[2] - y[2]); }).pop() || '';
 }
 
+// Env variables named on a key's "Per-session overrides" line and how each relates to the key:
+// 'precedence' — the variable wins over the key; 'off' — it can only switch the feature off.
+// A variable ranked below the key in a chain ("then this key, then X" / "and last X") is left out.
+function parseOverrides(line) {
+  const text = String(line || '');
+  const hits = [...text.matchAll(ENV_RE)];
+  const keyAt = text.indexOf('this key');
+  const out = [];
+  hits.forEach((m, i) => {
+    const env = m[1];
+    if (out.some(o => o.env === env)) return;
+    if (keyAt >= 0 && m.index > keyAt && /\b(?:then|last)\b/.test(text.slice(keyAt, m.index))) return;
+    const end = i + 1 < hits.length ? hits[i + 1].index : text.length;
+    const seg = text.slice(m.index + m[0].length, end);
+    const kind = /precedence/.test(seg) ? 'precedence' : /\bturns?\b[^.;]*\boff\b|\bskips\b/.test(seg) ? 'off' : 'precedence';
+    const when = (seg.match(/^[^.;]*?\bset to `([^`]+)`/) || [])[1];
+    out.push(when === undefined ? { env, kind } : { env, kind, when });
+  });
+  return out;
+}
+
 function parseReference(md) {
   const parts = String(md).replace(/\r\n/g, '\n').split(/^### `([A-Za-z0-9.]+)`[ \t]*$/m);
   const facts = {};
@@ -49,6 +70,7 @@ function parseReference(md) {
     const env = [...body.matchAll(ENV_RE)].map(m => m[1]).filter((v, i, a) => a.indexOf(v) === i).slice(0, 4);
     // Only a warning that opens the section counts; a substring search flagged fastMode in v1.4.
     const deprecated = /^\s*<Warning>\s*(?:Removed in|Deprecated)\b/.test(body);
+    const overLine = (body.match(/^\* \*\*Per-session overrides\*\*: .*$/m) || [''])[0];
     facts[key] = {
       scope: SCOPES[scopeRaw] || 'unknown',
       type: TYPES.includes(typeWord) ? typeWord : '',
@@ -57,6 +79,7 @@ function parseReference(md) {
       since,
       env,
       deprecated,
+      overrides: parseOverrides(overLine),
     };
   }
   return facts;
@@ -77,6 +100,7 @@ function buildMap(schema, facts, meta) {
       default: f ? f.default : (p && Object.prototype.hasOwnProperty.call(p, 'default') ? JSON.stringify(p.default) : ''),
       since: f ? f.since : '',
       env: f ? f.env : [],
+      overrides: f ? f.overrides : [],
       deprecated: (!!p && (p.deprecated === true || /^\s*(?:\*\*)?DEPRECATED\b/i.test(desc))) || (!!f && f.deprecated === true),
       desc,
       inSchema: !!p,
@@ -131,5 +155,5 @@ async function main(argv) {
   console.log('written into', path.relative(ROOT, HTML));
 }
 
-module.exports = { parseReference, buildMap, renderBlock, injectBlock, schemaVersionOf, START, END, SCHEMA_URL, REFERENCE_URL };
+module.exports = { parseReference, parseOverrides, buildMap,renderBlock, injectBlock, schemaVersionOf, START, END, SCHEMA_URL, REFERENCE_URL };
 if (require.main === module) main(process.argv.slice(2)).catch(e => { console.error(e.message); process.exit(1); });

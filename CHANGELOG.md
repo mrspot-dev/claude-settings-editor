@@ -3,6 +3,18 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.7.0] — 2026-09-23
+
+Explanation layer and env conflicts (design 2026-08-03, sections 3.3 and 3.6).
+
+### Added
+- Every setting in the General, Permissions, Sandbox, Display, Attribution and Advanced tabs has a collapsible "Details and facts" block: where the key applies, type, allowed values, default, environment variables that override it or can switch it off, the SchemaStore description (English, Apache-2.0) and a link to the Claude Code settings reference. Rendered as text only; nothing from the schema is parsed as markup.
+- The Environment tab reports when a variable in the `env` block overrides a key set in the same file (for example `CLAUDE_CODE_EFFORT_LEVEL` over `effortLevel`) or can switch its feature off (for example `CLAUDE_CODE_DISABLE_FAST_MODE` against `fastMode`). An empty value, the documented way to cancel a shell export, is not reported, and a variable that only acts with a specific value (for example `ENABLE_CLAUDEAI_MCP_SERVERS` set to `false`) is reported only with that value.
+- `SCHEMA_MAP` records these overrides per key, read from the settings reference's "Per-session overrides" line; CLI flags and variables ranked below the key are left out.
+
+### Changed
+- Fourteen setting descriptions rewritten to say what the setting does, in all six languages.
+
 ## [1.6.2] — 2026-09-23
 
 Share and bundle keep unknown keys at home, and an explicit sandbox off switch survives.
