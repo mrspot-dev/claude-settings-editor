@@ -3481,6 +3481,7 @@
         strictKnownMarketplaces: [],
         blockedMarketplaces: [],
         pluginSuggestionMarketplaces: [],
+        extras: {},
       };
     }
 
@@ -6079,6 +6080,7 @@
             if (data.theme) this.settings.theme = data.theme;
             if (data.fileSuggestion && data.fileSuggestion.command) this.settings.fileSuggestion.command = data.fileSuggestion.command;
             if (data.modelOverrides) this.settings.modelOverrides = JSON.parse(JSON.stringify(data.modelOverrides));
+            s.extras = readExtras(data, extraFields());
             // Preserve unknown properties for roundtrip fidelity
             const knownKeys = new Set([
               'model', 'effortLevel', 'maxEffortLevel', 'ultracode', 'modelSettings', 'outputStyle', 'language', 'alwaysThinkingEnabled',
@@ -6093,7 +6095,8 @@
               'fastMode', 'voice', 'editorMode', 'theme',
               'fileSuggestion', 'modelOverrides',
               'fallbackModel', 'enforceAvailableModels', 'autoMode',
-              'strictKnownMarketplaces', 'blockedMarketplaces', 'pluginSuggestionMarketplaces', 'bashEditDiffEnabled'
+              'strictKnownMarketplaces', 'blockedMarketplaces', 'pluginSuggestionMarketplaces', 'bashEditDiffEnabled',
+              ...extraTopKeys()
             ]);
             // Keys this editor used to write but Claude Code never read (or a typo of a real key): drop instead of round-tripping
             const legacyKeys = ['releaseChannel', 'fileSuggestions', 'autoDreamEnabled', 'teamateMode'];
@@ -6213,6 +6216,7 @@
           if (s.theme && s.theme !== 'auto') out.theme = s.theme;
           if (s.fileSuggestion?.command) out.fileSuggestion = { type: 'command', command: s.fileSuggestion.command };
           if (Object.keys(s.modelOverrides).length) out.modelOverrides = { ...s.modelOverrides };
+          applyExtras(out, s.extras || {}, extraFields());
           // Re-attach unknown properties preserved from import
           if (!settingsOverride && this._extraProps) {
             for (const [key, value] of Object.entries(this._extraProps)) {
@@ -6727,7 +6731,8 @@
             spinnerVerbs: 'display', spinnerTipsEnabled: 'display', showTurnDuration: 'display', prefersReducedMotion: 'display', statusLine: 'display', terminalProgressBarEnabled: 'display',
             attribution: 'attribution', autoMemoryEnabled: 'memory', autoMemoryDirectory: 'memory', cleanupPeriodDays: 'memory',
             model: 'general', effortLevel: 'general', maxEffortLevel: 'general', ultracode: 'general', modelSettings: 'general', outputStyle: 'general', language: 'general', alwaysThinkingEnabled: 'general', autoUpdatesChannel: 'general', fastMode: 'general', voice: 'general', editorMode: 'general', theme: 'general', fileSuggestion: 'general', modelOverrides: 'general' };
-          return tabs[key] || 'advanced';
+          const extra = extraFields().find(f => f.key === key);
+          return tabs[key] || (extra ? extra.tab : 'advanced');
         },
 
         applyDoctorFix(fix) {

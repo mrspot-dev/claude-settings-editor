@@ -70,3 +70,64 @@ test('share and bundle leave out env and keys unknown to the reference, but keep
 test('share of a clean document carries no note', () => {
   assert.equal(trip({ model: 'opus' }).app._shareableDoc().note, '');
 });
+
+test('every generic v1.8 field survives load and save, and none lands in _extraProps', () => {
+  const sample = { toggle: true, text: 'x', textarea: '# Rules\n', number: 14, list: ['a.example'], json: { a: [1] } };
+  const doc = {};
+  for (const f of extraFields()) setPath(doc, f.key, f.control === 'select' ? (f.options || SCHEMA_MAP.keys[f.key].enum)[0] : f.control === 'toggle' ? !f.on : sample[f.control]);
+  const { app, out } = trip(doc);
+  assert.deepEqual(out, doc);
+  assert.deepEqual(Object.keys(app._extraProps), []);
+});
+
+test('an explicit false and a spelling the select does not offer are kept as loaded', () => {
+  const doc = { channelsEnabled: false, browserExternalPageTools: 'disable', sandbox: { network: { allowManagedDomainsOnly: false } } };
+  assert.deepEqual(trip(doc).out, doc);
+});
+
+test('clearing a nested generic field removes it and the parents it empties, siblings stay', () => {
+  const { app } = trip({ sandbox: { enabled: true, bwrapPath: '/opt/bwrap', network: { allowManagedDomainsOnly: true } } });
+  const { ['sandbox.network.allowManagedDomainsOnly']: gone, ...rest } = app.settings.extras;
+  assert.equal(gone, true);
+  app.settings.extras = rest;
+  assert.deepEqual(JSON.parse(app.cleanJson()), { sandbox: { enabled: true, bwrapPath: '/opt/bwrap' } });
+});
+
+test('a loaded value of the wrong type stays as loaded; the doctor reports it, the editor does not rewrite it', () => {
+  const doc = { sshHostAllowlist: 'a.example', channelsEnabled: 'true', policyHelper: [1] };
+  const { app, out } = trip(doc);
+  assert.deepEqual(out, doc);
+  app.validateSettings();
+  const typeFindings = app.validationErrors.filter(e => e.message.startsWith('doctor.wrongType')).map(e => e.field).sort();
+  assert.deepEqual(typeFindings, ['channelsEnabled', 'policyHelper', 'sshHostAllowlist']);
+});
+
+test('loading a second file forgets the generic fields of the first', () => {
+  const app = editor();
+  app.loadJson(JSON.stringify({ claudeMd: 'A', sandbox: { bwrapPath: '/a' } }));
+  app.loadJson(JSON.stringify({ model: 'opus' }));
+  assert.deepEqual(app.settings.extras, {});
+  assert.deepEqual(JSON.parse(app.cleanJson()), { model: 'opus' });
+});
+
+test('a nested generic field alone creates its parents, and clearing it leaves no empty sandbox behind', () => {
+  const app = editor();
+  app.settings.extras = { 'sandbox.network.allowManagedDomainsOnly': true };
+  assert.deepEqual(JSON.parse(app.cleanJson()), { sandbox: { network: { allowManagedDomainsOnly: true } } });
+  app.settings.extras = {};
+  assert.deepEqual(JSON.parse(app.cleanJson()), {});
+});
+
+test('a template or snapshot without extras still exports', () => {
+  const app = editor();
+  const s = defaultSettings();
+  delete s.extras;
+  assert.deepEqual(JSON.parse(app.cleanJson(s)), {});
+});
+
+test('doctor findings for a generic key point to its tab', () => {
+  const app = editor();
+  assert.equal(app._tabForKey('claudeMd'), 'managed');
+  assert.equal(app._tabForKey('spellcheck'), 'display');
+  assert.equal(app._tabForKey('somethingElse'), 'advanced');
+});

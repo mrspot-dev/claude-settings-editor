@@ -6,7 +6,9 @@
 const ex = require('./extract.js');
 
 const EDITOR_ONLY_KEYS = ['mcpServers']; // deliberately editable here, explained in the MCP tab, not an official settings.json key
-const DYNAMIC_PREFIXES = ['data.', 'design.', 'terminal.', 'builder.', 'facts.'];
+const DYNAMIC_PREFIXES = ['data.', 'design.', 'terminal.', 'builder.', 'facts.', 'extra.'];
+// settings.extras holds the generic v1.8 fields under their key paths; they are checked through extraFields() instead
+const INTERNAL_KEYS = ['extras'];
 
 function section(lf, startRe, endRe) {
   const s = lf.search(startRe); if (s < 0) return '';
@@ -23,6 +25,7 @@ function selfCheck(lf) {
   const knownBlock = (load.match(/const knownKeys = new Set\(\[([\s\S]*?)\]\)/) || ['', ''])[1];
   const known = [...knownBlock.matchAll(/'([^']+)'/g)].map(m => m[1]);
   for (const key of defaultKeys) {
+    if (INTERNAL_KEYS.includes(key)) continue;
     if (!new RegExp('data\\.' + key + '\\b').test(load)) hard.push(`${key}: not read in loadJson`);
     if (!new RegExp('\\b(?:s|out)\\.' + key + '\\b').test(clean)) hard.push(`${key}: not written in cleanJson`);
     if (!known.includes(key)) hard.push(`${key}: missing in knownKeys`);
@@ -43,6 +46,17 @@ function selfCheck(lf) {
     const k = m[1];
     if (k.endsWith('.')) continue; // head of a dynamic key such as 'sandbox.filesystem.' + list.key
     if (!map.keys[k]) hard.push(`x-facts: ${k} is not in SCHEMA_MAP`);
+  }
+  let fields = [];
+  try { fields = ex.extractFunction(lf, 'extraFields')(); } catch (e) { /* a file without generic fields */ }
+  if (fields.length) {
+    if (!/readExtras\(data, extraFields\(\)\)/.test(load)) hard.push('extras: not read in loadJson');
+    if (!/applyExtras\(out, s\.extras/.test(clean)) hard.push('extras: not written in cleanJson');
+    if (!/\.\.\.extraTopKeys\(\)/.test(knownBlock)) hard.push('extras: extraTopKeys() missing in knownKeys');
+    for (const f of fields) {
+      if (!map.keys[f.key]) hard.push(`extras: ${f.key} is not in SCHEMA_MAP`);
+      if (known.includes(f.key)) hard.push(`extras: ${f.key} is also listed by hand in knownKeys`);
+    }
   }
   const groups = [...lf.matchAll(/<div id="(setting-[^"]+)" class="settings-group"[\s\S]*?(?=<div id="setting-|<\/script>|$)/g)];
   for (const g of groups) if (!/class="setting-desc"/.test(g[0])) soft.push(`${g[1]}: settings-group without setting-desc`);
