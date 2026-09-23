@@ -102,3 +102,18 @@ test('every x-facts key literal exists in SCHEMA_MAP, and the sandbox path group
   for (const k of keys) assert.ok(map[k], 'unknown x-facts key ' + k);
   assert.ok(/x-facts="'sandbox\.filesystem\.' \+ list\.key"/.test(lf), 'dynamic sandbox path groups');
 });
+
+test('the fourteen rewritten descriptions are in place in all six languages', () => {
+  const T = ex.extractT(lf);
+  const expectDe = {
+    'adv.plansDirDesc': 'Ordner, in dem Claude im Plan-Modus seine Plandateien ablegt, relativ zum Projekt.',
+    'perm.allowDescLong': 'Diese Aktionen führt Claude ohne Rückfrage aus.',
+    'adv.cleanupDescLong': 'Nach so vielen Tagen löscht Claude Code Sitzungsverläufe und andere App-Daten. Standard: 30.',
+  };
+  for (const [k, de] of Object.entries(expectDe)) assert.equal(T[k].de, de);
+  const keys = ['adv.plansDirDesc', 'display.reducedMotionDesc', 'display.statusLineDesc', 'display.turnDurationDesc', 'general.themeDesc', 'perm.defaultModeDesc', 'perm.askDescLong', 'general.languageDesc', 'adv.loginDescLong', 'perm.allowDescLong', 'perm.additionalDirsDesc', 'adv.cleanupDescLong', 'display.spinnerTipsDesc', 'perm.denyDescLong'];
+  for (const k of keys) {
+    for (const l of ['de', 'en', 'es', 'fr', 'ja', 'pt']) assert.ok(T[k][l] && T[k][l].length >= 20, k + ' ' + l);
+    assert.ok(T[k].de.length <= 95, k + ' de too long: ' + T[k].de.length);
+  }
+});
