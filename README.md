@@ -84,7 +84,7 @@ On Windows, you can also double-click `open-editor.bat`.
 
 | Tab | What it covers |
 |-----|----------------|
-| General | Model, effort level (visual card selector), output style, language, thinking mode, fast mode, voice, vim mode, theme, release channel, file suggestions, model overrides |
+| General | Model, effort level (visual card selector), output style, language, thinking mode, fast mode, voice, vim mode, theme, update channel, file suggestion command, model overrides |
 | Permissions | Allow/Ask/Deny rules, default mode, presets, conflict detection |
 | Skills & Plugins | Toggle 80+ plugins with categories, search, availability badges, 35+ custom skills |
 | Hooks | 25 events in 7 groups, 4 handler types (command, http, prompt, agent), conditional `if` + `shell` |
@@ -92,8 +92,8 @@ On Windows, you can also double-click `open-editor.bat`.
 | Sandbox | Mode (restrict/monitor), filesystem allow/deny/read paths, network domains |
 | Environment | Custom environment variables |
 | Display & UI | Spinner verbs (8 themed packs + custom), status line, motion preferences |
-| Attribution | Commit and PR attribution strings |
-| Advanced | API key helper, plans directory, cleanup period, available models, **Privacy & Telemetry** (disable Statsig/Sentry) |
+| Attribution | Commit and PR attribution strings, each hideable, and the session link in commits |
+| Advanced | API key helper, plans directory, cleanup period, Bash edit diff, available models, **Privacy & Telemetry** (disable Statsig/Sentry) |
 | Memory | Auto Memory toggle, **Memory History** (retention period presets: 30/90/180/365 days), Auto Dream, Session Memory, CLAUDE.md overview |
 | Companion Tools | 14 recommended tools for the Claude Code workflow (Happy Coder, Warp, LazyGit, etc.) |
 | Design Prompts | 30 curated design styles with AI prompts and color palettes + [designprompts.dev](https://www.designprompts.dev/) |
