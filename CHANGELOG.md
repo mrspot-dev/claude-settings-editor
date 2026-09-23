@@ -3,6 +3,13 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.8.2] — 2026-09-24
+
+### Fixed
+- About 200 German interface texts spelled umlauts and ß as two letters, a leftover from the first versions. They now use ä, ö, ü and ß.
+- The hint for an environment variable that switches a feature off read backwards for keys named `disable…`. It now says that the variable switches the feature off regardless of the key, in all six languages.
+- The length limit for the rewritten setting descriptions is now tested in all six languages; one Portuguese description was shortened to fit.
+
 ## [1.8.1] — 2026-09-23
 
 ### Fixed

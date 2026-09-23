@@ -115,6 +115,7 @@ test('the fourteen rewritten descriptions are in place in all six languages', ()
   for (const k of keys) {
     for (const l of ['de', 'en', 'es', 'fr', 'ja', 'pt']) assert.ok(T[k][l] && T[k][l].length >= 20, k + ' ' + l);
     assert.ok(T[k].de.length <= 95, k + ' de too long: ' + T[k].de.length);
+    for (const l of ['en', 'es', 'fr', 'ja', 'pt']) assert.ok(T[k][l].length <= 100, k + ' ' + l + ' too long: ' + T[k][l].length);
   }
 });
 
