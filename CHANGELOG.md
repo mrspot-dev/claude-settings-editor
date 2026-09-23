@@ -3,6 +3,22 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.8.0] — 2026-09-23
+
+Managed tab and auto mode up front (design docs/specs/2026-09-23-v18-managed-tab-design.md).
+
+### Added
+- **Managed tab** for the 31 keys that only take effect from managed settings (`managed-settings.json`, `managed-settings.d/`, MDM or server-managed): lockdown switches, plugin and channel policy, login gateway and version bounds, policy helper and source behaviour, desktop and browser limits, contracted model pricing, sandbox binary paths. A banner says where these keys act and lists the system directories. A switch marks the open file as managed: automatic for `managed-settings.json`, by hand for a drop-in with another name. In a managed file the doctor no longer reports these keys as having no effect.
+- **Fourteen keys in their subject tabs** that also work from the user file, each with a scope badge: `modelPicker`, `vimInsertModeRemaps`, `askUserQuestionTimeout`, `dialogExpiry`, `footerLinksRegexes`, `spellcheck`, `autoContinueAtUsageLimit`, `desktopSessionCleanupPeriodDays`, `feedbackDrafts`, `processWrapper`, `sshConfigs`, `pluginConfigs`, `skipAutoPermissionPrompt`, `useAutoModeDuringPlan`.
+- **Auto Mode preset**, first and marked as recommended: `defaultMode: "auto"`, no allow or ask rules (auto mode sets broad allow rules aside, and ask rules would still prompt), the Safety First deny list. The setup wizard offers auto mode first. The Permissions tab groups the auto mode settings and says that `auto` only acts from `~/.claude/settings.json`; the doctor warns when it sits in `settings.local.json`.
+- Fact sheets in the Memory tab and at `ultracode`.
+
+### Changed
+- All 45 new fields come from one list, so loading, saving, the known-key list, the search index and the self-check cannot drift apart for them.
+
+### Removed
+- The Auto Dream section of the Memory tab and the `/dream` tip: neither the settings reference nor the Claude Code changelog knows them. An imported `autoDreamEnabled` is still dropped with a notice.
+
 ## [1.7.0] — 2026-09-23
 
 Explanation layer and env conflicts (design 2026-08-03, sections 3.3 and 3.6).
