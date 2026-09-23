@@ -2,24 +2,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const ex = require('./extract.js');
-const { lf } = ex.loadHtml();
-
-// settingsEditor() is a top-level function; its methods run in Node once the free globals exist.
-globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
-globalThis.SCHEMA_MAP = ex.extractSchemaMap(lf);
-for (const fn of ['defaultSettings', 'attributionFromFile', 'attributionToFile', 'overlayOwned']) {
-  try { globalThis[fn] = ex.extractFunction(lf, fn); } catch (e) { globalThis[fn] = () => { throw e; }; }
-}
-const makeEditor = ex.extractFunction(lf, 'settingsEditor');
-function editor() {
-  const app = makeEditor();
-  app.settings = defaultSettings();
-  app.notes = [];
-  app.notify = (m) => app.notes.push(m);
-  app.t = (k) => k;
-  return app;
-}
+const { editor } = require('./editor-harness.js');
 const trip = (doc) => { const app = editor(); app.loadJson(JSON.stringify(doc)); return { app, out: JSON.parse(app.cleanJson()) }; };
 
 const setPath = (o, path, v) => { const p = path.split('.'); let c = o; for (const k of p.slice(0, -1)) c = c[k] = c[k] || {}; c[p[p.length - 1]] = v; };

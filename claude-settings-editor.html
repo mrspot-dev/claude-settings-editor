@@ -3528,6 +3528,46 @@
       return out;
     }
 
+    // Fact sheet (spec 3.3): a default is shown only when it is a value, not reference prose.
+    function factDefault(raw) {
+      const d = String(raw || '').trim();
+      if (!d) return '';
+      if (/^unset\b/i.test(d)) return 'unset';
+      const head = d.split(/, so |; /)[0].trim();
+      return head.length <= 40 ? head : '';
+    }
+
+    // Everything the fact sheet shows about one key, from SCHEMA_MAP only. The reference exists in English only,
+    // and its anchors are the key in lower case with dots turned into dashes.
+    function keyFacts(key, mapKeys) {
+      if (!mapKeys || key === '__proto__' || key === 'constructor' || key === 'prototype' || !Object.prototype.hasOwnProperty.call(mapKeys, key)) return null;
+      const i = mapKeys[key];
+      return {
+        key, scope: i.scope || 'unknown', type: i.type || '', values: i.enum || [], default: factDefault(i.default),
+        since: i.since || '', overrides: i.overrides || [], deprecated: !!i.deprecated, desc: i.desc || '',
+        url: i.inReference ? 'https://code.claude.com/docs/en/settings-reference#' + key.toLowerCase().replace(/\./g, '-') : '',
+      };
+    }
+
+    // Env conflicts (spec 3.6): a variable in the env block that overrides or switches off a key set in the same
+    // document. An empty value cancels a shell export and overrides nothing.
+    function envConflicts(doc, mapKeys) {
+      const env = doc && doc.env && typeof doc.env === 'object' && !Array.isArray(doc.env) ? doc.env : {};
+      const out = [];
+      for (const key of Object.keys(mapKeys || {})) {
+        const info = mapKeys[key];
+        if (!info.overrides || !info.overrides.length) continue;
+        const value = key.split('.').reduce((c, k) => (c && typeof c === 'object' && Object.prototype.hasOwnProperty.call(c, k) ? c[k] : undefined), doc);
+        if (value === undefined) continue;
+        for (const o of info.overrides) {
+          if (!Object.prototype.hasOwnProperty.call(env, o.env) || env[o.env] === '' || env[o.env] == null) continue;
+          if (o.when !== undefined && String(env[o.env]) !== o.when) continue; // e.g. ENABLE_CLAUDEAI_MCP_SERVERS acts only when "false"
+          out.push({ key, env: o.env, kind: o.kind, envValue: String(env[o.env]) });
+        }
+      }
+      return out;
+    }
+
     // Pure schema sync: top-level key diff between the online schema and the embedded fact table (spec 3.5).
     function diffSchemaKeys(remoteKeys, mapKeys) {
       const bad = new Set(['__proto__', 'constructor', 'prototype', '$schema']);
