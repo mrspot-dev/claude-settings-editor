@@ -98,3 +98,30 @@ test('voice: the editor writes the voice object, never the deprecated voiceEnabl
   assert.ok(!known.includes('voiceEnabled'));
   assert.ok(known.includes('bashEditDiffEnabled'));
 });
+
+test('attribution: hidden parts, sessionUrl and unknown sub-keys survive the round trip', () => {
+  const from = ex.extractFunction(lf, 'attributionFromFile');
+  const to = ex.extractFunction(lf, 'attributionToFile');
+  const trip = a => to(from(a));
+  assert.deepEqual(trip({ commit: '', pr: '', sessionUrl: false }), { commit: '', pr: '', sessionUrl: false });
+  assert.deepEqual(trip({ commit: 'X', pr: '' }), { commit: 'X', pr: '' });
+  assert.deepEqual(trip({ commit: '', future: 1 }), { future: 1, commit: '' });
+  assert.deepEqual(trip({ sessionUrl: true }), null);
+  assert.equal(trip(undefined), null);
+  assert.equal(trip({}), null);
+  const st = from({ commit: '' });
+  assert.equal(st.hideCommit, true);
+  assert.equal(st.commit, '');
+  assert.ok(/attributionFromFile\(data\.attribution\)/.test(lf) && /attributionToFile\(s\.attribution\)/.test(lf), 'loadJson and cleanJson use the helpers');
+});
+
+test('deprecatedKeyFix keeps the effect of keys Claude Code still reads', () => {
+  const fix = ex.extractFunction(lf, 'deprecatedKeyFix');
+  assert.deepEqual(fix({ disableArtifact: true, model: 'opus' }, 'disableArtifact'), { model: 'opus', enableArtifact: false });
+  assert.deepEqual(fix({ disableArtifact: false }, 'disableArtifact'), {});
+  assert.deepEqual(fix({ includeCoAuthoredBy: false }, 'includeCoAuthoredBy'), { attribution: { commit: '', pr: '' } });
+  assert.deepEqual(fix({ includeCoAuthoredBy: false, attribution: { commit: 'X' } }, 'includeCoAuthoredBy'), { attribution: { commit: 'X' } });
+  assert.deepEqual(fix({ includeCoAuthoredBy: false, attribution: { sessionUrl: false } }, 'includeCoAuthoredBy'), { attribution: { sessionUrl: false, commit: '', pr: '' } });
+  assert.deepEqual(fix({ includeCoAuthoredBy: true }, 'includeCoAuthoredBy'), {});
+  assert.deepEqual(fix({ taskOutputMaxChars: 5 }, 'taskOutputMaxChars'), {});
+});

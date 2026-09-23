@@ -1924,13 +1924,29 @@
             <div id="setting-attr-commit" class="settings-group">
               <label for="input-attr-commit" class="setting-label" x-text="t('attr.commit')"></label>
               <p class="setting-desc" x-text="t('attr.commitDescLong')"></p>
-              <input id="input-attr-commit" type="text" x-model="settings.attribution.commit" @input="markUnsaved()" placeholder="Co-Authored-By: Claude <noreply@anthropic.com>" class="setting-input font-mono">
+              <input id="input-attr-commit" type="text" x-model="settings.attribution.commit" @input="markUnsaved()" :disabled="settings.attribution.hideCommit" :class="{ 'opacity-40': settings.attribution.hideCommit }" placeholder="Co-Authored-By: Claude <noreply@anthropic.com>" class="setting-input font-mono">
+              <label class="mt-2 inline-flex items-center gap-2 text-xs text-fg-muted cursor-pointer">
+                <input id="input-attr-commit-hide" type="checkbox" x-model="settings.attribution.hideCommit" @change="markUnsaved()" class="accent-amber-500">
+                <span x-text="t('attr.hide')"></span>
+              </label>
             </div>
 
             <div id="setting-attr-pr" class="settings-group">
               <label for="input-attr-pr" class="setting-label" x-text="t('attr.pr')"></label>
               <p class="setting-desc" x-text="t('attr.prDescLong')"></p>
-              <input id="input-attr-pr" type="text" x-model="settings.attribution.pr" @input="markUnsaved()" placeholder="Generated with Claude Code" class="setting-input font-mono">
+              <input id="input-attr-pr" type="text" x-model="settings.attribution.pr" @input="markUnsaved()" :disabled="settings.attribution.hidePr" :class="{ 'opacity-40': settings.attribution.hidePr }" placeholder="Generated with Claude Code" class="setting-input font-mono">
+              <label class="mt-2 inline-flex items-center gap-2 text-xs text-fg-muted cursor-pointer">
+                <input id="input-attr-pr-hide" type="checkbox" x-model="settings.attribution.hidePr" @change="markUnsaved()" class="accent-amber-500">
+                <span x-text="t('attr.hide')"></span>
+              </label>
+            </div>
+
+            <div id="setting-attr-session" class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label id="label-attr-session" class="setting-label" x-text="t('attr.sessionUrl')"></label>
+                <p class="setting-desc" x-text="t('attr.sessionUrlDesc')"></p>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.attribution.sessionUrl }" @click="settings.attribution.sessionUrl = !settings.attribution.sessionUrl; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-attr-session" :aria-checked="settings.attribution.sessionUrl" @keydown.enter="settings.attribution.sessionUrl = !settings.attribution.sessionUrl; markUnsaved()" @keydown.space.prevent="settings.attribution.sessionUrl = !settings.attribution.sessionUrl; markUnsaved()"></div>
             </div>
           </div>
 
@@ -3402,7 +3418,7 @@
         env: {}, spinnerVerbs: { mode: 'append', verbs: [] },
         spinnerTipsEnabled: true, showTurnDuration: true, prefersReducedMotion: false,
         statusLine: { type: '', command: '', url: '', refresh: 5000, disabled: false },
-        attribution: { commit: '', pr: '' },
+        attribution: { commit: '', pr: '', hideCommit: false, hidePr: false, sessionUrl: true, extra: {} },
         cleanupPeriodDays: 30, fastModePerSessionOptIn: false, enableAllProjectMcpServers: false,
         respectGitignore: true, teammateMode: '', forceLoginMethod: '',
         fastMode: false, voice: {}, editorMode: 'normal', theme: 'auto',
@@ -3478,6 +3494,40 @@
       return { type: 'modelSetting', key: 'claude-opus-5-5', effortLevel: level };
     }
 
+    // Attribution has three states per part: Claude Code's default text (key absent), own text, and hidden
+    // (empty string, the documented way to drop it). Unknown sub-keys pass through untouched.
+    function attributionFromFile(a) {
+      const st = { commit: '', pr: '', hideCommit: false, hidePr: false, sessionUrl: true, extra: {} };
+      if (!a || typeof a !== 'object' || Array.isArray(a)) return st;
+      for (const [k, v] of Object.entries(a)) {
+        if (k === 'commit' && typeof v === 'string') { if (v === '') st.hideCommit = true; else st.commit = v; }
+        else if (k === 'pr' && typeof v === 'string') { if (v === '') st.hidePr = true; else st.pr = v; }
+        else if (k === 'sessionUrl' && typeof v === 'boolean') st.sessionUrl = v;
+        else if (k !== '__proto__' && k !== 'constructor' && k !== 'prototype') st.extra[k] = v;
+      }
+      return st;
+    }
+    function attributionToFile(st) {
+      const out = { ...((st && st.extra) || {}) };
+      if (st.hideCommit) out.commit = ''; else if (st.commit) out.commit = st.commit;
+      if (st.hidePr) out.pr = ''; else if (st.pr) out.pr = st.pr;
+      if (st.sessionUrl === false) out.sessionUrl = false;
+      return Object.keys(out).length ? out : null;
+    }
+
+    // Deprecated keys that Claude Code still reads keep their effect when the doctor removes them.
+    function deprecatedKeyFix(doc, key) {
+      const out = { ...doc };
+      const v = out[key];
+      delete out[key];
+      if (key === 'disableArtifact' && v === true) out.enableArtifact = false;
+      if (key === 'includeCoAuthoredBy' && v === false) {
+        const a = out.attribution && typeof out.attribution === 'object' && !Array.isArray(out.attribution) ? out.attribution : {};
+        if (typeof a.commit !== 'string' && typeof a.pr !== 'string') out.attribution = { ...a, commit: '', pr: '' };
+      }
+      return out;
+    }
+
     // Pure schema sync: top-level key diff between the online schema and the embedded fact table (spec 3.5).
     function diffSchemaKeys(remoteKeys, mapKeys) {
       const bad = new Set(['__proto__', 'constructor', 'prototype', '$schema']);
@@ -3497,7 +3547,7 @@
 
     const T = {
       // ─── App Shell ───
-      'app.version': { de: 'v1.5.0 · made with 💛', en: 'v1.5.0 · made with 💛', es: 'v1.5.0 · hecho con 💛', fr: 'v1.5.0 · fait avec 💛', ja: 'v1.5.0 · made with 💛', pt: 'v1.5.0 · feito com 💛' },
+      'app.version': { de: 'v1.6.0 · made with 💛', en: 'v1.6.0 · made with 💛', es: 'v1.6.0 · hecho con 💛', fr: 'v1.6.0 · fait avec 💛', ja: 'v1.6.0 · made with 💛', pt: 'v1.6.0 · feito com 💛' },
       'app.by': { de: 'von', en: 'by', es: 'por', fr: 'par', ja: '作成者', pt: 'por' },
       'sidebar.collapse': { de: 'Sidebar einklappen', en: 'Collapse sidebar', es: 'Contraer barra lateral', fr: 'Replier la barre laterale', ja: 'サイドバーを折りたたむ', pt: 'Recolher barra lateral' },
       'sidebar.expand': { de: 'Sidebar ausklappen', en: 'Expand sidebar', es: 'Expandir barra lateral', fr: 'Deplier la barre laterale', ja: 'サイドバーを展開する', pt: 'Expandir barra lateral' },
@@ -3929,8 +3979,11 @@
       'display.customPacks': { de: 'Eigene Packs', en: 'Custom packs', es: 'Paquetes personalizados', fr: 'Packs personnalises', ja: 'カスタムパック', pt: 'Pacotes personalizados' },
 
       // ─── Attribution Descriptions (long) ───
-      'attr.commitDescLong': { de: 'Text der automatisch an Git-Commit-Messages angehaengt wird (z.B. als Co-Author). Wird beim /commit Skill verwendet.', en: 'Text automatically appended to git commit messages (e.g. as co-author). Used by the /commit skill.', es: 'Texto agregado automaticamente a los mensajes de commit de git (p.ej. como coautor). Usado por el skill /commit.', fr: 'Texte ajoute automatiquement aux messages de commit git (ex. comme co-auteur). Utilise par le skill /commit.', ja: 'Gitコミットメッセージに自動追加されるテキスト（例: 共著者として）。/commitスキルで使用。', pt: 'Texto adicionado automaticamente as mensagens de commit do git (ex. como coautor). Usado pelo skill /commit.' },
-      'attr.prDescLong': { de: 'Text der in Pull-Request-Beschreibungen eingefuegt wird.', en: 'Text inserted into pull request descriptions.', es: 'Texto insertado en las descripciones de pull requests.', fr: 'Texte insere dans les descriptions de pull requests.', ja: 'プルリクエストの説明に挿入されるテキスト。', pt: 'Texto inserido nas descricoes de pull requests.' },
+      'attr.commitDescLong': { de: 'Text der automatisch an Git-Commit-Messages angehaengt wird (z.B. als Co-Author). Wird beim /commit Skill verwendet. Leer lassen = Standardtext von Claude Code.', en: 'Text automatically appended to git commit messages (e.g. as co-author). Used by the /commit skill. Leave empty for Claude Code’s default text.', es: 'Texto agregado automaticamente a los mensajes de commit de git (p.ej. como coautor). Usado por el skill /commit. Vacío = texto predeterminado de Claude Code.', fr: 'Texte ajoute automatiquement aux messages de commit git (ex. comme co-auteur). Utilise par le skill /commit. Vide = texte par défaut de Claude Code.', ja: 'Gitコミットメッセージに自動追加されるテキスト（例: 共著者として）。/commitスキルで使用。 空欄 = Claude Code の既定テキスト。', pt: 'Texto adicionado automaticamente as mensagens de commit do git (ex. como coautor). Usado pelo skill /commit. Vazio = texto padrão do Claude Code.' },
+      'attr.prDescLong': { de: 'Text der in Pull-Request-Beschreibungen eingefuegt wird. Leer lassen = Standardtext von Claude Code.', en: 'Text inserted into pull request descriptions. Leave empty for Claude Code’s default text.', es: 'Texto insertado en las descripciones de pull requests. Vacío = texto predeterminado de Claude Code.', fr: 'Texte insere dans les descriptions de pull requests. Vide = texte par défaut de Claude Code.', ja: 'プルリクエストの説明に挿入されるテキスト。 空欄 = Claude Code の既定テキスト。', pt: 'Texto inserido nas descricoes de pull requests. Vazio = texto padrão do Claude Code.' },
+      'attr.hide': { de: 'Ausblenden (leerer Text)', en: 'Hide (empty text)', es: 'Ocultar (texto vacío)', fr: 'Masquer (texte vide)', ja: '非表示（空のテキスト）', pt: 'Ocultar (texto vazio)' },
+      'attr.sessionUrl': { de: 'Session-Link in Commits', en: 'Session link in commits', es: 'Enlace de sesión en commits', fr: 'Lien de session dans les commits', ja: 'コミットのセッションリンク', pt: 'Link da sessão nos commits' },
+      'attr.sessionUrlDesc': { de: 'Hängt bei Commits aus Cloud- und Remote-Control-Sitzungen den claude.ai-Link zur Sitzung an. Aus = Link weglassen.', en: 'Adds the claude.ai session link to commits from cloud and Remote Control sessions. Off = leave the link out.', es: 'Añade el enlace de sesión de claude.ai a los commits de sesiones en la nube y de Remote Control. Desactivado = sin enlace.', fr: 'Ajoute le lien de session claude.ai aux commits des sessions cloud et Remote Control. Désactivé = sans lien.', ja: 'クラウドおよび Remote Control セッションのコミットに claude.ai のセッションリンクを付けます。オフ = リンクなし。', pt: 'Adiciona o link da sessão claude.ai aos commits de sessões na nuvem e de Remote Control. Desligado = sem link.' },
 
       // ─── Advanced: Long Descriptions ───
       'adv.cleanupDescLong': { de: 'Session-Transkripte Aufbewahrungsdauer. Standard: 30 Tage.', en: 'Session transcript retention period. Default: 30 days.', es: 'Periodo de retencion de transcripciones. Predeterminado: 30 dias.', fr: 'Duree de conservation des transcriptions. Par defaut: 30 jours.', ja: 'セッション記録の保持期間。デフォルト: 30日。', pt: 'Periodo de retencao de transcricoes. Padrao: 30 dias.' },
@@ -4314,7 +4367,7 @@
       // ─── Doctor ───
       'doctor.unknownKey': { de: 'Unbekannter Schlüssel: ', en: 'Unknown key: ', es: 'Clave desconocida: ', fr: 'Clé inconnue : ', ja: '不明なキー: ', pt: 'Chave desconhecida: ' },
       'doctor.didYouMean': { de: ' — meintest du ', en: ' — did you mean ', es: ' — ¿quisiste decir ', fr: ' — vouliez-vous dire ', ja: ' — もしかして ', pt: ' — você quis dizer ' },
-      'doctor.deprecatedKey': { de: 'Veralteter Schlüssel (laut Schema DEPRECATED): ', en: 'Deprecated key (per schema): ', es: 'Clave obsoleta (según el esquema): ', fr: 'Clé obsolète (selon le schéma) : ', ja: '非推奨キー（スキーマによる）: ', pt: 'Chave obsoleta (segundo o esquema): ' },
+      'doctor.deprecatedKey': { de: 'Veralteter Schlüssel: ', en: 'Deprecated key: ', es: 'Clave obsoleta: ', fr: 'Clé obsolète : ', ja: '非推奨のキー: ', pt: 'Chave obsoleta: ' },
       'doctor.effortOpus55': { de: 'Opus 5.5 übernimmt effortLevel der User-Datei nicht: ', en: 'Opus 5.5 ignores effortLevel from the user file: ', es: 'Opus 5.5 ignora effortLevel del archivo de usuario: ', fr: 'Opus 5.5 ignore effortLevel du fichier utilisateur : ', ja: 'Opus 5.5 はユーザーファイルの effortLevel を使いません: ', pt: 'O Opus 5.5 ignora effortLevel do arquivo de usuário: ' },
       'doctor.wrongType': { de: 'Falscher Typ bei ', en: 'Wrong type for ', es: 'Tipo incorrecto en ', fr: 'Type incorrect pour ', ja: '型が不正: ', pt: 'Tipo incorreto em ' },
       'doctor.notInEnum': { de: 'Wert nicht erlaubt: ', en: 'Value not allowed: ', es: 'Valor no permitido: ', fr: 'Valeur non autorisée : ', ja: '許可されていない値: ', pt: 'Valor não permitido: ' },
@@ -4780,6 +4833,7 @@
           { tab: 'display', label: 'search.spinnerVerbs', desc: 'search.spinnerVerbs.desc', keywords: ['spinner', 'verbs', 'wörter'], id: 'setting-spinner-verbs' },
           { tab: 'attribution', label: 'search.commitAttr', desc: 'search.commitAttr.desc', keywords: ['commit', 'attribution', 'co-author', 'git'], id: 'setting-attr-commit' },
           { tab: 'attribution', label: 'search.prAttr', desc: 'search.prAttr.desc', keywords: ['pr', 'pull-request', 'attribution'], id: 'setting-attr-pr' },
+          { tab: 'attribution', label: 'attr.sessionUrl', desc: 'attr.sessionUrlDesc', keywords: ['session', 'link', 'url', 'sessionurl', 'remote'], id: 'setting-attr-session' },
           { tab: 'advanced', label: 'search.cleanup', desc: 'search.cleanup.desc', keywords: ['cleanup', 'tage', 'aufbewahrung'], id: 'setting-cleanup' },
           { tab: 'advanced', label: 'search.fastMode', desc: 'search.fastMode.desc', keywords: ['fast', 'mode', 'schnell'], id: 'setting-fast-mode' },
           { tab: 'advanced', label: 'search.bashEditDiff', desc: 'search.bashEditDiff.desc', keywords: ['bash', 'diff', 'edit', 'hooks', 'posttooluse'], id: 'setting-bash-edit-diff' },
@@ -5706,7 +5760,7 @@
             if (data.showTurnDuration !== undefined) s.showTurnDuration = data.showTurnDuration;
             if (data.prefersReducedMotion !== undefined) s.prefersReducedMotion = data.prefersReducedMotion;
             if (data.statusLine) s.statusLine = { ...s.statusLine, ...data.statusLine };
-            if (data.attribution) s.attribution = { ...s.attribution, ...data.attribution };
+            if (data.attribution !== undefined) s.attribution = attributionFromFile(data.attribution);
             if (data.cleanupPeriodDays !== undefined) s.cleanupPeriodDays = data.cleanupPeriodDays;
             if (data.fastModePerSessionOptIn !== undefined) s.fastModePerSessionOptIn = data.fastModePerSessionOptIn;
             if (data.enableAllProjectMcpServers !== undefined) s.enableAllProjectMcpServers = data.enableAllProjectMcpServers;
@@ -5824,10 +5878,8 @@
             if (s.statusLine.disabled) sl.disabled = true;
             out.statusLine = sl;
           }
-          const attr = {};
-          if (s.attribution.commit) attr.commit = s.attribution.commit;
-          if (s.attribution.pr) attr.pr = s.attribution.pr;
-          if (Object.keys(attr).length) out.attribution = attr;
+          const attr = attributionToFile(s.attribution);
+          if (attr) out.attribution = attr;
           if (s.cleanupPeriodDays !== 30) out.cleanupPeriodDays = s.cleanupPeriodDays;
           if (s.fastModePerSessionOptIn) out.fastModePerSessionOptIn = true;
           if (s.enableAllProjectMcpServers) out.enableAllProjectMcpServers = true;
@@ -6357,7 +6409,7 @@
               if (f.kind === 'unknown') {
                 message = this.t('doctor.unknownKey') + f.key + (f.suggestion ? this.t('doctor.didYouMean') + f.suggestion + '?' : '');
                 fix = f.suggestion ? { type: 'rename', from: f.key, to: f.suggestion } : { type: 'remove', key: f.key };
-              } else if (f.kind === 'deprecated') { message = this.t('doctor.deprecatedKey') + f.key; fix = { type: 'remove', key: f.key }; }
+              } else if (f.kind === 'deprecated') { message = this.t('doctor.deprecatedKey') + f.key; fix = { type: 'deprecated', key: f.key }; }
               else if (f.kind === 'type') { severity = 'error'; message = this.t('doctor.wrongType') + f.key + ': ' + f.actual + ' → ' + f.expected; }
               else if (f.kind === 'enum') { severity = 'error'; message = this.t('doctor.notInEnum') + f.key + ' = "' + f.actual + '" (' + f.expected + ')'; }
               else if (f.kind === 'managed') { severity = 'info'; message = this.t('doctor.managedOnly') + f.key; }
@@ -6389,9 +6441,10 @@
 
         applyDoctorFix(fix) {
           if (!fix) return;
-          const doc = JSON.parse(this.cleanJson());
+          let doc = JSON.parse(this.cleanJson());
           if (fix.type === 'rename') { if (!Object.prototype.hasOwnProperty.call(doc, fix.to)) doc[fix.to] = doc[fix.from]; delete doc[fix.from]; }
           if (fix.type === 'remove') delete doc[fix.key];
+          if (fix.type === 'deprecated') doc = deprecatedKeyFix(doc, fix.key);
           if (fix.type === 'modelSetting') { const ms = doc.modelSettings || {}; doc.modelSettings = { ...ms, [fix.key]: { ...(ms[fix.key] || {}), effortLevel: fix.effortLevel } }; }
           this.loadJson(JSON.stringify(doc));
           this.markUnsaved();

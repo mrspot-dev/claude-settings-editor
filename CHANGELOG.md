@@ -3,6 +3,21 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.6.0] — 2026-09-23
+
+Attribution round trip and safer doctor fixes for deprecated keys.
+
+### Fixed
+- **`attribution` was lost on save.** Empty `commit`/`pr` strings (the documented way to hide attribution) and `sessionUrl` were dropped on export, so a file that hid attribution came back without the block and Claude Code added the co-author trailer again. Hidden parts, `sessionUrl` and unknown sub-keys now survive the round trip. The bug dates back to the first version.
+- The doctor fix for deprecated keys no longer deletes keys that Claude Code still reads without keeping their effect: `disableArtifact: true` becomes `enableArtifact: false`, and `includeCoAuthoredBy: false` becomes `attribution` with empty `commit` and `pr` (unless `attribution` already sets one of them). Keys without effect are still removed.
+- The deprecated-key message no longer claims the schema as its source, since most such keys now come from the settings reference.
+
+### Added
+- Attribution tab: a "hide" checkbox for the commit and the PR text (an empty field still means Claude Code's default text), and a switch for the claude.ai session link in commits (`attribution.sessionUrl`).
+
+### Changed
+- README tab overview: removed the release channel (gone since 1.3.2), added the Bash edit diff and the new attribution options.
+
 ## [1.5.0] — 2026-09-23
 
 Claude Opus 5.5 and Fable 5.1 (Claude Code 2.1.280), plus the rest of the changelog since 2.1.267.
