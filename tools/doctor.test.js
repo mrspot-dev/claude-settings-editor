@@ -22,6 +22,22 @@ const MAP = {
   'permissions.defaultMode': { type: 'string', enum: ['default'], scope: 'any', deprecated: false },
 };
 
+test('a nested managed key is reported unless its top-level parent is reported already', () => {
+  const map = {
+    sandbox: { type: 'object', enum: [], scope: 'any', deprecated: false },
+    'sandbox.bwrapPath': { type: 'string', enum: [], scope: 'managed', deprecated: false },
+    'sandbox.network.allowManagedDomainsOnly': { type: 'boolean', enum: [], scope: 'managed', deprecated: false },
+    'sandbox.enabled': { type: 'boolean', enum: [], scope: 'any', deprecated: false },
+    policyHelper: { type: 'object', enum: [], scope: 'managed', deprecated: false },
+    'policyHelper.path': { type: 'string', enum: [], scope: 'managed', deprecated: false },
+  };
+  const doc = { sandbox: { enabled: true, bwrapPath: '/usr/bin/bwrap', network: { allowManagedDomainsOnly: false } }, policyHelper: { path: '/x' } };
+  const managed = (opts) => doctorFindings(doc, map, { skipEnum: [], hints: {}, ...opts }).filter(f => f.kind === 'managed').map(f => f.key);
+  assert.deepEqual(managed({}), ['policyHelper', 'sandbox.bwrapPath', 'sandbox.network.allowManagedDomainsOnly']);
+  assert.deepEqual(managed({ managedFile: true }), []);
+  assert.deepEqual(doctorFindings({ sandbox: { enabled: true } }, map, { skipEnum: [], hints: {} }), []);
+});
+
 test('levenshtein and nearestKey', () => {
   assert.equal(levenshtein('teamateMode', 'teammateMode'), 1);
   assert.equal(levenshtein('', 'abc'), 3);
