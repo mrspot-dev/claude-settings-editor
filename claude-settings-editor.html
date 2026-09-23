@@ -3484,6 +3484,127 @@
       };
     }
 
+    // Settings the editor edits generically (v1.8, docs/specs/2026-09-23-v18-managed-tab-design.md). This one list
+    // drives loadJson, cleanJson, knownKeys, the search index and the rendered fields; values live in settings.extras
+    // under the full key path. on: true marks a boolean whose default is on, so switching it off writes false.
+    function extraFields() {
+      return [
+        { key: 'allowManagedHooksOnly', tab: 'managed', group: 'lockdown', control: 'toggle' },
+        { key: 'allowManagedMcpServersOnly', tab: 'managed', group: 'lockdown', control: 'toggle' },
+        { key: 'allowManagedPermissionRulesOnly', tab: 'managed', group: 'lockdown', control: 'toggle' },
+        { key: 'allowAllClaudeAiMcps', tab: 'managed', group: 'lockdown', control: 'toggle' },
+        { key: 'strictPluginOnlyCustomization', tab: 'managed', group: 'lockdown', control: 'json' },
+        { key: 'disableCommandPluginSources', tab: 'managed', group: 'lockdown', control: 'toggle' },
+        { key: 'disableSideloadFlags', tab: 'managed', group: 'lockdown', control: 'toggle' },
+        { key: 'allowedChannelPlugins', tab: 'managed', group: 'plugins', control: 'json' },
+        { key: 'channelsEnabled', tab: 'managed', group: 'plugins', control: 'toggle' },
+        { key: 'pluginTrustMessage', tab: 'managed', group: 'plugins', control: 'text' },
+        { key: 'forceLoginGatewayUrl', tab: 'managed', group: 'login', control: 'text' },
+        { key: 'gatewayInternalNetworks', tab: 'managed', group: 'login', control: 'list' },
+        { key: 'requiredMinimumVersion', tab: 'managed', group: 'login', control: 'text' },
+        { key: 'requiredMaximumVersion', tab: 'managed', group: 'login', control: 'text' },
+        { key: 'forceRemoteSettingsRefresh', tab: 'managed', group: 'login', control: 'toggle' },
+        { key: 'policyHelper', tab: 'managed', group: 'policy', control: 'json' },
+        { key: 'managedSourcesBehavior', tab: 'managed', group: 'policy', control: 'select' },
+        { key: 'parentSettingsBehavior', tab: 'managed', group: 'policy', control: 'select' },
+        { key: 'wslInheritsWindowsSettings', tab: 'managed', group: 'policy', control: 'toggle' },
+        { key: 'claudeMd', tab: 'managed', group: 'policy', control: 'textarea' },
+        { key: 'disableDesktopLocalSessions', tab: 'managed', group: 'desktop', control: 'toggle' },
+        { key: 'disableMobileSimulatorTools', tab: 'managed', group: 'desktop', control: 'toggle' },
+        { key: 'disableBrowserExternalNavigation', tab: 'managed', group: 'desktop', control: 'toggle' },
+        // the desktop app also accepts "disable"; the editor offers the documented spelling and keeps a loaded one
+        { key: 'browserExternalPageTools', tab: 'managed', group: 'desktop', control: 'select', options: ['disabled'] },
+        { key: 'managedMcpServers', tab: 'managed', group: 'desktop', control: 'json' },
+        { key: 'sshHostAllowlist', tab: 'managed', group: 'desktop', control: 'list' },
+        { key: 'modelPricing', tab: 'managed', group: 'cost', control: 'json' },
+        { key: 'sandbox.bwrapPath', tab: 'managed', group: 'sandbox', control: 'text' },
+        { key: 'sandbox.socatPath', tab: 'managed', group: 'sandbox', control: 'text' },
+        { key: 'sandbox.filesystem.allowManagedReadPathsOnly', tab: 'managed', group: 'sandbox', control: 'toggle' },
+        { key: 'sandbox.network.allowManagedDomainsOnly', tab: 'managed', group: 'sandbox', control: 'toggle' },
+        { key: 'modelPicker', tab: 'general', group: 'more', control: 'json' },
+        { key: 'vimInsertModeRemaps', tab: 'general', group: 'more', control: 'json' },
+        { key: 'askUserQuestionTimeout', tab: 'display', group: 'more', control: 'select' },
+        { key: 'dialogExpiry', tab: 'display', group: 'more', control: 'select' },
+        { key: 'footerLinksRegexes', tab: 'display', group: 'more', control: 'json' },
+        { key: 'spellcheck', tab: 'display', group: 'more', control: 'json' },
+        { key: 'autoContinueAtUsageLimit', tab: 'advanced', group: 'more', control: 'toggle', on: true },
+        { key: 'desktopSessionCleanupPeriodDays', tab: 'advanced', group: 'more', control: 'number' },
+        { key: 'feedbackDrafts', tab: 'advanced', group: 'more', control: 'select' },
+        { key: 'processWrapper', tab: 'advanced', group: 'more', control: 'text' },
+        { key: 'sshConfigs', tab: 'advanced', group: 'more', control: 'json' },
+        { key: 'pluginConfigs', tab: 'plugins', group: 'more', control: 'json' },
+        { key: 'skipAutoPermissionPrompt', tab: 'permissions', group: 'automode', control: 'toggle' },
+        { key: 'useAutoModeDuringPlan', tab: 'permissions', group: 'automode', control: 'toggle', on: true },
+      ];
+    }
+
+    function extraTopKeys() {
+      return extraFields().map(f => f.key).filter(k => k.indexOf('.') < 0);
+    }
+
+    function getPath(o, path) {
+      return path.split('.').reduce((c, k) => (c && typeof c === 'object' && !Array.isArray(c) && Object.prototype.hasOwnProperty.call(c, k) ? c[k] : undefined), o);
+    }
+
+    function setPath(o, path, v) {
+      const p = path.split('.');
+      let c = o;
+      for (const k of p.slice(0, -1)) { if (!c[k] || typeof c[k] !== 'object' || Array.isArray(c[k])) c[k] = {}; c = c[k]; }
+      c[p[p.length - 1]] = v;
+    }
+
+    // Removes a path and every parent object the removal leaves empty.
+    function deletePath(o, path) {
+      const p = path.split('.');
+      const chain = [o];
+      for (const k of p.slice(0, -1)) {
+        const next = chain[chain.length - 1][k];
+        if (!next || typeof next !== 'object' || Array.isArray(next)) return;
+        chain.push(next);
+      }
+      delete chain[chain.length - 1][p[p.length - 1]];
+      for (let i = chain.length - 1; i > 0 && !Object.keys(chain[i]).length; i--) delete chain[i - 1][p[i - 1]];
+    }
+
+    function readExtras(data, fields) {
+      const extras = {};
+      for (const f of fields) { const v = getPath(data, f.key); if (v !== undefined) extras[f.key] = JSON.parse(JSON.stringify(v)); }
+      return extras;
+    }
+
+    // A set field is written as stored; an unset nested field is removed, so a value kept in sandbox._raw goes too.
+    function applyExtras(out, extras, fields) {
+      for (const f of fields) {
+        if (Object.prototype.hasOwnProperty.call(extras, f.key)) setPath(out, f.key, JSON.parse(JSON.stringify(extras[f.key])));
+        else if (f.key.indexOf('.') >= 0) deletePath(out, f.key);
+      }
+      return out;
+    }
+
+    // Stored value after a click on a toggle: only a deviation from the default is written, undefined = unset.
+    function extraToggleNext(field, current) {
+      const on = current === undefined ? !!field.on : current === true;
+      return !on === !!field.on ? undefined : !on;
+    }
+
+    // Control text -> stored value ({ value }, undefined = unset) or { error: 'number' | 'json' }.
+    function parseExtraInput(field, text) {
+      const s = text == null ? '' : String(text);
+      if (field.control === 'list') { const items = s.split('\n').map(x => x.trim()).filter(Boolean); return { value: items.length ? items : undefined }; }
+      if (field.control === 'textarea') return { value: s.trim() ? s : undefined };
+      if (!s.trim()) return { value: undefined };
+      if (field.control === 'number') { const n = Number(s); return Number.isFinite(n) ? { value: n } : { error: 'number' }; }
+      if (field.control === 'json') { try { return { value: JSON.parse(s) }; } catch (e) { return { error: 'json' }; } }
+      return { value: s.trim() };
+    }
+
+    function extraDisplay(field, value) {
+      if (value === undefined) return '';
+      if (field.control === 'list' && Array.isArray(value) && value.every(v => typeof v === 'string')) return value.join('\n');
+      if (field.control === 'json' || field.control === 'list' || typeof value === 'object') return JSON.stringify(value, null, 2);
+      return String(value);
+    }
+
     function levenshtein(a, b) {
       const m = a.length, n = b.length;
       if (!m) return n; if (!n) return m;
