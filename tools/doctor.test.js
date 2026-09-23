@@ -125,3 +125,16 @@ test('deprecatedKeyFix keeps the effect of keys Claude Code still reads', () => 
   assert.deepEqual(fix({ includeCoAuthoredBy: true }, 'includeCoAuthoredBy'), {});
   assert.deepEqual(fix({ taskOutputMaxChars: 5 }, 'taskOutputMaxChars'), {});
 });
+
+test('embedded SCHEMA_MAP: overrides parsed from the reference', () => {
+  const map = ex.extractSchemaMap(lf).keys;
+  assert.deepEqual(map.effortLevel.overrides, [{ env: 'CLAUDE_CODE_EFFORT_LEVEL', kind: 'precedence' }]);
+  assert.deepEqual(map.fastMode.overrides, [{ env: 'CLAUDE_CODE_DISABLE_FAST_MODE', kind: 'off' }]);
+  assert.deepEqual(map.promptCacheTtl.overrides.map(o => o.env), ['FORCE_PROMPT_CACHING_5M', 'CLAUDE_CODE_PROMPT_CACHE_TTL']);
+  assert.deepEqual(map.disableClaudeAiConnectors.overrides, [{ env: 'ENABLE_CLAUDEAI_MCP_SERVERS', kind: 'off', when: 'false' }]);
+  const withWhen = Object.keys(map).filter(k => (map[k].overrides || []).some(o => o.when !== undefined));
+  assert.equal(withWhen.length, 6, 'keys with a trigger value: ' + withWhen.join(', '));
+  const withEnv = Object.keys(map).filter(k => map[k].overrides && map[k].overrides.length);
+  assert.ok(withEnv.length >= 28, 'only ' + withEnv.length + ' keys carry overrides');
+  for (const k of Object.keys(map)) assert.ok(Array.isArray(map[k].overrides), k + ' has no overrides array');
+});
