@@ -98,7 +98,7 @@ test('renderFacts never parses markup: only textContent, no HTML sinks', () => {
 test('every x-facts key literal exists in SCHEMA_MAP, and the sandbox path groups have a dynamic one', () => {
   const map = ex.extractSchemaMap(lf).keys;
   const keys = [...lf.matchAll(/x-facts="'([^']+)'"/g)].map(m => m[1]);
-  assert.equal(keys.length, 53, 'static x-facts count');
+  assert.equal(keys.length, 57, 'static x-facts count'); // v1.8: +3 Memory tab, +1 ultracode
   for (const k of keys) assert.ok(map[k], 'unknown x-facts key ' + k);
   assert.ok(/x-facts="'sandbox\.filesystem\.' \+ list\.key"/.test(lf), 'dynamic sandbox path groups');
 });
@@ -116,4 +116,35 @@ test('the fourteen rewritten descriptions are in place in all six languages', ()
     for (const l of ['de', 'en', 'es', 'fr', 'ja', 'pt']) assert.ok(T[k][l] && T[k][l].length >= 20, k + ' ' + l);
     assert.ok(T[k].de.length <= 95, k + ' de too long: ' + T[k].de.length);
   }
+});
+
+test('factsView: a boolean with default unset shows no default row, one with a real default does', () => {
+  const { editor } = require('./editor-harness.js');
+  const app = editor();
+  const rows = (k) => app.factsView(k).rows.map(r => r[0]);
+  assert.ok(!rows('ultracode').includes('facts.default'), 'ultracode: unset does not mean off for every boolean');
+  assert.deepEqual(app.factsView('autoMemoryEnabled').rows.find(r => r[0] === 'facts.default'), ['facts.default', 'true']);
+});
+
+test('factsView: a deprecated key carries the notice, a current one does not', () => {
+  const { editor } = require('./editor-harness.js');
+  const app = editor();
+  assert.equal(app.factsView('voiceEnabled').deprecated, 'facts.deprecated');
+  assert.equal(app.factsView('voice').deprecated, '');
+});
+
+test('factsView: a key the reference does not document has no docs link', () => {
+  const { editor } = require('./editor-harness.js');
+  const app = editor();
+  assert.equal(SCHEMA_MAP.keys.skippedPlugins.inReference, false);
+  assert.equal(app.factsView('skippedPlugins').url, '');
+  assert.ok(app.factsView('autoMemoryEnabled').url.endsWith('#automemoryenabled'));
+});
+
+test('the Memory tab shows fact sheets and no Auto Dream; ultracode has its fact sheet', () => {
+  for (const k of ['autoMemoryEnabled', 'autoMemoryDirectory', 'cleanupPeriodDays', 'ultracode']) assert.ok(lf.includes('x-facts="\'' + k + '\'"'), k);
+  assert.ok(!/memory\.dream|setting-auto-dream|healthTip3/.test(lf));
+  const T = ex.extractT(lf);
+  assert.ok(!/Dream/.test(T['memory.desc'].de + T['memory.historyTip'].en));
+  assert.ok(lf.includes("'autoDreamEnabled'"), 'the legacy key stays listed for the import notice');
 });

@@ -797,6 +797,7 @@
                 <div class="flex-1">
                   <span class="setting-label" id="label-ultracode" x-text="t('general.ultracode')"></span>
                   <p class="setting-desc" x-text="t('general.ultracodeDesc')"></p>
+                  <div x-facts="'ultracode'"></div>
                 </div>
                 <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.ultracode }" @click="settings.ultracode = !settings.ultracode; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-ultracode" :aria-checked="settings.ultracode" @keydown.enter="settings.ultracode = !settings.ultracode; markUnsaved()" @keydown.space.prevent="settings.ultracode = !settings.ultracode; markUnsaved()"></div>
               </div>
@@ -2983,6 +2984,7 @@
                 <div>
                   <span class="setting-label" x-text="t('memory.enabledLabel')"></span>
                   <p class="text-xs text-fg-dim mt-0.5" x-text="t('memory.enabledDesc')"></p>
+                  <div x-facts="'autoMemoryEnabled'"></div>
                 </div>
                 <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.autoMemoryEnabled }" @click="settings.autoMemoryEnabled = !settings.autoMemoryEnabled; markUnsaved()" tabindex="0" role="switch" :aria-checked="settings.autoMemoryEnabled" @keydown.enter="settings.autoMemoryEnabled = !settings.autoMemoryEnabled; markUnsaved()" @keydown.space.prevent="settings.autoMemoryEnabled = !settings.autoMemoryEnabled; markUnsaved()"></div>
               </div>
@@ -2991,6 +2993,7 @@
               <div class="py-3 px-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)]">
                 <span class="setting-label" x-text="t('memory.directoryLabel')"></span>
                 <p class="text-xs text-fg-dim mt-0.5 mb-2" x-text="t('memory.directoryDesc')"></p>
+                <div x-facts="'autoMemoryDirectory'" class="mb-2"></div>
                 <input type="text" class="setting-input w-full" x-model="settings.autoMemoryDirectory" @input="markUnsaved()" :placeholder="t('memory.directoryPlaceholder')">
               </div>
 
@@ -3016,62 +3019,6 @@
               </details>
             </div>
 
-            <!-- Section 2: Auto Dream -->
-            <div class="settings-group space-y-4" id="setting-auto-dream">
-              <div class="flex items-center gap-3 mb-2">
-                <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                  <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-                </div>
-                <div class="flex-1">
-                  <div class="flex items-center gap-2">
-                    <h3 class="font-display font-semibold text-sm text-fg" x-text="t('memory.dreamTitle')"></h3>
-                    <span class="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-400/15 text-indigo-300 border border-indigo-400/20" x-text="t('memory.dreamExperimental')"></span>
-                  </div>
-                  <p class="text-xs text-fg-dim mt-0.5" x-text="t('memory.dreamDesc')"></p>
-                </div>
-              </div>
-
-              <!-- Trigger Conditions -->
-              <div class="p-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)]">
-                <p class="text-xs font-semibold text-fg mb-3" x-text="t('memory.dreamTriggerTitle')"></p>
-                <div class="flex gap-3 mb-2">
-                  <div class="flex-1 p-3 rounded-lg bg-indigo-500/5 border border-indigo-500/10 text-center">
-                    <div class="text-2xl font-display font-bold text-indigo-400">24h</div>
-                    <p class="text-[10px] text-fg-dim mt-1" x-text="t('memory.dreamTrigger1')"></p>
-                  </div>
-                  <div class="flex items-center text-fg-dim text-lg font-bold">+</div>
-                  <div class="flex-1 p-3 rounded-lg bg-indigo-500/5 border border-indigo-500/10 text-center">
-                    <div class="text-2xl font-display font-bold text-indigo-400">5+</div>
-                    <p class="text-[10px] text-fg-dim mt-1" x-text="t('memory.dreamTrigger2')"></p>
-                  </div>
-                </div>
-                <p class="text-[10px] text-fg-dim text-center italic" x-text="t('memory.dreamTriggerBoth')"></p>
-              </div>
-
-              <!-- 4 Phases -->
-              <div class="p-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)]">
-                <p class="text-xs font-semibold text-fg mb-3" x-text="t('memory.dreamPhasesTitle')"></p>
-                <div class="space-y-2">
-                  <div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-indigo-500/15 text-indigo-400 text-[10px] font-bold flex items-center justify-center flex-shrink-0">1</span><span class="text-xs text-fg-dim" x-text="t('memory.dreamPhase1')"></span></div>
-                  <div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-indigo-500/15 text-indigo-400 text-[10px] font-bold flex items-center justify-center flex-shrink-0">2</span><span class="text-xs text-fg-dim" x-text="t('memory.dreamPhase2')"></span></div>
-                  <div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-indigo-500/15 text-indigo-400 text-[10px] font-bold flex items-center justify-center flex-shrink-0">3</span><span class="text-xs text-fg-dim" x-text="t('memory.dreamPhase3')"></span></div>
-                  <div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-indigo-500/15 text-indigo-400 text-[10px] font-bold flex items-center justify-center flex-shrink-0">4</span><span class="text-xs text-fg-dim" x-text="t('memory.dreamPhase4')"></span></div>
-                </div>
-              </div>
-
-              <!-- Manual Trigger + Safety -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div class="p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
-                  <p class="text-xs font-semibold text-indigo-300 mb-1" x-text="t('memory.dreamManualTitle')"></p>
-                  <p class="text-[11px] text-fg-dim" x-text="t('memory.dreamManualDesc')"></p>
-                </div>
-                <div class="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
-                  <p class="text-xs font-semibold text-emerald-300 mb-1">Safety</p>
-                  <p class="text-[11px] text-fg-dim" x-text="t('memory.dreamSafety')"></p>
-                </div>
-              </div>
-            </div>
-
             <!-- Section 3: Memory History -->
             <div class="settings-group space-y-4" id="setting-memory-history">
               <div class="flex items-center gap-3 mb-2">
@@ -3084,6 +3031,7 @@
                     <span class="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-400/15 text-amber-300 border border-amber-400/20" x-text="t('memory.historyRecommended')"></span>
                   </div>
                   <p class="text-xs text-fg-dim mt-0.5" x-text="t('memory.historyDesc')"></p>
+                  <div x-facts="'cleanupPeriodDays'"></div>
                 </div>
               </div>
 
@@ -3194,7 +3142,6 @@
               <ul class="mt-4 space-y-2.5 text-xs text-fg-dim">
                 <li class="flex items-start gap-2"><span class="text-emerald-400 mt-0.5">•</span><span x-text="t('memory.healthTip1')"></span></li>
                 <li class="flex items-start gap-2"><span class="text-emerald-400 mt-0.5">•</span><span x-text="t('memory.healthTip2')"></span></li>
-                <li class="flex items-start gap-2"><span class="text-emerald-400 mt-0.5">•</span><span x-text="t('memory.healthTip3')"></span></li>
                 <li class="flex items-start gap-2"><span class="text-emerald-400 mt-0.5">•</span><span x-text="t('memory.healthTip4')"></span></li>
                 <li class="flex items-start gap-2"><span class="text-emerald-400 mt-0.5">•</span><span x-text="t('memory.healthTip5')"></span></li>
               </ul>
@@ -4438,7 +4385,7 @@
       'memory.historyDaysLabel': { de: 'Aufbewahrungsdauer in Tagen', en: 'Retention period in days', es: 'Periodo de retencion en dias', fr: 'Periode de conservation en jours', ja: '保持期間（日数）', pt: 'Periodo de retencao em dias' },
       'memory.historyDefault': { de: 'Standard: 30 Tage', en: 'Default: 30 days', es: 'Predeterminado: 30 dias', fr: 'Par defaut: 30 jours', ja: 'デフォルト: 30日', pt: 'Padrao: 30 dias' },
       'memory.historyMax': { de: '★ Empfohlen: 365 Tage', en: '★ Recommended: 365 days', es: '★ Recomendado: 365 dias', fr: '★ Recommande: 365 jours', ja: '★ 推奨: 365日', pt: '★ Recomendado: 365 dias' },
-      'memory.historyTip': { de: 'Bei aktivem Auto Memory und Auto Dream empfehlen wir 365 Tage, damit wertvolle Erkenntnisse nicht verloren gehen.', en: 'With Auto Memory and Auto Dream active, we recommend 365 days so valuable insights are not lost.', es: 'Con Auto Memory y Auto Dream activos, recomendamos 365 dias para no perder informacion valiosa.', fr: 'Avec Auto Memory et Auto Dream actifs, nous recommandons 365 jours pour ne pas perdre d\'informations.', ja: 'Auto MemoryとAuto Dreamが有効な場合、重要な洞察を失わないよう365日を推奨します。', pt: 'Com Auto Memory e Auto Dream ativos, recomendamos 365 dias para nao perder informacoes valiosas.' },
+      'memory.historyTip': { de: 'Bei aktivem Auto Memory empfehlen wir 365 Tage, damit wertvolle Erkenntnisse nicht verloren gehen.', en: 'With Auto Memory active, we recommend 365 days so valuable insights are not lost.', es: 'Con Auto Memory activo, recomendamos 365 días para no perder información valiosa.', fr: 'Avec Auto Memory actif, nous recommandons 365 jours pour ne pas perdre d’informations.', ja: 'Auto Memory が有効な場合、重要な洞察を失わないよう 365 日を推奨します。', pt: 'Com o Auto Memory ativo, recomendamos 365 dias para não perder informações valiosas.' },
       'adv.skipDangerousPrompt': { de: 'Bypass-Modus Warnung ueberspringen', en: 'Skip bypass mode warning', es: 'Omitir advertencia del modo bypass', fr: 'Ignorer l\'avertissement du mode bypass', ja: 'バイパスモードの警告をスキップ', pt: 'Pular aviso do modo bypass' },
       'adv.skipDangerousPromptDesc': { de: 'Keine Bestaetigungs-Abfrage beim Wechsel in den Bypass-Permissions-Modus', en: 'No confirmation prompt when entering bypass permissions mode', es: 'Sin confirmacion al entrar en modo bypass de permisos', fr: 'Pas de confirmation lors du passage en mode bypass', ja: 'バイパス権限モードに入る際の確認なし', pt: 'Sem confirmacao ao entrar no modo bypass de permissoes' },
       'adv.extraMarketplaces': { de: 'Extra Marketplaces', en: 'Extra Marketplaces', es: 'Marketplaces adicionales', fr: 'Marketplaces supplementaires', ja: '追加マーケットプレイス', pt: 'Marketplaces adicionais' },
@@ -4667,7 +4614,7 @@
 
       // ─── Memory Tab ───
       'memory.title': { de: 'Memory', en: 'Memory', es: 'Memoria', fr: 'Memoire', ja: 'メモリ', pt: 'Memoria' },
-      'memory.desc': { de: 'Auto Memory, Auto Dream und Session Memory verwalten', en: 'Manage Auto Memory, Auto Dream and Session Memory', es: 'Gestionar Auto Memory, Auto Dream y Session Memory', fr: 'Gerer Auto Memory, Auto Dream et Session Memory', ja: 'Auto Memory、Auto Dream、Session Memoryを管理', pt: 'Gerenciar Auto Memory, Auto Dream e Session Memory' },
+      'memory.desc': { de: 'Auto Memory und Session Memory verwalten', en: 'Manage Auto Memory and Session Memory', es: 'Gestionar Auto Memory y Session Memory', fr: 'Gérer Auto Memory et Session Memory', ja: 'Auto Memory と Session Memory を管理', pt: 'Gerenciar Auto Memory e Session Memory' },
       'memory.autoMemoryTitle': { de: 'Auto Memory', en: 'Auto Memory', es: 'Auto Memory', fr: 'Auto Memory', ja: 'Auto Memory', pt: 'Auto Memory' },
       'memory.autoMemoryDesc': { de: 'Claude notiert sich automatisch Patterns, Build-Commands und Debugging-Insights waehrend der Arbeit.', en: 'Claude automatically notes patterns, build commands and debugging insights while working.', es: 'Claude anota automaticamente patrones, comandos de build e insights de depuracion durante el trabajo.', fr: 'Claude note automatiquement les patterns, commandes de build et insights de debogage pendant le travail.', ja: 'Claudeは作業中にパターン、ビルドコマンド、デバッグの知見を自動的にメモします。', pt: 'Claude anota automaticamente padroes, comandos de build e insights de depuracao durante o trabalho.' },
       'memory.enabledLabel': { de: 'Auto Memory aktiviert', en: 'Auto Memory enabled', es: 'Auto Memory activado', fr: 'Auto Memory active', ja: 'Auto Memory有効', pt: 'Auto Memory ativado' },
@@ -4682,21 +4629,6 @@
       'memory.savedItem2': { de: 'Build-Commands und Test-Konventionen', en: 'Build commands and test conventions', es: 'Comandos de build y convenciones de testing', fr: 'Commandes de build et conventions de test', ja: 'ビルドコマンドとテスト規約', pt: 'Comandos de build e convencoes de teste' },
       'memory.savedItem3': { de: 'Architektur-Notizen und Datei-Beziehungen', en: 'Architecture notes and file relationships', es: 'Notas de arquitectura y relaciones entre archivos', fr: 'Notes d\'architecture et relations entre fichiers', ja: 'アーキテクチャメモとファイルの関係性', pt: 'Notas de arquitetura e relacoes entre arquivos' },
       'memory.savedItem4': { de: 'Coding-Preferences und Korrekturen', en: 'Coding preferences and corrections', es: 'Preferencias de codigo y correcciones', fr: 'Preferences de codage et corrections', ja: 'コーディング設定と修正', pt: 'Preferencias de codigo e correcoes' },
-      'memory.dreamTitle': { de: 'Auto Dream', en: 'Auto Dream', es: 'Auto Dream', fr: 'Auto Dream', ja: 'Auto Dream', pt: 'Auto Dream' },
-      'memory.dreamDesc': { de: 'Periodische Konsolidierung — wie REM-Schlaf fuer Claudes Memory. Entfernt Widersprueche, mergt Duplikate, konvertiert relative Daten.', en: "Periodic consolidation — like REM sleep for Claude's memory. Removes contradictions, merges duplicates, converts relative dates.", es: 'Consolidacion periodica — como sueno REM para la memoria de Claude. Elimina contradicciones, fusiona duplicados, convierte fechas relativas.', fr: 'Consolidation periodique — comme le sommeil paradoxal pour la memoire de Claude. Supprime les contradictions, fusionne les doublons, convertit les dates relatives.', ja: '定期的な統合 — ClaudeのメモリのためのREMスリープ。矛盾を除去し、重複をマージし、相対日付を変換します。', pt: 'Consolidacao periodica — como sono REM para a memoria do Claude. Remove contradicoes, mescla duplicatas, converte datas relativas.' },
-      'memory.dreamExperimental': { de: 'Experimentell', en: 'Experimental', es: 'Experimental', fr: 'Experimental', ja: '実験的', pt: 'Experimental' },
-      'memory.dreamTriggerTitle': { de: 'Trigger-Bedingungen', en: 'Trigger conditions', es: 'Condiciones de activacion', fr: 'Conditions de declenchement', ja: 'トリガー条件', pt: 'Condicoes de ativacao' },
-      'memory.dreamTrigger1': { de: '24 Stunden seit letzter Konsolidierung', en: '24 hours since last consolidation', es: '24 horas desde la ultima consolidacion', fr: '24 heures depuis la derniere consolidation', ja: '最後の統合から24時間経過', pt: '24 horas desde a ultima consolidacao' },
-      'memory.dreamTrigger2': { de: 'Mehr als 5 Sessions seit letzter Konsolidierung', en: 'More than 5 sessions since last consolidation', es: 'Mas de 5 sesiones desde la ultima consolidacion', fr: 'Plus de 5 sessions depuis la derniere consolidation', ja: '最後の統合から5セッション以上経過', pt: 'Mais de 5 sessoes desde a ultima consolidacao' },
-      'memory.dreamTriggerBoth': { de: 'Beide Bedingungen muessen erfuellt sein.', en: 'Both conditions must be met.', es: 'Ambas condiciones deben cumplirse.', fr: 'Les deux conditions doivent etre remplies.', ja: '両方の条件を満たす必要があります。', pt: 'Ambas as condicoes devem ser atendidas.' },
-      'memory.dreamPhasesTitle': { de: '4 Phasen', en: '4 Phases', es: '4 Fases', fr: '4 Phases', ja: '4つのフェーズ', pt: '4 Fases' },
-      'memory.dreamPhase1': { de: 'Orient — Memory-Verzeichnis scannen', en: 'Orient — Scan memory directory', es: 'Orient — Escanear directorio de memoria', fr: 'Orient — Scanner le repertoire de memoire', ja: 'Orient — メモリディレクトリをスキャン', pt: 'Orient — Escanear diretorio de memoria' },
-      'memory.dreamPhase2': { de: 'Gather — Signal aus Session-Transkripten', en: 'Gather — Extract signals from session transcripts', es: 'Gather — Extraer senales de transcripciones de sesion', fr: 'Gather — Extraire les signaux des transcriptions de session', ja: 'Gather — セッショントランスクリプトからシグナルを抽出', pt: 'Gather — Extrair sinais das transcricoes de sessao' },
-      'memory.dreamPhase3': { de: 'Consolidate — Mergen, Prunen, Daten absolutieren', en: 'Consolidate — Merge, prune, convert dates to absolute', es: 'Consolidate — Fusionar, podar, absolutizar fechas', fr: 'Consolidate — Fusionner, elaguer, absolutiser les dates', ja: 'Consolidate — マージ、剪定、日付を絶対化', pt: 'Consolidate — Mesclar, podar, absolutizar datas' },
-      'memory.dreamPhase4': { de: 'Index — MEMORY.md unter 200 Zeilen halten', en: 'Index — Keep MEMORY.md under 200 lines', es: 'Index — Mantener MEMORY.md bajo 200 lineas', fr: 'Index — Maintenir MEMORY.md sous 200 lignes', ja: 'Index — MEMORY.mdを200行以内に保つ', pt: 'Index — Manter MEMORY.md abaixo de 200 linhas' },
-      'memory.dreamManualTitle': { de: 'Manuell triggern', en: 'Trigger manually', es: 'Activar manualmente', fr: 'Declencher manuellement', ja: '手動でトリガー', pt: 'Ativar manualmente' },
-      'memory.dreamManualDesc': { de: 'Tippe /dream oder "consolidate my memory files" in Claude Code.', en: 'Type /dream or "consolidate my memory files" in Claude Code.', es: 'Escribe /dream o "consolidate my memory files" en Claude Code.', fr: 'Tapez /dream ou "consolidate my memory files" dans Claude Code.', ja: 'Claude Codeで /dream または "consolidate my memory files" と入力してください。', pt: 'Digite /dream ou "consolidate my memory files" no Claude Code.' },
-      'memory.dreamSafety': { de: 'Sicherheit: Read-only auf Code, Lock-File verhindert parallele Runs, laeuft im Hintergrund.', en: 'Safety: Read-only on code, lock file prevents parallel runs, runs in background.', es: 'Seguridad: Solo lectura en codigo, archivo lock previene ejecuciones paralelas, se ejecuta en segundo plano.', fr: "Securite: Lecture seule sur le code, fichier lock empeche les executions paralleles, s'execute en arriere-plan.", ja: '安全性: コードは読み取り専用、ロックファイルで並列実行を防止、バックグラウンドで実行。', pt: 'Seguranca: Somente leitura no codigo, arquivo lock previne execucoes paralelas, executa em segundo plano.' },
       'memory.sessionTitle': { de: 'Session Memory', en: 'Session Memory', es: 'Session Memory', fr: 'Session Memory', ja: 'Session Memory', pt: 'Session Memory' },
       'memory.sessionDesc': { de: 'Automatische Zusammenfassungen im Hintergrund — macht /compact instant.', en: 'Automatic background summaries — makes /compact instant.', es: 'Resumenes automaticos en segundo plano — hace /compact instantaneo.', fr: 'Resumes automatiques en arriere-plan — rend /compact instantane.', ja: 'バックグラウンドでの自動要約 — /compactを即座に実行可能にします。', pt: 'Resumos automaticos em segundo plano — torna /compact instantaneo.' },
       'memory.sessionCadence': { de: 'Erste Extraktion nach ~10.000 Tokens, dann alle ~5.000 Tokens oder 3 Tool-Calls.', en: 'First extraction after ~10,000 tokens, then every ~5,000 tokens or 3 tool calls.', es: 'Primera extraccion despues de ~10.000 tokens, luego cada ~5.000 tokens o 3 llamadas de herramientas.', fr: "Premiere extraction apres ~10 000 tokens, puis tous les ~5 000 tokens ou 3 appels d'outils.", ja: '最初の抽出は約10,000トークン後、以降は約5,000トークンまたは3ツールコールごと。', pt: 'Primeira extracao apos ~10.000 tokens, depois a cada ~5.000 tokens ou 3 chamadas de ferramentas.' },
@@ -4713,7 +4645,6 @@
       'memory.healthTitle': { de: 'Memory Health Tipps', en: 'Memory Health Tips', es: 'Consejos de salud de memoria', fr: 'Conseils de sante memoire', ja: 'メモリヘルスのヒント', pt: 'Dicas de saude da memoria' },
       'memory.healthTip1': { de: 'MEMORY.md unter 200 Zeilen halten — darueber wird abgeschnitten', en: 'Keep MEMORY.md under 200 lines — content above that gets truncated', es: 'Mantener MEMORY.md bajo 200 lineas — por encima se trunca', fr: 'Maintenir MEMORY.md sous 200 lignes — au-dela, le contenu est tronque', ja: 'MEMORY.mdを200行以内に保つ — 超過分は切り捨てられます', pt: 'Manter MEMORY.md abaixo de 200 linhas — acima disso e truncado' },
       'memory.healthTip2': { de: 'Relative Daten vermeiden ("gestern" → konkretes Datum)', en: 'Avoid relative dates ("yesterday" → specific date)', es: 'Evitar fechas relativas ("ayer" → fecha concreta)', fr: 'Eviter les dates relatives ("hier" → date concrete)', ja: '相対日付を避ける（「昨日」→ 具体的な日付）', pt: 'Evitar datas relativas ("ontem" → data concreta)' },
-      'memory.healthTip3': { de: 'Nach grossen Refactors: /dream manuell triggern', en: 'After major refactors: trigger /dream manually', es: 'Despues de grandes refactors: activar /dream manualmente', fr: 'Apres de gros refactors: declencher /dream manuellement', ja: '大規模なリファクタリング後: /dreamを手動でトリガー', pt: 'Apos grandes refatoracoes: ativar /dream manualmente' },
       'memory.healthTip4': { de: 'CI/CD: CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 setzen', en: 'CI/CD: set CLAUDE_CODE_DISABLE_AUTO_MEMORY=1', es: 'CI/CD: establecer CLAUDE_CODE_DISABLE_AUTO_MEMORY=1', fr: 'CI/CD: definir CLAUDE_CODE_DISABLE_AUTO_MEMORY=1', ja: 'CI/CD: CLAUDE_CODE_DISABLE_AUTO_MEMORY=1を設定', pt: 'CI/CD: definir CLAUDE_CODE_DISABLE_AUTO_MEMORY=1' },
       'memory.healthTip5': { de: '/memory oeffnet das Memory-Dashboard in Claude Code', en: '/memory opens the Memory Dashboard in Claude Code', es: '/memory abre el panel de memoria en Claude Code', fr: '/memory ouvre le tableau de bord memoire dans Claude Code', ja: '/memoryでClaude Codeのメモリダッシュボードを開く', pt: '/memory abre o painel de memoria no Claude Code' },
       // ─── Memory Search Registry ───
@@ -5656,7 +5587,7 @@
           { id: 'display', label: 'Display & UI', desc: 'Spinner, Status Line und visuelle Einstellungen', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>' },
           { id: 'attribution', label: 'Attribution', desc: 'Commit- und PR-Attribution konfigurieren', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>' },
           { id: 'advanced', label: 'Advanced', desc: 'Auth, Performance und erweiterte Optionen', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>' },
-          { id: 'memory', label: 'Memory', desc: 'Auto Memory, Auto Dream und Session Memory', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>' },
+          { id: 'memory', label: 'Memory', desc: 'Auto Memory und Session Memory', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>' },
           { id: 'managed', label: 'Managed', desc: 'Einstellungen, die nur aus einer verteilten Managed-Konfiguration wirken', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>' },
           { id: 'separator' },
           { id: 'design-prompts', label: 'Design Prompts', desc: '30 kuratierte Design-Aesthetiken mit AI-ready Prompts', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>' },
