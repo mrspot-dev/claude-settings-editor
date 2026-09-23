@@ -93,3 +93,16 @@ test('generic fields: a field that names a tab the editor does not have is a har
   assert.ok(sc.selfCheck(withTab('nowhere')).hard.includes('extras: claudeMd names the unknown tab nowhere'));
   assert.ok(!sc.selfCheck(withTab('managed')).hard.some(h => h.includes('unknown tab')));
 });
+
+test('generic fields: a field without its extra.<key> sentence is a hard finding', () => {
+  const fields = "const tabs = [{ id: 'managed', label: 'M' }];\n    function extraFields() {\n      return [{ key: 'claudeMd', tab: 'managed' }];\n    }\n";
+  const wired = { defaults: "model: '', extras: {}", mapKeys: '"model":{},"claudeMd":{}', known: "'model', ...extraTopKeys()", load: 'if (data.model) s.model = data.model; s.extras = readExtras(data, extraFields());', clean: 'if (s.model) out.model = s.model; applyExtras(out, s.extras || {}, extraFields());' };
+  const r = sc.selfCheck(mini(wired).replace('<script>', '<script>\n    ' + fields));
+  assert.deepEqual(r.hard, ['extras: extra.claudeMd missing in T']);
+  const withText = mini({ ...wired, t: "'a.x': { de: 'Schlüssel', en: 'Key', es: 'Clave', fr: 'Clé', ja: 'キー', pt: 'Chave' },\n      'extra.claudeMd': { de: 'Firmen-Anweisungen', en: 'Org instructions', es: 'Instrucciones', fr: 'Instructions', ja: '指示', pt: 'Instruções' }," });
+  assert.deepEqual(sc.selfCheck(withText.replace('<script>', '<script>\n    ' + fields)).hard, []);
+  const twoLanguages = mini({ ...wired, t: "'a.x': { de: 'Schlüssel', en: 'Key', es: 'Clave', fr: 'Clé', ja: 'キー', pt: 'Chave' },\n      'extra.claudeMd': { de: 'Firmen-Anweisungen', en: 'Org instructions' }," });
+  const hard = sc.selfCheck(twoLanguages.replace('<script>', '<script>\n    ' + fields)).hard;
+  assert.ok(hard.includes('extras: extra.claudeMd missing in T'), hard.join(' | '));
+  assert.ok(hard.some(h => h.startsWith('i18n: 1 T lines do not carry all six languages')), hard.join(' | '));
+});

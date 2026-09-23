@@ -55,6 +55,7 @@ function selfCheck(lf) {
     if (!/\.\.\.extraTopKeys\(\)/.test(knownBlock)) hard.push('extras: extraTopKeys() missing in knownKeys');
     const tabIds = [...lf.matchAll(/{ id: '([a-z-]+)', label:/g)].map(m => m[1]);
     for (const f of fields) {
+      if (!T['extra.' + f.key]) hard.push(`extras: extra.${f.key} missing in T`);
       if (!tabIds.includes(f.tab)) hard.push(`extras: ${f.key} names the unknown tab ${f.tab}`);
       if (!map.keys[f.key]) hard.push(`extras: ${f.key} is not in SCHEMA_MAP`);
       if (known.includes(f.key)) hard.push(`extras: ${f.key} is also listed by hand in knownKeys`);

@@ -160,3 +160,14 @@ test('the Managed tab and every subject tab with "more" fields render their bloc
   assert.ok(lf.includes("extraFieldsFor('managed', g)"));
   for (const tab of new Set(extraFields().filter(f => f.group === 'more').map(f => f.tab))) assert.ok(lf.includes(`extraFieldsFor('${tab}', 'more')`), tab);
 });
+
+test('every generic field has its curated sentence in six languages, at most 100 characters', () => {
+  const T = require('./extract.js').extractT(lf);
+  const long = [];
+  for (const f of extraFields()) {
+    const e = T['extra.' + f.key];
+    assert.ok(e, 'missing extra.' + f.key);
+    for (const lang of ['de', 'en', 'es', 'fr', 'ja', 'pt']) if (e[lang].length > 100) long.push(f.key + '/' + lang + ' ' + e[lang].length);
+  }
+  assert.deepEqual(long, []);
+});
