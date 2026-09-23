@@ -131,3 +131,29 @@ test('doctor findings for a generic key point to its tab', () => {
   assert.equal(app._tabForKey('spellcheck'), 'display');
   assert.equal(app._tabForKey('somethingElse'), 'advanced');
 });
+
+test('validateSettings: managed findings follow the file name and the manual mark', () => {
+  const managedFindings = (fileName, mark) => {
+    const app = editor();
+    app.loadJson(JSON.stringify({ claudeMd: 'Be nice.' }));
+    app.fileName = fileName;
+    if (mark) app.managedMarkedFor = fileName;
+    app.validateSettings();
+    return app.validationErrors.filter(e => e.message === 'doctor.managedOnlyclaudeMd').length;
+  };
+  assert.equal(managedFindings('settings.json'), 1);
+  assert.equal(managedFindings('managed-settings.json'), 0);
+  assert.equal(managedFindings('50-security.json', true), 0, 'a managed-settings.d drop-in marked by hand');
+  assert.equal(managedFindings('50-security.json'), 1);
+});
+
+test('validateSettings: auto mode in settings.local.json is reported on the permissions tab', () => {
+  const app = editor();
+  app.loadJson(JSON.stringify({ permissions: { defaultMode: 'auto' } }));
+  app.fileName = 'settings.local.json';
+  app.validateSettings();
+  assert.ok(app.validationErrors.some(e => e.tab === 'permissions' && e.message === 'doctor.autoIgnoredHere'));
+  app.fileName = 'settings.json';
+  app.validateSettings();
+  assert.ok(!app.validationErrors.some(e => e.message === 'doctor.autoIgnoredHere'));
+});

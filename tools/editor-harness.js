@@ -8,7 +8,7 @@ const { lf } = ex.loadHtml();
 const FUNCS = ['defaultSettings', 'attributionFromFile', 'attributionToFile', 'overlayOwned', 'deprecatedKeyFix',
   'opus55EffortHint', 'levenshtein', 'nearestKey', 'doctorFindings', 'keyFacts', 'factDefault', 'envConflicts',
   'extraFields', 'extraTopKeys', 'getPath', 'setPath', 'deletePath', 'readExtras', 'applyExtras', 'extraToggleNext',
-  'parseExtraInput', 'extraDisplay'];
+  'parseExtraInput', 'extraDisplay', 'autoModeIgnoredHere'];
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 globalThis.SCHEMA_MAP = ex.extractSchemaMap(lf);

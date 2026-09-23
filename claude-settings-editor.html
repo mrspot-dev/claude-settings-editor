@@ -3647,7 +3647,7 @@
         const typeOk = !info.type || actual === info.type || (info.type === 'integer' && actual === 'number');
         if (!typeOk) findings.push({ key, kind: 'type', suggestion: '', actual, expected: info.type });
         else if (info.enum && info.enum.length && typeof v === 'string' && !skipEnum.has(key) && !info.enum.includes(v)) findings.push({ key, kind: 'enum', suggestion: '', actual: v, expected: info.enum.join(', ') });
-        if (info.scope === 'managed') findings.push({ key, kind: 'managed', suggestion: '', actual: '', expected: '' });
+        if (info.scope === 'managed' && !(opts && opts.managedFile)) findings.push({ key, kind: 'managed', suggestion: '', actual: '', expected: '' });
       }
       return findings;
     }
@@ -3659,6 +3659,13 @@
       const perModel = (doc && doc.modelSettings) || {};
       if (!level || Object.prototype.hasOwnProperty.call(perModel, 'claude-opus-5-5')) return null;
       return { type: 'modelSetting', key: 'claude-opus-5-5', effortLevel: level };
+    }
+
+    // defaultMode "auto" and the autoMode block have no effect from project files (permission-modes docs). Only
+    // settings.local.json is certain by its name; settings.json may be the user file, so it is not reported.
+    function autoModeIgnoredHere(doc, fileName) {
+      if (String(fileName || '').toLowerCase() !== 'settings.local.json') return false;
+      return !!(doc && doc.permissions && doc.permissions.defaultMode === 'auto') || !!(doc && doc.autoMode !== undefined);
     }
 
     // Attribution has three states per part: Claude Code's default text (key absent), own text, and hidden
@@ -4650,7 +4657,8 @@
       'facts.docs': { de: 'Claude-Code-Referenz (Englisch)', en: 'Claude Code reference', es: 'Referencia de Claude Code (en inglés)', fr: 'Référence Claude Code (en anglais)', ja: 'Claude Code リファレンス（英語）', pt: 'Referência do Claude Code (em inglês)' },
       'doctor.wrongType': { de: 'Falscher Typ bei ', en: 'Wrong type for ', es: 'Tipo incorrecto en ', fr: 'Type incorrect pour ', ja: '型が不正: ', pt: 'Tipo incorreto em ' },
       'doctor.notInEnum': { de: 'Wert nicht erlaubt: ', en: 'Value not allowed: ', es: 'Valor no permitido: ', fr: 'Valeur non autorisée : ', ja: '許可されていない値: ', pt: 'Valor não permitido: ' },
-      'doctor.managedOnly': { de: 'Greift nur aus managed-settings.json, hier wirkungslos: ', en: 'Only takes effect from managed-settings.json, no effect here: ', es: 'Solo actúa desde managed-settings.json, sin efecto aquí: ', fr: 'N’agit que depuis managed-settings.json, sans effet ici : ', ja: 'managed-settings.json からのみ有効、ここでは無効: ', pt: 'Só vale a partir de managed-settings.json, sem efeito aqui: ' },
+      'doctor.managedOnly': { de: 'Wirkt nur aus der Managed-Konfiguration (Tab Managed), hier wirkungslos: ', en: 'Only takes effect from managed sources (Managed tab), no effect here: ', es: 'Solo actúa desde fuentes gestionadas (pestaña Managed), sin efecto aquí: ', fr: 'N’agit que depuis les sources gérées (onglet Managed), sans effet ici : ', ja: '管理ソースからのみ有効（Managed タブ）、ここでは無効: ', pt: 'Só vale a partir de fontes gerenciadas (aba Managed), sem efeito aqui: ' },
+      'doctor.autoIgnoredHere': { de: 'Auto Mode und der autoMode-Block wirken aus settings.local.json nicht. Nach ~/.claude/settings.json verschieben.', en: 'Auto mode and the autoMode block have no effect from settings.local.json. Move them to ~/.claude/settings.json.', es: 'El modo auto y el bloque autoMode no tienen efecto desde settings.local.json. Muévelos a ~/.claude/settings.json.', fr: 'Le mode auto et le bloc autoMode sont sans effet depuis settings.local.json. Déplacez-les vers ~/.claude/settings.json.', ja: 'auto モードと autoMode ブロックは settings.local.json では無効です。~/.claude/settings.json に移してください。', pt: 'O modo auto e o bloco autoMode não têm efeito a partir de settings.local.json. Mova-os para ~/.claude/settings.json.' },
       'doctor.mcpServersHint': { de: 'mcpServers wird nicht aus settings.json gelesen — gehört in .mcp.json oder ~/.claude.json', en: 'mcpServers is not read from settings.json — it belongs in .mcp.json or ~/.claude.json', es: 'mcpServers no se lee desde settings.json — va en .mcp.json o ~/.claude.json', fr: 'mcpServers n’est pas lu depuis settings.json — il va dans .mcp.json ou ~/.claude.json', ja: 'mcpServers は settings.json から読み込まれません — .mcp.json か ~/.claude.json に置きます', pt: 'mcpServers não é lido do settings.json — fica em .mcp.json ou ~/.claude.json' },
       'doctor.apply': { de: 'beheben', en: 'fix', es: 'corregir', fr: 'corriger', ja: '修正', pt: 'corrigir' },
       'doctor.applied': { de: 'Behoben: ', en: 'Fixed: ', es: 'Corregido: ', fr: 'Corrigé : ', ja: '修正しました: ', pt: 'Corrigido: ' },
@@ -5039,6 +5047,11 @@
         lastOpenedFileName: localStorage.getItem('claude-settings-last-file') || '',
         fileHandle: null,
         fileName: '',
+        // file name the user marked as managed (a managed-settings.d drop-in can have any name); null = none
+        managedMarkedFor: null,
+        get managedFile() {
+          return (this.fileName || '').toLowerCase() === 'managed-settings.json' || (this.managedMarkedFor !== null && this.managedMarkedFor === this.fileName);
+        },
         syncState: { status: 'idle', added: [], removed: [], remoteVersion: '', error: '', checkedAt: '' },
         unsaved: false,
         pluginSearch: '',
@@ -6694,6 +6707,7 @@
             const findings = doctorFindings(doc, SCHEMA_MAP.keys, {
               skipEnum: ['effortLevel', 'maxEffortLevel', 'editorMode', 'theme', 'teammateMode', 'autoUpdatesChannel', 'outputStyle'],
               hints: { mcpServers: true },
+              managedFile: this.managedFile,
             });
             for (const f of findings) {
               let message = '', severity = 'warn', fix = null;
@@ -6708,6 +6722,7 @@
               errors.push({ tab: this._tabForKey(f.key), field: f.key, severity, message, fix });
             }
             const effortFix = opus55EffortHint(doc);
+            if (autoModeIgnoredHere(doc, this.fileName)) errors.push({ tab: 'permissions', field: 'permissions.defaultMode', severity: 'warn', message: this.t('doctor.autoIgnoredHere'), fix: null });
             if (effortFix) errors.push({ tab: 'general', field: 'effortLevel', severity: 'info', message: this.t('doctor.effortOpus55') + effortFix.effortLevel, fix: effortFix });
             for (const c of envConflicts(doc, SCHEMA_MAP.keys)) {
               const message = c.env + '=' + c.envValue + this.t(c.kind === 'off' ? 'doctor.envOff' : 'doctor.envWins') + c.key;
