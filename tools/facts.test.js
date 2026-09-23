@@ -73,3 +73,32 @@ test('validateSettings reports env conflicts in the Environment tab, also for ke
   app2.validateSettings();
   assert.equal(app2.validationErrors.filter(e => e.tab === 'env').length, 0);
 });
+
+test('factsView turns keyFacts into translated rows; unknown keys give null', () => {
+  const { editor } = require('./editor-harness.js');
+  const app = editor();
+  const v = app.factsView('effortLevel');
+  assert.equal(v.summary, 'facts.summary');
+  const labels = v.rows.map(r => r[0]);
+  assert.ok(labels.includes('facts.scope') && labels.includes('facts.values') && labels.includes('facts.envOverride'), labels.join(','));
+  assert.deepEqual(v.rows.find(r => r[0] === 'facts.envOverride'), ['facts.envOverride', 'CLAUDE_CODE_EFFORT_LEVEL — facts.envWins']);
+  assert.equal(v.rows.find(r => r[0] === 'facts.default')[1], 'facts.unset');
+  assert.equal(v.url, 'https://code.claude.com/docs/en/settings-reference#effortlevel');
+  assert.deepEqual(app.factsView('disableClaudeAiConnectors').rows.find(r => r[0] === 'facts.envOverride'), ['facts.envOverride', 'ENABLE_CLAUDEAI_MCP_SERVERS=false — facts.envOff']);
+  assert.equal(app.factsView('definitelyNotAKey'), null);
+});
+
+test('renderFacts never parses markup: only textContent, no HTML sinks', () => {
+  const src = lf.match(/^    function renderFacts\([\s\S]*?\n    \}/m);
+  assert.ok(src, 'renderFacts not found');
+  assert.ok(!/innerHTML|outerHTML|insertAdjacentHTML|document\.write/.test(src[0]), 'renderFacts uses an HTML sink');
+  assert.ok(/textContent/.test(src[0]));
+});
+
+test('every x-facts key literal exists in SCHEMA_MAP, and the sandbox path groups have a dynamic one', () => {
+  const map = ex.extractSchemaMap(lf).keys;
+  const keys = [...lf.matchAll(/x-facts="'([^']+)'"/g)].map(m => m[1]);
+  assert.equal(keys.length, 53, 'static x-facts count');
+  for (const k of keys) assert.ok(map[k], 'unknown x-facts key ' + k);
+  assert.ok(/x-facts="'sandbox\.filesystem\.' \+ list\.key"/.test(lf), 'dynamic sandbox path groups');
+});

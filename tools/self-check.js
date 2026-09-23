@@ -6,7 +6,7 @@
 const ex = require('./extract.js');
 
 const EDITOR_ONLY_KEYS = ['mcpServers']; // deliberately editable here, explained in the MCP tab, not an official settings.json key
-const DYNAMIC_PREFIXES = ['data.', 'design.', 'terminal.', 'builder.'];
+const DYNAMIC_PREFIXES = ['data.', 'design.', 'terminal.', 'builder.', 'facts.'];
 
 function section(lf, startRe, endRe) {
   const s = lf.search(startRe); if (s < 0) return '';
@@ -39,6 +39,11 @@ function selfCheck(lf) {
   const isDynamicHead = (k) => k.endsWith('.') && DYNAMIC_PREFIXES.some(p => k.startsWith(p));
   for (const k of used) if (!T[k] && !isDynamicHead(k)) hard.push(`i18n: ${k} used but not defined in T`);
   for (const [k, v] of Object.entries(T)) if (/\b[a-zäöüß]*(ae|oe|ue)[a-zäöüß]*\b/i.test(v.de) && !/[äöüÄÖÜ]/.test(v.de)) soft.push(`i18n: ${k} de looks transliterated (no Umlaut, has ae/oe/ue): ${v.de.slice(0, 40)}`);
+  for (const m of lf.matchAll(/x-facts="'([^']+)'/g)) {
+    const k = m[1];
+    if (k.endsWith('.')) continue; // head of a dynamic key such as 'sandbox.filesystem.' + list.key
+    if (!map.keys[k]) hard.push(`x-facts: ${k} is not in SCHEMA_MAP`);
+  }
   const groups = [...lf.matchAll(/<div id="(setting-[^"]+)" class="settings-group"[\s\S]*?(?=<div id="setting-|<\/script>|$)/g)];
   for (const g of groups) if (!/class="setting-desc"/.test(g[0])) soft.push(`${g[1]}: settings-group without setting-desc`);
   return { hard, soft, stats: { defaultKeys: defaultKeys.length, knownKeys: known.length, tKeys: Object.keys(T).length, mapKeys: Object.keys(map.keys).length, groups: groups.length } };

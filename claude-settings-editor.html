@@ -634,6 +634,7 @@
             <div id="setting-model" class="settings-group">
               <label for="input-model" class="setting-label" x-text="t('general.model')"></label>
               <p class="setting-desc" x-text="t('general.modelDesc')"></p>
+              <div x-facts="'model'"></div>
               <select id="input-model" x-model="settings.model" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.model }">
                 <option value="" x-text="t('general.modelOpusDefault')"></option>
                 <option value="best" x-text="t('general.modelBest')"></option>
@@ -648,6 +649,7 @@
             <div id="setting-fallback-model" class="settings-group">
               <label class="setting-label" x-text="t('general.fallbackModel')"></label>
               <p class="setting-desc" x-text="t('general.fallbackModelDesc')"></p>
+              <div x-facts="'fallbackModel'"></div>
               <template x-for="(m, i) in settings.fallbackModel" :key="'fbmod-'+i">
                 <div class="flex items-center gap-2 mb-1.5 group">
                   <span class="font-mono text-sm text-fg px-3 py-2 rounded-xl flex-1" style="background:rgba(18,18,26,0.7);border:1px solid rgba(255,255,255,0.07)" x-text="m"></span>
@@ -663,6 +665,7 @@
             <div id="setting-effort" class="settings-group">
               <label class="setting-label" x-text="t('general.effort')"></label>
               <p class="setting-desc" x-text="t('general.effortDesc')"></p>
+              <div x-facts="'effortLevel'"></div>
               <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
                 <!-- Low -->
                 <button @click="settings.effortLevel = 'low'; markUnsaved()"
@@ -781,6 +784,7 @@
             <div id="setting-effort-cap" class="settings-group">
               <label for="input-max-effort" class="setting-label" x-text="t('general.maxEffort')"></label>
               <p class="setting-desc" x-text="t('general.maxEffortDesc')"></p>
+              <div x-facts="'maxEffortLevel'"></div>
               <select id="input-max-effort" x-model="settings.maxEffortLevel" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.maxEffortLevel }">
                 <option value="" x-text="t('general.maxEffortNone')"></option>
                 <option value="low">low</option>
@@ -801,6 +805,7 @@
             <div id="setting-model-settings" class="settings-group">
               <label class="setting-label" x-text="t('general.modelSettings')"></label>
               <p class="setting-desc" x-text="t('general.modelSettingsDesc')"></p>
+              <div x-facts="'modelSettings'"></div>
               <div class="space-y-2 mt-3">
                 <template x-for="(entry, key) in settings.modelSettings" :key="'ms-'+key">
                   <div class="flex items-center gap-2 group">
@@ -833,6 +838,7 @@
             <div id="setting-output-style" class="settings-group">
               <label for="input-output-style" class="setting-label" x-text="t('general.outputStyle')"></label>
               <p class="setting-desc" x-text="t('general.outputStyleDesc')"></p>
+              <div x-facts="'outputStyle'"></div>
               <div x-data="{ custom: false }" class="flex gap-2">
                 <template x-if="!custom">
                   <select id="input-output-style" x-model="settings.outputStyle" @change="markUnsaved()" class="setting-input flex-1" :class="{ 'has-value': settings.outputStyle }">
@@ -853,6 +859,7 @@
             <div id="setting-language" class="settings-group">
               <label for="input-language" class="setting-label" x-text="t('general.language')"></label>
               <p class="setting-desc" x-text="t('general.languageDesc')"></p>
+              <div x-facts="'language'"></div>
               <div x-data="{ custom: false }" class="flex gap-2">
                 <template x-if="!custom">
                   <select id="input-language" x-model="settings.language" @change="markUnsaved()" class="setting-input flex-1" :class="{ 'has-value': settings.language }">
@@ -879,6 +886,7 @@
               <div class="flex-1">
                 <label id="label-thinking" class="setting-label" x-text="t('general.thinking')"></label>
                 <p class="setting-desc" x-text="t('general.thinkingDesc')"></p>
+                <div x-facts="'alwaysThinkingEnabled'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.alwaysThinkingEnabled }" @click="settings.alwaysThinkingEnabled = !settings.alwaysThinkingEnabled; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-thinking" :aria-checked="settings.alwaysThinkingEnabled" @keydown.enter="settings.alwaysThinkingEnabled = !settings.alwaysThinkingEnabled; markUnsaved()" @keydown.space.prevent="settings.alwaysThinkingEnabled = !settings.alwaysThinkingEnabled; markUnsaved()"></div>
             </div>
@@ -886,6 +894,7 @@
             <div id="setting-auto-updates" class="settings-group">
               <label for="input-auto-updates" class="setting-label" x-text="t('general.autoUpdates')"></label>
               <p class="setting-desc" x-text="t('general.autoUpdatesDesc')"></p>
+              <div x-facts="'autoUpdatesChannel'"></div>
               <select id="input-auto-updates" x-model="settings.autoUpdatesChannel" @change="markUnsaved()" class="setting-input has-value">
                 <option value="latest" x-text="t('general.autoUpdatesLatest')"></option>
                 <option value="stable" x-text="t('general.autoUpdatesStable')"></option>
@@ -896,6 +905,7 @@
               <div class="flex-1">
                 <label id="label-fast-mode-global" class="setting-label" x-text="t('general.fastMode')"></label>
                 <p class="setting-desc" x-text="t('general.fastModeDesc')"></p>
+                <div x-facts="'fastMode'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.fastMode }" @click="settings.fastMode = !settings.fastMode; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-fast-mode-global" :aria-checked="settings.fastMode" @keydown.enter="settings.fastMode = !settings.fastMode; markUnsaved()" @keydown.space.prevent="settings.fastMode = !settings.fastMode; markUnsaved()"></div>
             </div>
@@ -904,6 +914,7 @@
               <div class="flex-1">
                 <label id="label-voice" class="setting-label" x-text="t('general.voice')"></label>
                 <p class="setting-desc" x-text="t('general.voiceDesc')"></p>
+                <div x-facts="'voice'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': !!settings.voice.enabled }" @click="settings.voice = { ...settings.voice, enabled: !settings.voice.enabled }; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-voice" :aria-checked="!!settings.voice.enabled" @keydown.enter="settings.voice = { ...settings.voice, enabled: !settings.voice.enabled }; markUnsaved()" @keydown.space.prevent="settings.voice = { ...settings.voice, enabled: !settings.voice.enabled }; markUnsaved()"></div>
             </div>
@@ -911,6 +922,7 @@
             <div id="setting-editor-mode" class="settings-group">
               <label for="input-editor-mode" class="setting-label" x-text="t('general.editorMode')"></label>
               <p class="setting-desc" x-text="t('general.editorModeDesc')"></p>
+              <div x-facts="'editorMode'"></div>
               <select id="input-editor-mode" x-model="settings.editorMode" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.editorMode && settings.editorMode !== 'normal' }">
                 <option value="normal" x-text="t('general.editorModeNormal')"></option>
                 <option value="vim" x-text="t('general.editorModeVim')"></option>
@@ -920,6 +932,7 @@
             <div id="setting-theme" class="settings-group">
               <label for="input-theme" class="setting-label" x-text="t('general.theme')"></label>
               <p class="setting-desc" x-text="t('general.themeDesc')"></p>
+              <div x-facts="'theme'"></div>
               <select id="input-theme" x-model="settings.theme" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.theme && settings.theme !== 'auto' }">
                 <option value="auto" x-text="t('general.themeAuto')"></option>
                 <option value="light" x-text="t('general.themeLight')"></option>
@@ -930,12 +943,14 @@
             <div id="setting-file-suggestions" class="settings-group">
               <label for="input-file-suggestion" class="setting-label" x-text="t('general.fileSuggestion')"></label>
               <p class="setting-desc" x-text="t('general.fileSuggestionDesc')"></p>
+              <div x-facts="'fileSuggestion'"></div>
               <input id="input-file-suggestion" type="text" x-model="settings.fileSuggestion.command" @input="markUnsaved()" :placeholder="t('general.fileSuggestionPlaceholder')" class="setting-input font-mono" :class="{ 'has-value': settings.fileSuggestion.command }">
             </div>
 
             <div id="setting-model-overrides" class="settings-group">
               <label class="setting-label" x-text="t('general.modelOverrides')"></label>
               <p class="setting-desc" x-text="t('general.modelOverridesDesc')"></p>
+              <div x-facts="'modelOverrides'"></div>
               <div class="space-y-2 mt-3">
                 <template x-for="(val, key) in settings.modelOverrides" :key="'mo-'+key">
                   <div class="flex items-center gap-2 group">
@@ -1046,6 +1061,7 @@
             <div id="setting-perm-default-mode" class="settings-group">
               <label for="input-perm-default-mode" class="setting-label" x-text="t('perm.defaultMode')"></label>
               <p class="setting-desc" x-text="t('perm.defaultModeDesc')"></p>
+              <div x-facts="'permissions.defaultMode'"></div>
               <select id="input-perm-default-mode" x-model="settings.permissions.defaultMode" @change="markUnsaved()" class="setting-input has-value">
                 <option value="default" x-text="t('perm.modeDefault')"></option>
                 <option value="acceptEdits" x-text="t('perm.modeAcceptEdits')"></option>
@@ -1062,6 +1078,7 @@
               <div class="flex-1">
                 <label id="label-classify-all-shell" class="setting-label" x-text="t('perm.classifyAllShell')"></label>
                 <p class="setting-desc" x-text="t('perm.classifyAllShellDesc')"></p>
+                <div x-facts="'autoMode.classifyAllShell'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1"
                    :class="{ 'active': settings.autoMode.classifyAllShell }"
@@ -1076,6 +1093,7 @@
               <div class="flex-1">
                 <label id="label-perm-bypass" class="setting-label" x-text="t('perm.bypass')"></label>
                 <p class="setting-desc" x-text="t('perm.bypassDesc')"></p>
+                <div x-facts="'permissions.disableBypassPermissionsMode'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1"
                    :class="{ 'active': settings.permissions.disableBypassPermissionsMode === 'disable' }"
@@ -1086,6 +1104,7 @@
               <div class="flex-1">
                 <label id="label-perm-disable-auto" class="setting-label" x-text="t('perm.disableAutoMode')"></label>
                 <p class="setting-desc" x-text="t('perm.disableAutoModeDesc')"></p>
+                <div x-facts="'disableAutoMode'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1"
                    :class="{ 'active': settings.permissions.disableAutoMode === 'disable' }"
@@ -1099,6 +1118,7 @@
                 <span class="text-xs font-normal text-fg-dim font-sans" x-text="'— ' + t('perm.allowDesc')"></span>
               </label>
               <p class="setting-desc" x-text="t('perm.allowDescLong')"></p>
+              <div x-facts="'permissions.allow'"></div>
               <div class="space-y-2 mt-3">
                 <template x-for="(rule, i) in settings.permissions.allow" :key="'allow-'+i">
                   <div class="flex items-center gap-2 group draggable-rule"
@@ -1137,6 +1157,7 @@
                 <span class="text-xs font-normal text-fg-dim font-sans" x-text="'— ' + t('perm.askDesc')"></span>
               </label>
               <p class="setting-desc" x-text="t('perm.askDescLong')"></p>
+              <div x-facts="'permissions.ask'"></div>
               <div class="space-y-2 mt-3">
                 <template x-for="(rule, i) in settings.permissions.ask" :key="'ask-'+i">
                   <div class="flex items-center gap-2 group draggable-rule"
@@ -1175,6 +1196,7 @@
                 <span class="text-xs font-normal text-fg-dim font-sans" x-text="'— ' + t('perm.denyDesc')"></span>
               </label>
               <p class="setting-desc" x-text="t('perm.denyDescLong')"></p>
+              <div x-facts="'permissions.deny'"></div>
               <div class="space-y-2 mt-3">
                 <template x-for="(rule, i) in settings.permissions.deny" :key="'deny-'+i">
                   <div class="flex items-center gap-2 group draggable-rule"
@@ -1209,6 +1231,7 @@
             <div id="setting-perm-dirs" class="settings-group">
               <label class="setting-label" x-text="t('perm.additionalDirs')"></label>
               <p class="setting-desc" x-text="t('perm.additionalDirsDesc')"></p>
+              <div x-facts="'permissions.additionalDirectories'"></div>
               <div class="space-y-2 mt-3">
                 <template x-for="(dir, i) in settings.permissions.additionalDirectories" :key="'dir-'+i">
                   <div class="flex items-center gap-2 group draggable-rule"
@@ -1591,6 +1614,7 @@
               <div class="flex-1">
                 <label id="label-sandbox-enable" class="setting-label" x-text="t('sandbox.enable')"></label>
                 <p class="setting-desc" x-text="t('sandbox.enableDescLong')"></p>
+                <div x-facts="'sandbox.enabled'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.sandbox.enabled }" @click="settings.sandbox.enabled = !settings.sandbox.enabled; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-sandbox-enable" :aria-checked="settings.sandbox.enabled" @keydown.enter="settings.sandbox.enabled = !settings.sandbox.enabled; markUnsaved()" @keydown.space.prevent="settings.sandbox.enabled = !settings.sandbox.enabled; markUnsaved()"></div>
             </div>
@@ -1598,6 +1622,7 @@
             <template x-for="list in [{key:'allowWrite',label:'Filesystem — Allow Write',color:'emerald'},{key:'denyWrite',label:'Filesystem — Deny Write',color:'red'},{key:'denyRead',label:'Filesystem — Deny Read',color:'red'},{key:'allowRead',label:'Filesystem — Allow Read',color:'blue'}]" :key="list.key">
               <div class="settings-group" :id="'setting-sandbox-' + list.key">
                 <label class="setting-label" x-text="list.label"></label>
+                <div x-facts="'sandbox.filesystem.' + list.key"></div>
                 <div class="space-y-2 mt-3">
                   <template x-for="(path, i) in settings.sandbox.filesystem[list.key]" :key="list.key+'-'+i">
                     <div class="flex items-center gap-2 group draggable-rule"
@@ -1625,6 +1650,7 @@
             <div id="setting-sandbox-domains" class="settings-group">
               <label class="setting-label" x-text="t('sandbox.networkDomains')"></label>
               <p class="setting-desc" x-text="t('sandbox.domainsDesc')"></p>
+              <div x-facts="'sandbox.network.allowedDomains'"></div>
               <div class="space-y-2 mt-3">
                 <template x-for="(d, i) in settings.sandbox.network.allowedDomains" :key="'domain-'+i">
                   <div class="flex items-center gap-2 group">
@@ -1643,6 +1669,7 @@
               <div class="flex-1">
                 <label id="label-sandbox-local-binding" class="setting-label" x-text="t('sandbox.localBinding')"></label>
                 <p class="setting-desc" x-text="t('sandbox.localBindingDesc')"></p>
+                <div x-facts="'sandbox.network.allowLocalBinding'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.sandbox.network.allowLocalBinding }" @click="settings.sandbox.network.allowLocalBinding = !settings.sandbox.network.allowLocalBinding; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-sandbox-local-binding" :aria-checked="settings.sandbox.network.allowLocalBinding" @keydown.enter="settings.sandbox.network.allowLocalBinding = !settings.sandbox.network.allowLocalBinding; markUnsaved()" @keydown.space.prevent="settings.sandbox.network.allowLocalBinding = !settings.sandbox.network.allowLocalBinding; markUnsaved()"></div>
             </div>
@@ -1688,6 +1715,7 @@
               <div class="flex-1">
                 <label id="label-spinner-tips" class="setting-label" x-text="t('display.spinnerTips')"></label>
                 <p class="setting-desc" x-text="t('display.spinnerTipsDesc')"></p>
+                <div x-facts="'spinnerTipsEnabled'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.spinnerTipsEnabled }" @click="settings.spinnerTipsEnabled = !settings.spinnerTipsEnabled; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-spinner-tips" :aria-checked="settings.spinnerTipsEnabled" @keydown.enter="settings.spinnerTipsEnabled = !settings.spinnerTipsEnabled; markUnsaved()" @keydown.space.prevent="settings.spinnerTipsEnabled = !settings.spinnerTipsEnabled; markUnsaved()"></div>
             </div>
@@ -1696,6 +1724,7 @@
               <div class="flex-1">
                 <label id="label-turn-duration" class="setting-label" x-text="t('display.turnDuration')"></label>
                 <p class="setting-desc" x-text="t('display.turnDurationDesc')"></p>
+                <div x-facts="'showTurnDuration'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.showTurnDuration }" @click="settings.showTurnDuration = !settings.showTurnDuration; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-turn-duration" :aria-checked="settings.showTurnDuration" @keydown.enter="settings.showTurnDuration = !settings.showTurnDuration; markUnsaved()" @keydown.space.prevent="settings.showTurnDuration = !settings.showTurnDuration; markUnsaved()"></div>
             </div>
@@ -1704,6 +1733,7 @@
               <div class="flex-1">
                 <label id="label-reduced-motion" class="setting-label" x-text="t('display.reducedMotion')"></label>
                 <p class="setting-desc" x-text="t('display.reducedMotionDesc')"></p>
+                <div x-facts="'prefersReducedMotion'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.prefersReducedMotion }" @click="settings.prefersReducedMotion = !settings.prefersReducedMotion; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-reduced-motion" :aria-checked="settings.prefersReducedMotion" @keydown.enter="settings.prefersReducedMotion = !settings.prefersReducedMotion; markUnsaved()" @keydown.space.prevent="settings.prefersReducedMotion = !settings.prefersReducedMotion; markUnsaved()"></div>
             </div>
@@ -1711,6 +1741,7 @@
             <div id="setting-status-line" class="settings-group">
               <label class="setting-label" x-text="t('display.statusLine')"></label>
               <p class="setting-desc" x-text="t('display.statusLineDesc')"></p>
+              <div x-facts="'statusLine'"></div>
               <div class="space-y-3 mt-3">
                 <div class="flex items-center gap-2">
                   <label for="input-statusline-type" class="text-xs text-fg-dim font-mono tracking-wide w-20 flex-shrink-0" x-text="t('display.statusLineType')"></label>
@@ -1744,6 +1775,7 @@
             <div id="setting-spinner-verbs" class="settings-group">
               <label for="input-spinner-verbs-mode" class="setting-label" x-text="t('display.spinnerVerbs')"></label>
               <p class="setting-desc" x-text="t('display.spinnerVerbsDescLong')"></p>
+              <div x-facts="'spinnerVerbs'"></div>
               <div class="flex items-center gap-2 mt-3">
                 <select id="input-spinner-verbs-mode" x-model="settings.spinnerVerbs.mode" @change="markUnsaved()" class="setting-input !w-44 !text-sm has-value">
                   <option value="append" x-text="t('display.spinnerAppend')"></option>
@@ -1915,6 +1947,7 @@
             <div id="setting-attr-commit" class="settings-group">
               <label for="input-attr-commit" class="setting-label" x-text="t('attr.commit')"></label>
               <p class="setting-desc" x-text="t('attr.commitDescLong')"></p>
+              <div x-facts="'attribution.commit'"></div>
               <input id="input-attr-commit" type="text" x-model="settings.attribution.commit" @input="markUnsaved()" :disabled="settings.attribution.hideCommit" :class="{ 'opacity-40': settings.attribution.hideCommit }" placeholder="Co-Authored-By: Claude <noreply@anthropic.com>" class="setting-input font-mono">
               <label class="mt-2 inline-flex items-center gap-2 text-xs text-fg-muted cursor-pointer">
                 <input id="input-attr-commit-hide" type="checkbox" x-model="settings.attribution.hideCommit" @change="markUnsaved()" class="accent-amber-500">
@@ -1925,6 +1958,7 @@
             <div id="setting-attr-pr" class="settings-group">
               <label for="input-attr-pr" class="setting-label" x-text="t('attr.pr')"></label>
               <p class="setting-desc" x-text="t('attr.prDescLong')"></p>
+              <div x-facts="'attribution.pr'"></div>
               <input id="input-attr-pr" type="text" x-model="settings.attribution.pr" @input="markUnsaved()" :disabled="settings.attribution.hidePr" :class="{ 'opacity-40': settings.attribution.hidePr }" placeholder="Generated with Claude Code" class="setting-input font-mono">
               <label class="mt-2 inline-flex items-center gap-2 text-xs text-fg-muted cursor-pointer">
                 <input id="input-attr-pr-hide" type="checkbox" x-model="settings.attribution.hidePr" @change="markUnsaved()" class="accent-amber-500">
@@ -1936,6 +1970,7 @@
               <div class="flex-1">
                 <label id="label-attr-session" class="setting-label" x-text="t('attr.sessionUrl')"></label>
                 <p class="setting-desc" x-text="t('attr.sessionUrlDesc')"></p>
+                <div x-facts="'attribution.sessionUrl'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.attribution.sessionUrl }" @click="settings.attribution.sessionUrl = !settings.attribution.sessionUrl; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-attr-session" :aria-checked="settings.attribution.sessionUrl" @keydown.enter="settings.attribution.sessionUrl = !settings.attribution.sessionUrl; markUnsaved()" @keydown.space.prevent="settings.attribution.sessionUrl = !settings.attribution.sessionUrl; markUnsaved()"></div>
             </div>
@@ -1946,6 +1981,7 @@
             <div id="setting-cleanup" class="settings-group">
               <label for="input-cleanup" class="setting-label" x-text="t('adv.cleanup')"></label>
               <p class="setting-desc" x-text="t('adv.cleanupDescLong')"></p>
+              <div x-facts="'cleanupPeriodDays'"></div>
               <input id="input-cleanup" type="number" x-model.number="settings.cleanupPeriodDays" @input="markUnsaved()" placeholder="30" class="setting-input !w-32">
             </div>
 
@@ -1953,6 +1989,7 @@
               <div class="flex-1">
                 <label id="label-fast-mode" class="setting-label" x-text="t('adv.fastMode')"></label>
                 <p class="setting-desc" x-text="t('adv.fastModeDescLong')"></p>
+                <div x-facts="'fastModePerSessionOptIn'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.fastModePerSessionOptIn }" @click="settings.fastModePerSessionOptIn = !settings.fastModePerSessionOptIn; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-fast-mode" :aria-checked="settings.fastModePerSessionOptIn" @keydown.enter="settings.fastModePerSessionOptIn = !settings.fastModePerSessionOptIn; markUnsaved()" @keydown.space.prevent="settings.fastModePerSessionOptIn = !settings.fastModePerSessionOptIn; markUnsaved()"></div>
             </div>
@@ -1961,6 +1998,7 @@
               <div class="flex-1">
                 <label id="label-all-mcp" class="setting-label" x-text="t('adv.allMcp')"></label>
                 <p class="setting-desc" x-text="t('adv.allMcpDescLong')"></p>
+                <div x-facts="'enableAllProjectMcpServers'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.enableAllProjectMcpServers }" @click="settings.enableAllProjectMcpServers = !settings.enableAllProjectMcpServers; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-all-mcp" :aria-checked="settings.enableAllProjectMcpServers" @keydown.enter="settings.enableAllProjectMcpServers = !settings.enableAllProjectMcpServers; markUnsaved()" @keydown.space.prevent="settings.enableAllProjectMcpServers = !settings.enableAllProjectMcpServers; markUnsaved()"></div>
             </div>
@@ -1969,6 +2007,7 @@
               <div class="flex-1">
                 <label id="label-gitignore" class="setting-label" x-text="t('adv.gitignore')"></label>
                 <p class="setting-desc" x-text="t('adv.gitignoreDescLong')"></p>
+                <div x-facts="'respectGitignore'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.respectGitignore }" @click="settings.respectGitignore = !settings.respectGitignore; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-gitignore" :aria-checked="settings.respectGitignore" @keydown.enter="settings.respectGitignore = !settings.respectGitignore; markUnsaved()" @keydown.space.prevent="settings.respectGitignore = !settings.respectGitignore; markUnsaved()"></div>
             </div>
@@ -1976,6 +2015,7 @@
             <div id="setting-teammate" class="settings-group">
               <label for="input-teammate" class="setting-label" x-text="t('adv.teammate')"></label>
               <p class="setting-desc" x-text="t('adv.teammateDescLong')"></p>
+              <div x-facts="'teammateMode'"></div>
               <select id="input-teammate" x-model="settings.teammateMode" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.teammateMode }">
                 <option value="" x-text="t('adv.teammateDefault')"></option>
                 <option value="auto" x-text="t('adv.teammateAuto')"></option>
@@ -1988,6 +2028,7 @@
             <div id="setting-login" class="settings-group">
               <label for="input-login" class="setting-label" x-text="t('adv.login')"></label>
               <p class="setting-desc" x-text="t('adv.loginDescLong')"></p>
+              <div x-facts="'forceLoginMethod'"></div>
               <select id="input-login" x-model="settings.forceLoginMethod" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.forceLoginMethod }">
                 <option value="" x-text="t('adv.loginNone')"></option>
                 <option value="claudeai" x-text="t('adv.loginClaudeai')"></option>
@@ -1998,12 +2039,14 @@
             <div id="setting-api-key" class="settings-group">
               <label for="input-api-key" class="setting-label" x-text="t('adv.apiKey')"></label>
               <p class="setting-desc" x-text="t('adv.apiKeyDescLong')"></p>
+              <div x-facts="'apiKeyHelper'"></div>
               <input id="input-api-key" type="text" x-model="settings.apiKeyHelper" @input="markUnsaved()" placeholder="~/.claude/get-api-key.sh" class="setting-input font-mono">
             </div>
 
             <div id="setting-plans-dir" class="settings-group">
               <label for="input-plans-dir" class="setting-label" x-text="t('adv.plansDir')"></label>
               <p class="setting-desc" x-text="t('adv.plansDirDesc')"></p>
+              <div x-facts="'plansDirectory'"></div>
               <input id="input-plans-dir" type="text" x-model="settings.plansDirectory" @input="markUnsaved()" placeholder="~/.claude/plans" class="setting-input font-mono">
             </div>
 
@@ -2011,6 +2054,7 @@
               <div class="flex-1">
                 <label id="label-progress-bar" class="setting-label" x-text="t('adv.progressBar')"></label>
                 <p class="setting-desc" x-text="t('adv.progressBarDescLong')"></p>
+                <div x-facts="'terminalProgressBarEnabled'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.terminalProgressBarEnabled }" @click="settings.terminalProgressBarEnabled = !settings.terminalProgressBarEnabled; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-progress-bar" :aria-checked="settings.terminalProgressBarEnabled" @keydown.enter="settings.terminalProgressBarEnabled = !settings.terminalProgressBarEnabled; markUnsaved()" @keydown.space.prevent="settings.terminalProgressBarEnabled = !settings.terminalProgressBarEnabled; markUnsaved()"></div>
             </div>
@@ -2019,6 +2063,7 @@
               <div class="flex-1">
                 <label id="label-disable-hooks" class="setting-label" x-text="t('adv.disableHooks')"></label>
                 <p class="setting-desc" x-text="t('adv.disableHooksDescLong')"></p>
+                <div x-facts="'disableAllHooks'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.disableAllHooks }" @click="settings.disableAllHooks = !settings.disableAllHooks; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-disable-hooks" :aria-checked="settings.disableAllHooks" @keydown.enter="settings.disableAllHooks = !settings.disableAllHooks; markUnsaved()" @keydown.space.prevent="settings.disableAllHooks = !settings.disableAllHooks; markUnsaved()"></div>
             </div>
@@ -2026,6 +2071,7 @@
             <div id="setting-bash-edit-diff" class="settings-group">
               <label for="input-bash-edit-diff" class="setting-label" x-text="t('adv.bashEditDiff')"></label>
               <p class="setting-desc" x-text="t('adv.bashEditDiffDesc')"></p>
+              <div x-facts="'bashEditDiffEnabled'"></div>
               <select id="input-bash-edit-diff" :value="settings.bashEditDiffEnabled === '' ? '' : String(settings.bashEditDiffEnabled)" @change="settings.bashEditDiffEnabled = $event.target.value === '' ? '' : $event.target.value === 'true'; markUnsaved()" class="setting-input" :class="{ 'has-value': settings.bashEditDiffEnabled !== '' }">
                 <option value="" x-text="t('adv.bashEditDiffUnset')"></option>
                 <option value="true" x-text="t('adv.bashEditDiffOn')"></option>
@@ -2036,6 +2082,7 @@
             <div id="setting-available-models" class="settings-group">
               <label class="setting-label" x-text="t('adv.availableModels')"></label>
               <p class="setting-desc" x-text="t('adv.availableModelsDescLong')"></p>
+              <div x-facts="'availableModels'"></div>
               <template x-for="(m, i) in settings.availableModels" :key="'amod-'+i">
                 <div class="flex items-center gap-2 mb-1.5 group">
                   <span class="font-mono text-sm text-fg px-3 py-2 rounded-xl flex-1" style="background:rgba(18,18,26,0.7);border:1px solid rgba(255,255,255,0.07)" x-text="m"></span>
@@ -2053,6 +2100,7 @@
               <div class="flex-1">
                 <label id="label-enforce-available-models" class="setting-label" x-text="t('adv.enforceAvailableModels')"></label>
                 <p class="setting-desc" x-text="t('adv.enforceAvailableModelsDesc')"></p>
+                <div x-facts="'enforceAvailableModels'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.enforceAvailableModels }" @click="settings.enforceAvailableModels = !settings.enforceAvailableModels; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-enforce-available-models" :aria-checked="settings.enforceAvailableModels" @keydown.enter="settings.enforceAvailableModels = !settings.enforceAvailableModels; markUnsaved()" @keydown.space.prevent="settings.enforceAvailableModels = !settings.enforceAvailableModels; markUnsaved()"></div>
             </div>
@@ -2062,6 +2110,7 @@
               <div class="flex-1">
                 <label id="label-skip-dangerous" class="setting-label" x-text="t('adv.skipDangerousPrompt')"></label>
                 <p class="setting-desc" x-text="t('adv.skipDangerousPromptDesc')"></p>
+                <div x-facts="'skipDangerousModePermissionPrompt'"></div>
               </div>
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.skipDangerousModePermissionPrompt }" @click="settings.skipDangerousModePermissionPrompt = !settings.skipDangerousModePermissionPrompt; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-skip-dangerous" :aria-checked="settings.skipDangerousModePermissionPrompt" @keydown.enter="settings.skipDangerousModePermissionPrompt = !settings.skipDangerousModePermissionPrompt; markUnsaved()" @keydown.space.prevent="settings.skipDangerousModePermissionPrompt = !settings.skipDangerousModePermissionPrompt; markUnsaved()"></div>
             </div>
@@ -2076,6 +2125,7 @@
             <div id="setting-extra-marketplaces" class="settings-group">
               <label class="setting-label" x-text="t('adv.extraMarketplaces')"></label>
               <p class="setting-desc" x-text="t('adv.extraMarketplacesDesc')"></p>
+              <div x-facts="'extraKnownMarketplaces'"></div>
               <textarea class="setting-input w-full font-mono text-xs" rows="4" :value="JSON.stringify(settings.extraKnownMarketplaces, null, 2)" @input="setJsonField('extraKnownMarketplaces', $event.target.value)" placeholder='{ "my-marketplace": { "owner": "github-user", "repo": "repo-name" } }'></textarea>
             </div>
 
@@ -2083,6 +2133,7 @@
             <div id="setting-auto-mode" class="settings-group">
               <label class="setting-label" x-text="t('adv.autoMode')"></label>
               <p class="setting-desc" x-text="t('adv.autoModeDesc')"></p>
+              <div x-facts="'autoMode'"></div>
               <textarea class="setting-input w-full font-mono text-xs" rows="4" :value="JSON.stringify(settings.autoMode, null, 2)" @input="setJsonField('autoMode', $event.target.value)" placeholder='{ "classifyAllShell": false, "allow": [], "soft_deny": [], "hard_deny": [] }'></textarea>
             </div>
 
@@ -2090,6 +2141,7 @@
             <div id="setting-strict-marketplaces" class="settings-group">
               <label class="setting-label" x-text="t('adv.strictMarketplaces')"></label>
               <p class="setting-desc" x-text="t('adv.strictMarketplacesDesc')"></p>
+              <div x-facts="'strictKnownMarketplaces'"></div>
               <textarea class="setting-input w-full font-mono text-xs" rows="3" :value="JSON.stringify(settings.strictKnownMarketplaces, null, 2)" @input="setJsonField('strictKnownMarketplaces', $event.target.value)" placeholder='[ "owner/repo" ]'></textarea>
             </div>
 
@@ -2097,6 +2149,7 @@
             <div id="setting-blocked-marketplaces" class="settings-group">
               <label class="setting-label" x-text="t('adv.blockedMarketplaces')"></label>
               <p class="setting-desc" x-text="t('adv.blockedMarketplacesDesc')"></p>
+              <div x-facts="'blockedMarketplaces'"></div>
               <textarea class="setting-input w-full font-mono text-xs" rows="3" :value="JSON.stringify(settings.blockedMarketplaces, null, 2)" @input="setJsonField('blockedMarketplaces', $event.target.value)" placeholder='[ "owner/repo" ]'></textarea>
             </div>
 
@@ -2104,6 +2157,7 @@
             <div id="setting-plugin-suggestion-marketplaces" class="settings-group">
               <label class="setting-label" x-text="t('adv.pluginSuggestionMarketplaces')"></label>
               <p class="setting-desc" x-text="t('adv.pluginSuggestionMarketplacesDesc')"></p>
+              <div x-facts="'pluginSuggestionMarketplaces'"></div>
               <textarea class="setting-input w-full font-mono text-xs" rows="3" :value="JSON.stringify(settings.pluginSuggestionMarketplaces, null, 2)" @input="setJsonField('pluginSuggestionMarketplaces', $event.target.value)" placeholder='[ "marketplace-name" ]'></textarea>
             </div>
 
@@ -3568,6 +3622,51 @@
       return out;
     }
 
+    // Builds the fact sheet with textContent only: SCHEMA_MAP text comes from a repo that accepts pull requests (spec 5.1).
+    function renderFacts(details, v) {
+      details.hidden = !v;
+      if (!v) return;
+      const open = details.open;
+      details.replaceChildren();
+      const summary = document.createElement('summary');
+      summary.className = 'cursor-pointer select-none text-[11px] font-mono text-fg-dim hover:text-fg';
+      summary.textContent = v.summary;
+      const box = document.createElement('div');
+      box.className = 'mt-2 space-y-1 text-xs text-fg-muted';
+      for (const [label, value] of v.rows) {
+        const row = document.createElement('div');
+        const l = document.createElement('span'); l.className = 'text-fg-dim'; l.textContent = label + ': ';
+        const val = document.createElement('span'); val.className = 'font-mono'; val.textContent = value;
+        row.append(l, val);
+        box.appendChild(row);
+      }
+      if (v.deprecated) { const d = document.createElement('div'); d.className = 'text-amber-400'; d.textContent = v.deprecated; box.appendChild(d); }
+      if (v.desc) {
+        const cap = document.createElement('div'); cap.className = 'pt-1 text-[10px] font-mono uppercase tracking-wider text-fg-dim'; cap.textContent = v.descLabel;
+        const p = document.createElement('p'); p.className = 'leading-relaxed'; p.lang = 'en'; p.textContent = v.desc;
+        box.append(cap, p);
+      }
+      if (v.url) {
+        const a = document.createElement('a'); a.href = v.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+        a.className = 'inline-block pt-1 underline decoration-dotted hover:text-fg'; a.textContent = v.linkLabel;
+        box.appendChild(a);
+      }
+      details.append(summary, box);
+      details.open = open;
+    }
+
+    // Directive x-facts (its expression yields a key string): a collapsed fact sheet per setting. The effect re-renders on language change because
+    // factsView reads this.lang through t(); the <details> element survives, so an open sheet stays open.
+    document.addEventListener('alpine:init', () => {
+      Alpine.directive('facts', (el, { expression }, { evaluateLater, effect }) => {
+        const details = document.createElement('details');
+        details.className = 'key-facts mt-2';
+        el.appendChild(details);
+        const view = evaluateLater('factsView(' + expression + ')');
+        effect(() => view(v => renderFacts(details, v)));
+      });
+    });
+
     // Pure schema sync: top-level key diff between the online schema and the embedded fact table (spec 3.5).
     function diffSchemaKeys(remoteKeys, mapKeys) {
       const bad = new Set(['__proto__', 'constructor', 'prototype', '$schema']);
@@ -4408,6 +4507,25 @@
       'doctor.effortOpus55': { de: 'Opus 5.5 übernimmt effortLevel der User-Datei nicht: ', en: 'Opus 5.5 ignores effortLevel from the user file: ', es: 'Opus 5.5 ignora effortLevel del archivo de usuario: ', fr: 'Opus 5.5 ignore effortLevel du fichier utilisateur : ', ja: 'Opus 5.5 はユーザーファイルの effortLevel を使いません: ', pt: 'O Opus 5.5 ignora effortLevel do arquivo de usuário: ' },
       'doctor.envWins': { de: ' im env-Block gilt vor ', en: ' in the env block wins over ', es: ' en el bloque env prevalece sobre ', fr: ' dans le bloc env l’emporte sur ', ja: ' は env ブロックで次より優先: ', pt: ' no bloco env prevalece sobre ' },
       'doctor.envOff': { de: ' im env-Block kann abschalten: ', en: ' in the env block can switch off: ', es: ' en el bloque env puede desactivar: ', fr: ' dans le bloc env peut désactiver : ', ja: ' は env ブロックで次をオフにできます: ', pt: ' no bloco env pode desligar: ' },
+      'facts.summary': { de: 'Details und Fakten', en: 'Details and facts', es: 'Detalles y datos', fr: 'Détails et faits', ja: '詳細と仕様', pt: 'Detalhes e fatos' },
+      'facts.scope': { de: 'Gilt in', en: 'Applies in', es: 'Se aplica en', fr: 'S’applique dans', ja: '有効な場所', pt: 'Vale em' },
+      'facts.scope.any': { de: 'jeder settings.json (User, Projekt, Local, Managed)', en: 'any settings.json (user, project, local, managed)', es: 'cualquier settings.json (usuario, proyecto, local, gestionado)', fr: 'tout settings.json (utilisateur, projet, local, géré)', ja: 'すべての settings.json（ユーザー、プロジェクト、ローカル、管理）', pt: 'qualquer settings.json (usuário, projeto, local, gerenciado)' },
+      'facts.scope.managed': { de: 'nur managed-settings.json', en: 'managed-settings.json only', es: 'solo managed-settings.json', fr: 'managed-settings.json uniquement', ja: 'managed-settings.json のみ', pt: 'somente managed-settings.json' },
+      'facts.scope.user-managed': { de: 'User-Datei, --settings oder Managed', en: 'user file, --settings or managed', es: 'archivo de usuario, --settings o gestionado', fr: 'fichier utilisateur, --settings ou géré', ja: 'ユーザーファイル、--settings、管理設定', pt: 'arquivo de usuário, --settings ou gerenciado' },
+      'facts.scope.user-local-managed': { de: 'User-, Local- oder Managed-Datei', en: 'user, local or managed file', es: 'archivo de usuario, local o gestionado', fr: 'fichier utilisateur, local ou géré', ja: 'ユーザー、ローカル、管理ファイル', pt: 'arquivo de usuário, local ou gerenciado' },
+      'facts.scope.global-config': { de: '~/.claude.json, nicht settings.json', en: '~/.claude.json, not settings.json', es: '~/.claude.json, no settings.json', fr: '~/.claude.json, pas settings.json', ja: '~/.claude.json（settings.json ではない）', pt: '~/.claude.json, não settings.json' },
+      'facts.scope.unknown': { de: 'nicht angegeben', en: 'not stated', es: 'no indicado', fr: 'non indiqué', ja: '記載なし', pt: 'não informado' },
+      'facts.type': { de: 'Typ', en: 'Type', es: 'Tipo', fr: 'Type', ja: '型', pt: 'Tipo' },
+      'facts.values': { de: 'Erlaubte Werte', en: 'Allowed values', es: 'Valores permitidos', fr: 'Valeurs autorisées', ja: '許可される値', pt: 'Valores permitidos' },
+      'facts.default': { de: 'Standard', en: 'Default', es: 'Predeterminado', fr: 'Par défaut', ja: '既定値', pt: 'Padrão' },
+      'facts.unset': { de: 'nicht gesetzt', en: 'unset', es: 'sin definir', fr: 'non défini', ja: '未設定', pt: 'não definido' },
+      'facts.since': { de: 'Ab Claude Code', en: 'Since Claude Code', es: 'Desde Claude Code', fr: 'Depuis Claude Code', ja: '対応バージョン', pt: 'Desde o Claude Code' },
+      'facts.envOverride': { de: 'Env-Variable', en: 'Environment variable', es: 'Variable de entorno', fr: 'Variable d’environnement', ja: '環境変数', pt: 'Variável de ambiente' },
+      'facts.envWins': { de: 'gilt vor diesem Wert', en: 'takes precedence over this value', es: 'prevalece sobre este valor', fr: 'prime sur cette valeur', ja: 'この値より優先', pt: 'prevalece sobre este valor' },
+      'facts.envOff': { de: 'kann die Funktion abschalten', en: 'can switch the feature off', es: 'puede desactivar la función', fr: 'peut désactiver la fonction', ja: '機能をオフにできる', pt: 'pode desligar o recurso' },
+      'facts.deprecated': { de: 'Veraltet laut Claude-Code-Referenz oder Schema', en: 'Deprecated according to the Claude Code reference or schema', es: 'Obsoleto según la referencia o el esquema de Claude Code', fr: 'Obsolète selon la référence ou le schéma de Claude Code', ja: 'Claude Code のリファレンスまたはスキーマでは非推奨', pt: 'Obsoleto segundo a referência ou o esquema do Claude Code' },
+      'facts.officialDesc': { de: 'Beschreibung aus dem SchemaStore-Schema (Englisch)', en: 'Description from the SchemaStore schema', es: 'Descripción del esquema de SchemaStore (en inglés)', fr: 'Description du schéma SchemaStore (en anglais)', ja: 'SchemaStore スキーマの説明（英語）', pt: 'Descrição do esquema do SchemaStore (em inglês)' },
+      'facts.docs': { de: 'Claude-Code-Referenz (Englisch)', en: 'Claude Code reference', es: 'Referencia de Claude Code (en inglés)', fr: 'Référence Claude Code (en anglais)', ja: 'Claude Code リファレンス（英語）', pt: 'Referência do Claude Code (em inglês)' },
       'doctor.wrongType': { de: 'Falscher Typ bei ', en: 'Wrong type for ', es: 'Tipo incorrecto en ', fr: 'Type incorrect pour ', ja: '型が不正: ', pt: 'Tipo incorreto em ' },
       'doctor.notInEnum': { de: 'Wert nicht erlaubt: ', en: 'Value not allowed: ', es: 'Valor no permitido: ', fr: 'Valeur non autorisée : ', ja: '許可されていない値: ', pt: 'Valor não permitido: ' },
       'doctor.managedOnly': { de: 'Greift nur aus managed-settings.json, hier wirkungslos: ', en: 'Only takes effect from managed-settings.json, no effect here: ', es: 'Solo actúa desde managed-settings.json, sin efecto aquí: ', fr: 'N’agit que depuis managed-settings.json, sans effet ici : ', ja: 'managed-settings.json からのみ有効、ここでは無効: ', pt: 'Só vale a partir de managed-settings.json, sem efeito aqui: ' },
@@ -5383,6 +5501,19 @@
           return Object.prototype.hasOwnProperty.call(SCHEMA_MAP.keys, key) ? SCHEMA_MAP.keys[key] : null;
         },
         // ─── i18n Helper ───
+        factsView(key) {
+          const f = keyFacts(key, SCHEMA_MAP.keys);
+          if (!f) return null;
+          const rows = [[this.t('facts.scope'), this.t('facts.scope.' + f.scope)]];
+          if (f.type) rows.push([this.t('facts.type'), f.type]);
+          if (f.values.length) rows.push([this.t('facts.values'), f.values.join(' · ')]);
+          // for a boolean, "unset" does not mean off (alwaysThinkingEnabled is on when unset), so the row would mislead
+          if (f.default && !(f.default === 'unset' && f.type === 'boolean')) rows.push([this.t('facts.default'), f.default === 'unset' ? this.t('facts.unset') : f.default]);
+          if (f.since) rows.push([this.t('facts.since'), 'v' + f.since]);
+          for (const o of f.overrides) rows.push([this.t('facts.envOverride'), o.env + (o.when !== undefined ? '=' + o.when : '') + ' — ' + this.t(o.kind === 'off' ? 'facts.envOff' : 'facts.envWins')]);
+          return { summary: this.t('facts.summary'), rows, deprecated: f.deprecated ? this.t('facts.deprecated') : '', desc: f.desc, descLabel: this.t('facts.officialDesc'), url: f.url, linkLabel: this.t('facts.docs') };
+        },
+
         t(key) {
           const entry = T[key];
           if (!entry) return key;
