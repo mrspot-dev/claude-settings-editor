@@ -4406,6 +4406,8 @@
       'doctor.didYouMean': { de: ' — meintest du ', en: ' — did you mean ', es: ' — ¿quisiste decir ', fr: ' — vouliez-vous dire ', ja: ' — もしかして ', pt: ' — você quis dizer ' },
       'doctor.deprecatedKey': { de: 'Veralteter Schlüssel: ', en: 'Deprecated key: ', es: 'Clave obsoleta: ', fr: 'Clé obsolète : ', ja: '非推奨のキー: ', pt: 'Chave obsoleta: ' },
       'doctor.effortOpus55': { de: 'Opus 5.5 übernimmt effortLevel der User-Datei nicht: ', en: 'Opus 5.5 ignores effortLevel from the user file: ', es: 'Opus 5.5 ignora effortLevel del archivo de usuario: ', fr: 'Opus 5.5 ignore effortLevel du fichier utilisateur : ', ja: 'Opus 5.5 はユーザーファイルの effortLevel を使いません: ', pt: 'O Opus 5.5 ignora effortLevel do arquivo de usuário: ' },
+      'doctor.envWins': { de: ' im env-Block gilt vor ', en: ' in the env block wins over ', es: ' en el bloque env prevalece sobre ', fr: ' dans le bloc env l’emporte sur ', ja: ' は env ブロックで次より優先: ', pt: ' no bloco env prevalece sobre ' },
+      'doctor.envOff': { de: ' im env-Block kann abschalten: ', en: ' in the env block can switch off: ', es: ' en el bloque env puede desactivar: ', fr: ' dans le bloc env peut désactiver : ', ja: ' は env ブロックで次をオフにできます: ', pt: ' no bloco env pode desligar: ' },
       'doctor.wrongType': { de: 'Falscher Typ bei ', en: 'Wrong type for ', es: 'Tipo incorrecto en ', fr: 'Type incorrect pour ', ja: '型が不正: ', pt: 'Tipo incorreto em ' },
       'doctor.notInEnum': { de: 'Wert nicht erlaubt: ', en: 'Value not allowed: ', es: 'Valor no permitido: ', fr: 'Valeur non autorisée : ', ja: '許可されていない値: ', pt: 'Valor não permitido: ' },
       'doctor.managedOnly': { de: 'Greift nur aus managed-settings.json, hier wirkungslos: ', en: 'Only takes effect from managed-settings.json, no effect here: ', es: 'Solo actúa desde managed-settings.json, sin efecto aquí: ', fr: 'N’agit que depuis managed-settings.json, sans effet ici : ', ja: 'managed-settings.json からのみ有効、ここでは無効: ', pt: 'Só vale a partir de managed-settings.json, sem efeito aqui: ' },
@@ -6451,6 +6453,10 @@
             }
             const effortFix = opus55EffortHint(doc);
             if (effortFix) errors.push({ tab: 'general', field: 'effortLevel', severity: 'info', message: this.t('doctor.effortOpus55') + effortFix.effortLevel, fix: effortFix });
+            for (const c of envConflicts(doc, SCHEMA_MAP.keys)) {
+              const message = c.env + '=' + c.envValue + this.t(c.kind === 'off' ? 'doctor.envOff' : 'doctor.envWins') + c.key;
+              errors.push({ tab: 'env', field: 'env', severity: 'info', message, fix: null });
+            }
           } catch (e) { errors.push({ tab: 'advanced', field: 'doctor', severity: 'warn', message: this.t('doctor.failed') + ' ' + e.message, fix: null }); }
 
           this.validationErrors = errors;

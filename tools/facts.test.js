@@ -53,3 +53,23 @@ test('envConflicts: a set key plus its override variable in env is a conflict; a
   assert.deepEqual(envConflicts({ disableClaudeAiConnectors: false, env: { ENABLE_CLAUDEAI_MCP_SERVERS: 'false' } }, MAP),
     [{ key: 'disableClaudeAiConnectors', env: 'ENABLE_CLAUDEAI_MCP_SERVERS', kind: 'off', envValue: 'false' }]);
 });
+
+test('validateSettings reports env conflicts in the Environment tab, also for keys the editor has no field for', () => {
+  const { editor } = require('./editor-harness.js');
+  const app = editor();
+  app.loadJson(JSON.stringify({
+    effortLevel: 'high', fastMode: true, autoCompactEnabled: true, promptCacheTtl: '1h',
+    env: { CLAUDE_CODE_EFFORT_LEVEL: 'low', CLAUDE_CODE_DISABLE_FAST_MODE: '1', DISABLE_AUTO_COMPACT: '1', ENABLE_PROMPT_CACHING_1H: '1' },
+  }));
+  app.validateSettings();
+  const env = app.validationErrors.filter(e => e.tab === 'env' && e.severity === 'info').map(e => e.message).sort();
+  assert.deepEqual(env, [
+    'CLAUDE_CODE_DISABLE_FAST_MODE=1doctor.envOfffastMode',
+    'CLAUDE_CODE_EFFORT_LEVEL=lowdoctor.envWinseffortLevel',
+    'DISABLE_AUTO_COMPACT=1doctor.envOffautoCompactEnabled',
+  ]);
+  const app2 = editor();
+  app2.loadJson(JSON.stringify({ effortLevel: 'high', env: { CLAUDE_CODE_EFFORT_LEVEL: '' } }));
+  app2.validateSettings();
+  assert.equal(app2.validationErrors.filter(e => e.tab === 'env').length, 0);
+});
