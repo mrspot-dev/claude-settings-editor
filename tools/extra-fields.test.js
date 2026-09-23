@@ -144,6 +144,19 @@ test('toggleManagedFile marks the open file, and a file named managed-settings.j
   app.fileName = 'managed-settings.json';
   app.toggleManagedFile();
   assert.equal(app.managedFile, true);
+  assert.equal(app.managedMarkedFor, '50-security.json', 'the name alone makes it managed; the toggle leaves the earlier mark alone');
+});
+
+test('toggleManagedFile does nothing without an open file', () => {
+  const app = editor();
+  app.fileName = '';
+  app.toggleManagedFile();
+  assert.equal(app.managedFile, false);
+  assert.equal(app.managedMarkedFor, null);
+});
+
+test('the managed-file switch says it is disabled for managed-settings.json', () => {
+  assert.ok(lf.includes(':aria-disabled="String((fileName || \'\').toLowerCase() === \'managed-settings.json\')"'));
 });
 
 test('the Managed tab exists with a description, and the search finds generic fields', () => {

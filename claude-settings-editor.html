@@ -3160,6 +3160,7 @@
                 <div class="toggle bg-bg-elevated mt-1 flex-shrink-0"
                      :class="{ 'active': managedFile, 'opacity-50': (fileName || '').toLowerCase() === 'managed-settings.json' }"
                      @click="toggleManagedFile()" tabindex="0" role="switch" aria-labelledby="label-managed-file" :aria-checked="managedFile"
+                     :aria-disabled="String((fileName || '').toLowerCase() === 'managed-settings.json')"
                      @keydown.enter="toggleManagedFile()" @keydown.space.prevent="toggleManagedFile()"></div>
               </div>
               <p class="text-xs font-semibold text-fg mt-3" x-text="t('managed.pathsTitle')"></p>
@@ -3322,7 +3323,7 @@
           <p class="text-sm text-fg-muted mt-2" x-text="t('wizard.permDesc')"></p>
           <div class="mt-4 space-y-2">
             <template x-for="pm in [{id:'auto',labelKey:'wizard.permAuto',descKey:'wizard.permAutoDesc',rec:true},{id:'default',labelKey:'wizard.permDefault',descKey:'wizard.permDefaultDesc'},{id:'acceptEdits',labelKey:'wizard.permProductive',descKey:'wizard.permProductiveDesc'},{id:'plan',labelKey:'wizard.permReadOnly',descKey:'wizard.permReadOnlyDesc'},{id:'bypassPermissions',labelKey:'wizard.permAutopilot',descKey:'wizard.permAutopilotDesc'}]" :key="pm.id">
-              <button @click="settings.permissions.defaultMode = pm.id; markUnsaved()"
+              <button @click="wizardSetMode(pm.id)"
                       class="w-full text-left p-3 rounded-xl border transition-all"
                       :class="settings.permissions.defaultMode === pm.id ? 'border-accent/40 bg-accent/5' : 'border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.15)]'">
                 <div class="font-display font-medium text-sm" :class="settings.permissions.defaultMode === pm.id ? 'text-accent' : 'text-fg'"><span x-text="t(pm.labelKey)"></span><span x-show="pm.rec" class="ml-2 text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-accent/15 text-accent border border-accent/30" x-text="t('perm.recommended')"></span></div>
@@ -3669,6 +3670,17 @@
         else if (info.enum && info.enum.length && typeof v === 'string' && !skipEnum.has(key) && !info.enum.includes(v)) findings.push({ key, kind: 'enum', suggestion: '', actual: v, expected: info.enum.join(', ') });
         if (info.scope === 'managed' && !(opts && opts.managedFile)) findings.push({ key, kind: 'managed', suggestion: '', actual: '', expected: '' });
       }
+      // nested managed keys (sandbox.bwrapPath) sit under a parent that works anywhere; a managed parent is reported above
+      if (!(opts && opts.managedFile)) {
+        for (const path of candidates) {
+          if (!path.includes('.') || mapKeys[path].scope !== 'managed') continue;
+          const top = path.split('.')[0];
+          if (mapKeys[top] && mapKeys[top].scope === 'managed') continue;
+          let v = doc;
+          for (const part of path.split('.')) v = v && typeof v === 'object' && !Array.isArray(v) && Object.prototype.hasOwnProperty.call(v, part) ? v[part] : undefined;
+          if (v !== undefined) findings.push({ key: path, kind: 'managed', suggestion: '', actual: '', expected: '' });
+        }
+      }
       return findings;
     }
 
@@ -3840,6 +3852,8 @@
         const err = make('p', 'text-xs text-red-400 mt-1');
         err.hidden = true;
         const current = () => (app.settings.extras || {})[f.key];
+        // a rejected entry stays in the control with its hint until this field's stored value changes
+        let errKey = '', errFor = '';
         let control;
         if (f.control === 'toggle') {
           control = make('div', 'toggle bg-bg-elevated mt-1 flex-shrink-0');
@@ -3862,8 +3876,9 @@
           control.addEventListener('change', () => {
             const r = parseExtraInput(f, control.value);
             err.hidden = !r.error;
-            if (r.error === 'json') err.textContent = app.t('extra.invalidJson');
-            else if (r.error) err.textContent = app.t('extra.invalidNumber');
+            errKey = r.error === 'json' ? 'extra.invalidJson' : r.error ? 'extra.invalidNumber' : '';
+            errFor = JSON.stringify(current());
+            if (errKey) err.textContent = app.t(errKey);
             else app.setExtra(f.key, r.value);
           });
           body.append(control, err);
@@ -3889,6 +3904,8 @@
             control.value = v === undefined ? '' : String(v);
             return;
           }
+          if (errKey && JSON.stringify(v) === errFor) { err.textContent = app.t(errKey); return; }
+          errKey = '';
           if (document.activeElement !== control) { control.value = extraDisplay(f, v); err.hidden = true; }
         });
       });
@@ -3913,7 +3930,7 @@
 
     const T = {
       // ─── App Shell ───
-      'app.version': { de: 'v1.8.0 · made with 💛', en: 'v1.8.0 · made with 💛', es: 'v1.8.0 · hecho con 💛', fr: 'v1.8.0 · fait avec 💛', ja: 'v1.8.0 · made with 💛', pt: 'v1.8.0 · feito com 💛' },
+      'app.version': { de: 'v1.8.1 · made with 💛', en: 'v1.8.1 · made with 💛', es: 'v1.8.1 · hecho con 💛', fr: 'v1.8.1 · fait avec 💛', ja: 'v1.8.1 · made with 💛', pt: 'v1.8.1 · feito com 💛' },
       'app.by': { de: 'von', en: 'by', es: 'por', fr: 'par', ja: '作成者', pt: 'por' },
       'sidebar.collapse': { de: 'Sidebar einklappen', en: 'Collapse sidebar', es: 'Contraer barra lateral', fr: 'Replier la barre laterale', ja: 'サイドバーを折りたたむ', pt: 'Recolher barra lateral' },
       'sidebar.expand': { de: 'Sidebar ausklappen', en: 'Expand sidebar', es: 'Expandir barra lateral', fr: 'Deplier la barre laterale', ja: 'サイドバーを展開する', pt: 'Expandir barra lateral' },
@@ -5803,8 +5820,16 @@
           this.markUnsaved();
         },
 
+        // the wizard's mode choice; auto also lifts an auto mode lock, as the Auto Mode preset does
+        wizardSetMode(id) {
+          this.settings.permissions.defaultMode = id;
+          if (id === 'auto') this.settings.permissions.disableAutoMode = '';
+          this.markUnsaved();
+        },
+
         toggleManagedFile() {
-          if ((this.fileName || '').toLowerCase() === 'managed-settings.json') return; // named so, it is managed
+          if (!this.fileName) return; // nothing open, nothing to mark
+          if (this.fileName.toLowerCase() === 'managed-settings.json') return; // named so, it is managed
           this.managedMarkedFor = this.managedFile ? null : this.fileName;
           this.validateSettings();
         },

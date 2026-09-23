@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.8.1] — 2026-09-23
+
+### Fixed
+- A rejected entry in one of the new fields (not a number, invalid JSON) keeps its text and hint until that field's value changes. Before, editing any other new field or switching the language silently put the old value back and hid the hint. The hint now follows the interface language.
+- The doctor reports nested keys that only act from managed settings, such as `sandbox.bwrapPath` or `sandbox.network.allowManagedDomainsOnly`, when they sit in a user or project file.
+- Choosing auto mode in the setup wizard lifts a `permissions.disableAutoMode` lock, as the Auto Mode preset already did.
+- The managed-file switch tells screen readers that it is disabled for a file named `managed-settings.json`, and it does nothing while no file is open.
+
 ## [1.8.0] — 2026-09-23
 
 Managed tab and auto mode up front (design docs/specs/2026-09-23-v18-managed-tab-design.md).

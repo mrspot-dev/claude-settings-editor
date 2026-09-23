@@ -49,3 +49,14 @@ test('the permissions tab groups auto mode: heading, classifier, disable switch,
 test('the defaultMode select shows where auto takes effect', () => {
   assert.ok(lf.includes('x-show="settings.permissions.defaultMode === \'auto\'" class="text-xs text-amber-300 mt-2" x-text="t(\'perm.autoWhere\')"'));
 });
+
+test('choosing auto in the wizard lifts an auto mode lock, like the preset does', () => {
+  const app = editor();
+  app.settings.permissions.disableAutoMode = 'disable';
+  app.wizardSetMode('default');
+  assert.equal(app.settings.permissions.disableAutoMode, 'disable', 'other modes leave the lock alone');
+  app.wizardSetMode('auto');
+  assert.equal(app.settings.permissions.defaultMode, 'auto');
+  assert.equal(app.settings.permissions.disableAutoMode, '');
+  assert.ok(lf.includes('@click="wizardSetMode(pm.id)"'));
+});
