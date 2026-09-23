@@ -1056,6 +1056,7 @@
                     <div class="flex items-center gap-2 mb-0.5">
                       <span class="text-base" x-text="pp.icon"></span>
                       <span class="font-medium text-sm text-fg" x-text="td('data.preset.' + pp.id + '.name', pp.name)"></span>
+                      <span x-show="pp.recommended" class="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-accent/15 text-accent border border-accent/30" x-text="t('perm.recommended')"></span>
                     </div>
                     <p class="text-xs text-fg-dim leading-snug" x-text="td('data.preset.' + pp.id + '.desc', pp.desc)"></p>
                   </button>
@@ -1077,7 +1078,11 @@
                 <option value="manual" x-text="t('perm.modeManual')"></option>
                 <option value="delegate" x-text="t('perm.modeDelegate')"></option>
               </select>
+              <p x-show="settings.permissions.defaultMode === 'auto'" class="text-xs text-amber-300 mt-2" x-text="t('perm.autoWhere')"></p>
             </div>
+
+            <!-- Auto Mode group (v1.8) -->
+            <h3 id="setting-automode-group" class="font-display font-semibold text-sm text-fg" x-text="t('perm.autoGroup')"></h3>
 
             <div id="setting-classify-all-shell" class="settings-group flex items-start justify-between">
               <div class="flex-1">
@@ -1094,17 +1099,6 @@
                    @keydown.space.prevent="settings.autoMode = {...settings.autoMode, classifyAllShell: !settings.autoMode.classifyAllShell}; markUnsaved()"></div>
             </div>
 
-            <div id="setting-perm-bypass" class="settings-group flex items-start justify-between">
-              <div class="flex-1">
-                <label id="label-perm-bypass" class="setting-label" x-text="t('perm.bypass')"></label>
-                <p class="setting-desc" x-text="t('perm.bypassDesc')"></p>
-                <div x-facts="'permissions.disableBypassPermissionsMode'"></div>
-              </div>
-              <div class="toggle bg-bg-elevated mt-1"
-                   :class="{ 'active': settings.permissions.disableBypassPermissionsMode === 'disable' }"
-                   @click="settings.permissions.disableBypassPermissionsMode = settings.permissions.disableBypassPermissionsMode === 'disable' ? '' : 'disable'; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-perm-bypass" :aria-checked="settings.permissions.disableBypassPermissionsMode === 'disable'" @keydown.enter="settings.permissions.disableBypassPermissionsMode = settings.permissions.disableBypassPermissionsMode === 'disable' ? '' : 'disable'; markUnsaved()" @keydown.space.prevent="settings.permissions.disableBypassPermissionsMode = settings.permissions.disableBypassPermissionsMode === 'disable' ? '' : 'disable'; markUnsaved()"></div>
-            </div>
-
             <div id="setting-perm-disable-auto" class="settings-group flex items-start justify-between">
               <div class="flex-1">
                 <label id="label-perm-disable-auto" class="setting-label" x-text="t('perm.disableAutoMode')"></label>
@@ -1114,6 +1108,20 @@
               <div class="toggle bg-bg-elevated mt-1"
                    :class="{ 'active': settings.permissions.disableAutoMode === 'disable' }"
                    @click="settings.permissions.disableAutoMode = settings.permissions.disableAutoMode === 'disable' ? '' : 'disable'; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-perm-disable-auto" :aria-checked="settings.permissions.disableAutoMode === 'disable'" @keydown.enter="settings.permissions.disableAutoMode = settings.permissions.disableAutoMode === 'disable' ? '' : 'disable'; markUnsaved()" @keydown.space.prevent="settings.permissions.disableAutoMode = settings.permissions.disableAutoMode === 'disable' ? '' : 'disable'; markUnsaved()"></div>
+            </div>
+
+            <template x-for="f in extraFieldsFor('permissions', 'automode')" :key="f.key"><div x-extra-field="f"></div></template>
+            <button type="button" class="text-xs text-accent hover:underline" @click="jumpToSetting('advanced', 'setting-auto-mode')" x-text="t('perm.autoRulesLink')"></button>
+
+            <div id="setting-perm-bypass" class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label id="label-perm-bypass" class="setting-label" x-text="t('perm.bypass')"></label>
+                <p class="setting-desc" x-text="t('perm.bypassDesc')"></p>
+                <div x-facts="'permissions.disableBypassPermissionsMode'"></div>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1"
+                   :class="{ 'active': settings.permissions.disableBypassPermissionsMode === 'disable' }"
+                   @click="settings.permissions.disableBypassPermissionsMode = settings.permissions.disableBypassPermissionsMode === 'disable' ? '' : 'disable'; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-perm-bypass" :aria-checked="settings.permissions.disableBypassPermissionsMode === 'disable'" @keydown.enter="settings.permissions.disableBypassPermissionsMode = settings.permissions.disableBypassPermissionsMode === 'disable' ? '' : 'disable'; markUnsaved()" @keydown.space.prevent="settings.permissions.disableBypassPermissionsMode = settings.permissions.disableBypassPermissionsMode === 'disable' ? '' : 'disable'; markUnsaved()"></div>
             </div>
 
             <!-- Allow Rules -->
@@ -3366,11 +3374,11 @@
           <h3 class="font-display font-bold text-xl text-white" x-text="t('wizard.permTitle')"></h3>
           <p class="text-sm text-fg-muted mt-2" x-text="t('wizard.permDesc')"></p>
           <div class="mt-4 space-y-2">
-            <template x-for="pm in [{id:'default',labelKey:'wizard.permDefault',descKey:'wizard.permDefaultDesc'},{id:'acceptEdits',labelKey:'wizard.permProductive',descKey:'wizard.permProductiveDesc'},{id:'plan',labelKey:'wizard.permReadOnly',descKey:'wizard.permReadOnlyDesc'},{id:'bypassPermissions',labelKey:'wizard.permAutopilot',descKey:'wizard.permAutopilotDesc'}]" :key="pm.id">
+            <template x-for="pm in [{id:'auto',labelKey:'wizard.permAuto',descKey:'wizard.permAutoDesc',rec:true},{id:'default',labelKey:'wizard.permDefault',descKey:'wizard.permDefaultDesc'},{id:'acceptEdits',labelKey:'wizard.permProductive',descKey:'wizard.permProductiveDesc'},{id:'plan',labelKey:'wizard.permReadOnly',descKey:'wizard.permReadOnlyDesc'},{id:'bypassPermissions',labelKey:'wizard.permAutopilot',descKey:'wizard.permAutopilotDesc'}]" :key="pm.id">
               <button @click="settings.permissions.defaultMode = pm.id; markUnsaved()"
                       class="w-full text-left p-3 rounded-xl border transition-all"
                       :class="settings.permissions.defaultMode === pm.id ? 'border-accent/40 bg-accent/5' : 'border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.15)]'">
-                <div class="font-display font-medium text-sm" :class="settings.permissions.defaultMode === pm.id ? 'text-accent' : 'text-fg'" x-text="t(pm.labelKey)"></div>
+                <div class="font-display font-medium text-sm" :class="settings.permissions.defaultMode === pm.id ? 'text-accent' : 'text-fg'"><span x-text="t(pm.labelKey)"></span><span x-show="pm.rec" class="ml-2 text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-accent/15 text-accent border border-accent/30" x-text="t('perm.recommended')"></span></div>
                 <div class="text-xs text-fg-muted mt-0.5" x-text="t(pm.descKey)"></div>
               </button>
             </template>
@@ -3653,6 +3661,22 @@
       if (field.control === 'list' && Array.isArray(value) && value.every(v => typeof v === 'string')) return value.join('\n');
       if (field.control === 'json' || field.control === 'list' || typeof value === 'object') return JSON.stringify(value, null, 2);
       return String(value);
+    }
+
+    // Hard deny rules of the Safety First and Auto Mode presets; deny rules block in every permission mode.
+    function safetyDenyRules() {
+      return [
+            'Bash(rm -rf *)', 'Bash(rm -rf /)', 'Bash(rmdir *)',
+            'Bash(sudo *)', 'Bash(shutdown *)', 'Bash(reboot *)', 'Bash(halt *)', 'Bash(poweroff *)',
+            'Bash(dd *)', 'Bash(mkfs *)', 'Bash(shred *)', 'Bash(fdisk *)',
+            'Bash(chmod *)', 'Bash(chown *)', 'Bash(chgrp *)',
+            'Bash(eval *)', 'Bash(exec *)',
+            'Bash(curl * | bash)', 'Bash(curl * | sh)',
+            'Bash(wget * | bash)', 'Bash(wget * | sh)',
+            'Bash(nc *)', 'Bash(socat *)', 'Bash(nmap *)',
+            'Read(./.env)', 'Read(./.env.*)',
+            'Read(~/.ssh/*)', 'Read(~/.aws/*)', 'Read(~/.gnupg/*)'
+      ];
     }
 
     function levenshtein(a, b) {
@@ -4847,6 +4871,14 @@
       'extra.pluginConfigs': { de: 'Antworten aus dem Konfigurationsdialog von Plugins; Claude Code schreibt sie selbst.', en: 'Answers from a plugin’s configuration dialog; Claude Code writes them itself.', es: 'Respuestas del diálogo de configuración de un plugin; Claude Code las escribe solo.', fr: 'Réponses du dialogue de configuration d’un plugin ; Claude Code les écrit lui-même.', ja: 'プラグインの設定ダイアログの回答。Claude Code が自動で書き込みます。', pt: 'Respostas da caixa de configuração de um plugin; o Claude Code as grava sozinho.' },
       'extra.skipAutoPermissionPrompt': { de: 'Blendet den einmaligen Hinweis aus, wenn man Auto Mode selbst einschaltet.', en: 'Skips the one-time notice when you switch auto mode on yourself.', es: 'Omite el aviso único al activar tú mismo el modo auto.', fr: 'Masque l’avis unique lorsque vous activez vous-même le mode auto.', ja: '自分で auto モードに切り替えたときの一度きりの案内を表示しません。', pt: 'Pula o aviso único quando você mesmo ativa o modo auto.' },
       'extra.useAutoModeDuringPlan': { de: 'Im Plan-Modus prüft der Auto-Mode-Classifier Befehle, statt jedes Mal zu fragen.', en: 'In plan mode the auto mode classifier reviews commands instead of asking each time.', es: 'En el modo plan, el clasificador del modo auto revisa los comandos en vez de preguntar.', fr: 'En mode plan, le classifieur du mode auto vérifie les commandes au lieu de demander.', ja: 'プランモードで、毎回確認する代わりに auto モードの分類器がコマンドを審査します。', pt: 'No modo plan, o classificador do modo auto revisa os comandos em vez de perguntar.' },
+      'data.preset.pp-auto.name': { de: 'Auto Mode', en: 'Auto Mode', es: 'Modo auto', fr: 'Mode auto', ja: 'auto モード', pt: 'Modo auto' },
+      'data.preset.pp-auto.desc': { de: 'Ein Classifier prüft jede Aktion, harte Deny-Regeln bleiben. Wirkt aus ~/.claude/settings.json, braucht Opus 4.6+, Sonnet 4.6+ oder Fable.', en: 'A classifier reviews every action, hard deny rules stay. Works from ~/.claude/settings.json; needs Opus 4.6+, Sonnet 4.6+ or Fable.', es: 'Un clasificador revisa cada acción y las reglas de denegación se mantienen. Funciona desde ~/.claude/settings.json; requiere Opus 4.6+, Sonnet 4.6+ o Fable.', fr: 'Un classifieur vérifie chaque action, les règles de refus restent. Agit depuis ~/.claude/settings.json ; nécessite Opus 4.6+, Sonnet 4.6+ ou Fable.', ja: '分類器がすべての操作を審査し、拒否ルールは維持されます。~/.claude/settings.json で有効。Opus 4.6 以降、Sonnet 4.6 以降、または Fable が必要です。', pt: 'Um classificador revisa cada ação e as regras de negação ficam. Vale a partir de ~/.claude/settings.json; requer Opus 4.6+, Sonnet 4.6+ ou Fable.' },
+      'perm.recommended': { de: 'Empfohlen', en: 'Recommended', es: 'Recomendado', fr: 'Recommandé', ja: 'おすすめ', pt: 'Recomendado' },
+      'perm.autoWhere': { de: 'Auto Mode wirkt nur aus ~/.claude/settings.json (oder Managed), nicht aus Projektdateien.', en: 'Auto mode only takes effect from ~/.claude/settings.json (or managed), not from project files.', es: 'El modo auto solo actúa desde ~/.claude/settings.json (o gestionado), no desde archivos de proyecto.', fr: 'Le mode auto n’agit que depuis ~/.claude/settings.json (ou géré), pas depuis les fichiers de projet.', ja: 'auto モードは ~/.claude/settings.json（または管理設定）でのみ有効で、プロジェクトファイルでは効きません。', pt: 'O modo auto só vale a partir de ~/.claude/settings.json (ou gerenciado), não de arquivos de projeto.' },
+      'perm.autoGroup': { de: 'Auto Mode', en: 'Auto mode', es: 'Modo auto', fr: 'Mode auto', ja: 'auto モード', pt: 'Modo auto' },
+      'perm.autoRulesLink': { de: 'Classifier-Regeln (autoMode) im Tab Advanced bearbeiten →', en: 'Edit the classifier rules (autoMode) in the Advanced tab →', es: 'Editar las reglas del clasificador (autoMode) en la pestaña Advanced →', fr: 'Modifier les règles du classifieur (autoMode) dans l’onglet Advanced →', ja: 'Advanced タブで分類器のルール（autoMode）を編集 →', pt: 'Editar as regras do classificador (autoMode) na aba Advanced →' },
+      'wizard.permAuto': { de: 'Auto Mode', en: 'Auto mode', es: 'Modo auto', fr: 'Mode auto', ja: 'auto モード', pt: 'Modo auto' },
+      'wizard.permAutoDesc': { de: 'Ein Classifier prüft jede Aktion statt Rückfragen; wirkt aus ~/.claude/settings.json', en: 'A classifier reviews each action instead of prompts; works from ~/.claude/settings.json', es: 'Un clasificador revisa cada acción en lugar de preguntar; funciona desde ~/.claude/settings.json', fr: 'Un classifieur vérifie chaque action au lieu de demander ; agit depuis ~/.claude/settings.json', ja: '確認の代わりに分類器が各操作を審査します。~/.claude/settings.json で有効', pt: 'Um classificador revisa cada ação em vez de perguntar; vale a partir de ~/.claude/settings.json' },
       'doctor.autoIgnoredHere': { de: 'Auto Mode und der autoMode-Block wirken aus settings.local.json nicht. Nach ~/.claude/settings.json verschieben.', en: 'Auto mode and the autoMode block have no effect from settings.local.json. Move them to ~/.claude/settings.json.', es: 'El modo auto y el bloque autoMode no tienen efecto desde settings.local.json. Muévelos a ~/.claude/settings.json.', fr: 'Le mode auto et le bloc autoMode sont sans effet depuis settings.local.json. Déplacez-les vers ~/.claude/settings.json.', ja: 'auto モードと autoMode ブロックは settings.local.json では無効です。~/.claude/settings.json に移してください。', pt: 'O modo auto e o bloco autoMode não têm efeito a partir de settings.local.json. Mova-os para ~/.claude/settings.json.' },
       'doctor.mcpServersHint': { de: 'mcpServers wird nicht aus settings.json gelesen — gehört in .mcp.json oder ~/.claude.json', en: 'mcpServers is not read from settings.json — it belongs in .mcp.json or ~/.claude.json', es: 'mcpServers no se lee desde settings.json — va en .mcp.json o ~/.claude.json', fr: 'mcpServers n’est pas lu depuis settings.json — il va dans .mcp.json ou ~/.claude.json', ja: 'mcpServers は settings.json から読み込まれません — .mcp.json か ~/.claude.json に置きます', pt: 'mcpServers não é lido do settings.json — fica em .mcp.json ou ~/.claude.json' },
       'doctor.apply': { de: 'beheben', en: 'fix', es: 'corregir', fr: 'corriger', ja: '修正', pt: 'corrigir' },
@@ -5523,6 +5555,7 @@
         askSuggestions: ['Bash(git push *)', 'Bash(git reset *)', 'Bash(docker *)', 'Bash(rm *)', 'Bash(firebase deploy *)', 'Bash(npm publish *)', 'Bash(gh pr *)'],
 
         permPresets: [
+          { id: 'pp-auto', name: 'Auto Mode', desc: 'Classifier prüft jede Aktion, harte Deny-Regeln bleiben.', icon: '✨', color: 'text-accent border-accent/40 hover:bg-accent/10', recommended: true },
           { id: 'pp-safety', name: 'Safety First', desc: 'Breite Allow-Liste + harte Deny-Rules. Max Flow, min Risiko.', icon: '🛡', color: 'text-red-400 border-red-500/30 hover:bg-red-500/10' },
           { id: 'pp-productive', name: 'Produktiv', desc: 'Gängige Dev-Tools erlaubt, kaum Deny. Schnelles Arbeiten.', icon: '⚡', color: 'text-blue-400 border-blue-500/30 hover:bg-blue-500/10' },
           { id: 'pp-readonly', name: 'Nur Lesen', desc: 'Nur Read/Glob/Grep. Kein Schreiben, kein Bash.', icon: '👁', color: 'text-violet-400 border-violet-500/30 hover:bg-violet-500/10' },
@@ -6492,7 +6525,15 @@
         _applyPermPresetData(id) {
           const p = this.settings.permissions;
 
-          if (id === 'pp-safety') {
+          if (id === 'pp-auto') {
+            // auto mode drops broad allow rules anyway; ask rules would still prompt, so the preset sets none
+            p.defaultMode = 'auto';
+            // choosing the preset asks for auto mode, so a lock in the same file would contradict it
+            p.disableAutoMode = '';
+            p.allow = [];
+            p.ask = [];
+            p.deny = safetyDenyRules();
+          } else if (id === 'pp-safety') {
             p.defaultMode = 'acceptEdits';
             p.allow = [
               'Bash(npm *)', 'Bash(npx *)', 'Bash(node *)', 'Bash(bun *)',
@@ -6509,18 +6550,7 @@
               'Bash(gh pr *)', 'Bash(gh issue *)',
               'Bash(docker *)', 'Bash(rm *)'
             ];
-            p.deny = [
-              'Bash(rm -rf *)', 'Bash(rm -rf /)', 'Bash(rmdir *)',
-              'Bash(sudo *)', 'Bash(shutdown *)', 'Bash(reboot *)', 'Bash(halt *)', 'Bash(poweroff *)',
-              'Bash(dd *)', 'Bash(mkfs *)', 'Bash(shred *)', 'Bash(fdisk *)',
-              'Bash(chmod *)', 'Bash(chown *)', 'Bash(chgrp *)',
-              'Bash(eval *)', 'Bash(exec *)',
-              'Bash(curl * | bash)', 'Bash(curl * | sh)',
-              'Bash(wget * | bash)', 'Bash(wget * | sh)',
-              'Bash(nc *)', 'Bash(socat *)', 'Bash(nmap *)',
-              'Read(./.env)', 'Read(./.env.*)',
-              'Read(~/.ssh/*)', 'Read(~/.aws/*)', 'Read(~/.gnupg/*)'
-            ];
+            p.deny = safetyDenyRules();
           } else if (id === 'pp-productive') {
             p.defaultMode = 'acceptEdits';
             p.allow = [
