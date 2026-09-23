@@ -1595,15 +1595,6 @@
               <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.sandbox.enabled }" @click="settings.sandbox.enabled = !settings.sandbox.enabled; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-sandbox-enable" :aria-checked="settings.sandbox.enabled" @keydown.enter="settings.sandbox.enabled = !settings.sandbox.enabled; markUnsaved()" @keydown.space.prevent="settings.sandbox.enabled = !settings.sandbox.enabled; markUnsaved()"></div>
             </div>
 
-            <div id="setting-sandbox-mode" class="settings-group">
-              <label for="input-sandbox-mode" class="setting-label" x-text="t('sandbox.mode')"></label>
-              <p class="setting-desc" x-text="t('sandbox.modeDesc')"></p>
-              <select id="input-sandbox-mode" x-model="settings.sandbox.mode" @change="markUnsaved()" class="setting-input" :class="{ 'has-value': settings.sandbox.mode && settings.sandbox.mode !== 'restrict' }">
-                <option value="restrict" x-text="t('sandbox.modeRestrict')"></option>
-                <option value="monitor" x-text="t('sandbox.modeMonitor')"></option>
-              </select>
-            </div>
-
             <template x-for="list in [{key:'allowWrite',label:'Filesystem — Allow Write',color:'emerald'},{key:'denyWrite',label:'Filesystem — Deny Write',color:'red'},{key:'denyRead',label:'Filesystem — Deny Read',color:'red'},{key:'allowRead',label:'Filesystem — Allow Read',color:'blue'}]" :key="list.key">
               <div class="settings-group" :id="'setting-sandbox-' + list.key">
                 <label class="setting-label" x-text="list.label"></label>
@@ -3412,12 +3403,12 @@
         model: '', effortLevel: '', outputStyle: '', language: '',
         maxEffortLevel: '', ultracode: false, modelSettings: {},
         alwaysThinkingEnabled: false, autoUpdatesChannel: 'latest',
-        permissions: { allow: [], ask: [], deny: [], additionalDirectories: [], defaultMode: 'default', disableBypassPermissionsMode: '', disableAutoMode: '' },
+        permissions: { allow: [], ask: [], deny: [], additionalDirectories: [], defaultMode: 'default', disableBypassPermissionsMode: '', disableAutoMode: '', _raw: {} },
         enabledPlugins: {}, hooks: {}, mcpServers: {},
-        sandbox: { enabled: false, mode: 'restrict', filesystem: { allowWrite: [], denyWrite: [], denyRead: [], allowRead: [] }, network: { allowedDomains: [], allowLocalBinding: false, allowAllUnixSockets: false } },
+        sandbox: { enabled: false, _raw: {}, filesystem: { allowWrite: [], denyWrite: [], denyRead: [], allowRead: [] }, network: { allowedDomains: [], allowLocalBinding: false, allowAllUnixSockets: false } },
         env: {}, spinnerVerbs: { mode: 'append', verbs: [] },
         spinnerTipsEnabled: true, showTurnDuration: true, prefersReducedMotion: false,
-        statusLine: { type: '', command: '', url: '', refresh: 5000, disabled: false },
+        statusLine: { type: '', command: '', url: '', refresh: 5000, disabled: false, _raw: {} },
         attribution: { commit: '', pr: '', hideCommit: false, hidePr: false, sessionUrl: true, extra: {} },
         cleanupPeriodDays: 30, fastModePerSessionOptIn: false, enableAllProjectMcpServers: false,
         respectGitignore: true, teammateMode: '', forceLoginMethod: '',
@@ -3515,6 +3506,15 @@
       return Object.keys(out).length ? out : null;
     }
 
+    // The editor edits only some sub-keys of permissions, sandbox and statusLine; every other imported sub-key must
+    // survive a save. Start from the imported object and overlay the owned values; an owned value of undefined removes
+    // the key. Returns undefined for an empty result so the caller can leave the whole object out.
+    function overlayOwned(raw, owned) {
+      const out = raw && typeof raw === 'object' && !Array.isArray(raw) ? JSON.parse(JSON.stringify(raw)) : {};
+      for (const [k, v] of Object.entries(owned)) { if (v === undefined) delete out[k]; else out[k] = v; }
+      return Object.keys(out).length ? out : undefined;
+    }
+
     // Deprecated keys that Claude Code still reads keep their effect when the doctor removes them.
     function deprecatedKeyFix(doc, key) {
       const out = { ...doc };
@@ -3547,7 +3547,7 @@
 
     const T = {
       // ─── App Shell ───
-      'app.version': { de: 'v1.6.0 · made with 💛', en: 'v1.6.0 · made with 💛', es: 'v1.6.0 · hecho con 💛', fr: 'v1.6.0 · fait avec 💛', ja: 'v1.6.0 · made with 💛', pt: 'v1.6.0 · feito com 💛' },
+      'app.version': { de: 'v1.6.1 · made with 💛', en: 'v1.6.1 · made with 💛', es: 'v1.6.1 · hecho con 💛', fr: 'v1.6.1 · fait avec 💛', ja: 'v1.6.1 · made with 💛', pt: 'v1.6.1 · feito com 💛' },
       'app.by': { de: 'von', en: 'by', es: 'por', fr: 'par', ja: '作成者', pt: 'por' },
       'sidebar.collapse': { de: 'Sidebar einklappen', en: 'Collapse sidebar', es: 'Contraer barra lateral', fr: 'Replier la barre laterale', ja: 'サイドバーを折りたたむ', pt: 'Recolher barra lateral' },
       'sidebar.expand': { de: 'Sidebar ausklappen', en: 'Expand sidebar', es: 'Expandir barra lateral', fr: 'Deplier la barre laterale', ja: 'サイドバーを展開する', pt: 'Expandir barra lateral' },
@@ -3797,10 +3797,6 @@
       // ─── Tab: Sandbox ───
       'sandbox.enable': { de: 'Sandbox aktivieren', en: 'Enable sandbox', es: 'Activar sandbox', fr: 'Activer le bac a sable', ja: 'サンドボックスを有効化', pt: 'Ativar sandbox' },
       'sandbox.enableDesc': { de: 'Isoliert Dateisystem- und Netzwerkzugriffe.', en: 'Isolates file system and network access.', es: 'Aisla el acceso al sistema de archivos y la red.', fr: 'Isole les acces au systeme de fichiers et au reseau.', ja: 'ファイルシステムとネットワークアクセスを分離します。', pt: 'Isola o acesso ao sistema de arquivos e a rede.' },
-      'sandbox.mode': { de: 'Sandbox-Modus', en: 'Sandbox Mode', es: 'Modo de sandbox', fr: 'Mode sandbox', ja: 'サンドボックスモード', pt: 'Modo de sandbox' },
-      'sandbox.modeDesc': { de: 'Restrict blockiert verbotene Zugriffe, Monitor loggt sie nur.', en: 'Restrict blocks forbidden access, Monitor only logs it.', es: 'Restrict bloquea accesos prohibidos, Monitor solo los registra.', fr: 'Restrict bloque les acces interdits, Monitor les enregistre seulement.', ja: 'Restrictは禁止されたアクセスをブロックし、Monitorはログのみ記録します。', pt: 'Restrict bloqueia acessos proibidos, Monitor apenas os registra.' },
-      'sandbox.modeRestrict': { de: 'Restrict — Zugriffe blockieren', en: 'Restrict — Block access', es: 'Restrict — Bloquear acceso', fr: 'Restrict — Bloquer les acces', ja: 'Restrict — アクセスをブロック', pt: 'Restrict — Bloquear acesso' },
-      'sandbox.modeMonitor': { de: 'Monitor — Nur loggen', en: 'Monitor — Log only', es: 'Monitor — Solo registrar', fr: 'Monitor — Journaliser uniquement', ja: 'Monitor — ログのみ', pt: 'Monitor — Apenas registrar' },
       'sandbox.allowWrite': { de: 'Schreibzugriff erlaubt', en: 'Write access allowed', es: 'Acceso de escritura permitido', fr: 'Acces en ecriture autorise', ja: '書き込みアクセス許可', pt: 'Acesso de escrita permitido' },
       'sandbox.denyWrite': { de: 'Schreibzugriff blockiert', en: 'Write access blocked', es: 'Acceso de escritura bloqueado', fr: 'Acces en ecriture bloque', ja: '書き込みアクセスブロック', pt: 'Acesso de escrita bloqueado' },
       'sandbox.denyRead': { de: 'Lesezugriff blockiert', en: 'Read access blocked', es: 'Acceso de lectura bloqueado', fr: 'Acces en lecture bloque', ja: '読み取りアクセスブロック', pt: 'Acesso de leitura bloqueado' },
@@ -4520,8 +4516,6 @@
       'search.mcp.desc': { de: 'Model Context Protocol Server', en: 'Model Context Protocol servers', es: 'Servidores Model Context Protocol', fr: 'Serveurs Model Context Protocol', ja: 'モデルコンテキストプロトコルサーバー', pt: 'Servidores Model Context Protocol' },
       'search.sandboxEnable': { de: 'Sandbox aktivieren', en: 'Enable Sandbox', es: 'Activar sandbox', fr: 'Activer le sandbox', ja: 'サンドボックスを有効化', pt: 'Ativar sandbox' },
       'search.sandboxEnable.desc': { de: 'Dateisystem und Netzwerk isolieren', en: 'Isolate filesystem and network', es: 'Aislar sistema de archivos y red', fr: 'Isoler le systeme de fichiers et le reseau', ja: 'ファイルシステムとネットワークを分離', pt: 'Isolar sistema de arquivos e rede' },
-      'search.sandboxMode': { de: 'Sandbox-Modus', en: 'Sandbox Mode', es: 'Modo de sandbox', fr: 'Mode sandbox', ja: 'サンドボックスモード', pt: 'Modo de sandbox' },
-      'search.sandboxMode.desc': { de: 'Restrict oder Monitor Modus', en: 'Restrict or Monitor mode', es: 'Modo Restrict o Monitor', fr: 'Mode Restrict ou Monitor', ja: 'RestrictまたはMonitorモード', pt: 'Modo Restrict ou Monitor' },
       'search.sandboxAllowRead': { de: 'Sandbox Allow Read', en: 'Sandbox Allow Read', es: 'Sandbox Allow Read', fr: 'Sandbox Allow Read', ja: 'サンドボックス読み取り許可', pt: 'Sandbox Allow Read' },
       'search.sandboxAllowRead.desc': { de: 'Lesezugriff erlaubte Pfade', en: 'Read access allowed paths', es: 'Rutas con acceso de lectura permitido', fr: 'Chemins avec acces en lecture autorise', ja: '読み取りアクセスが許可されたパス', pt: 'Caminhos com acesso de leitura permitido' },
       'search.networkDomains': { de: 'Network Domains', en: 'Network Domains', es: 'Dominios de red', fr: 'Domaines reseau', ja: 'ネットワークドメイン', pt: 'Dominios de rede' },
@@ -4747,8 +4741,6 @@
       'validation.invalidEditorModeSuffix': { de: '". Erlaubt: normal, vim.', en: '". Allowed: normal, vim.', es: '". Permitidos: normal, vim.', fr: '". Autorise: normal, vim.', ja: '"。許可: normal, vim。', pt: '". Permitidos: normal, vim.' },
       'validation.invalidTheme': { de: 'Ungueltiges Theme: "', en: 'Invalid theme: "', es: 'Tema invalido: "', fr: 'Theme invalide: "', ja: '無効なテーマ: "', pt: 'Tema invalido: "' },
       'validation.invalidThemeSuffix': { de: '". Erlaubt: auto, light, dark.', en: '". Allowed: auto, light, dark.', es: '". Permitidos: auto, light, dark.', fr: '". Autorise: auto, light, dark.', ja: '"。許可: auto, light, dark。', pt: '". Permitidos: auto, light, dark.' },
-      'validation.invalidSandboxMode': { de: 'Ungueltiger Sandbox-Modus: "', en: 'Invalid sandbox mode: "', es: 'Modo de sandbox invalido: "', fr: 'Mode sandbox invalide: "', ja: '無効なサンドボックスモード: "', pt: 'Modo de sandbox invalido: "' },
-      'validation.invalidSandboxModeSuffix': { de: '". Erlaubt: restrict, monitor.', en: '". Allowed: restrict, monitor.', es: '". Permitidos: restrict, monitor.', fr: '". Autorise: restrict, monitor.', ja: '"。許可: restrict, monitor。', pt: '". Permitidos: restrict, monitor.' },
       'validation.mcpServer': { de: 'MCP Server "', en: 'MCP Server "', es: 'Servidor MCP "', fr: 'Serveur MCP "', ja: 'MCPサーバー "', pt: 'Servidor MCP "' },
       'validation.hookPrefix': { de: ' Hook #', en: ' Hook #', es: ' Hook #', fr: ' Hook #', ja: ' Hook #', pt: ' Hook #' },
       'validation.ruleLabel': { de: ' Rule #', en: ' Rule #', es: ' Regla #', fr: ' Regle #', ja: ' ルール #', pt: ' Regra #' },
@@ -4821,7 +4813,6 @@
           { tab: 'hooks', label: 'search.hooks', desc: 'search.hooks.desc', keywords: ['hooks', 'event', 'session', 'tool'], id: 'setting-hooks' },
           { tab: 'mcp', label: 'search.mcp', desc: 'search.mcp.desc', keywords: ['mcp', 'server', 'stdio', 'http', 'sse'], id: 'setting-mcp' },
           { tab: 'sandbox', label: 'search.sandboxEnable', desc: 'search.sandboxEnable.desc', keywords: ['sandbox', 'isolieren', 'sicherheit'], id: 'setting-sandbox-enable' },
-          { tab: 'sandbox', label: 'search.sandboxMode', desc: 'search.sandboxMode.desc', keywords: ['sandbox', 'mode', 'restrict', 'monitor'], id: 'setting-sandbox-mode' },
           { tab: 'sandbox', label: 'search.sandboxAllowRead', desc: 'search.sandboxAllowRead.desc', keywords: ['sandbox', 'read', 'lesen', 'allowRead'], id: 'setting-sandbox-allowRead' },
           { tab: 'sandbox', label: 'search.networkDomains', desc: 'search.networkDomains.desc', keywords: ['network', 'domains', 'netzwerk'], id: 'setting-sandbox-domains' },
           { tab: 'sandbox', label: 'search.localBinding', desc: 'search.localBinding.desc', keywords: ['local', 'binding', 'port'], id: 'setting-sandbox-local-binding' },
@@ -5729,6 +5720,7 @@
             if (data.alwaysThinkingEnabled !== undefined) s.alwaysThinkingEnabled = data.alwaysThinkingEnabled;
             if (data.autoUpdatesChannel) s.autoUpdatesChannel = data.autoUpdatesChannel;
             if (data.permissions) {
+              s.permissions._raw = JSON.parse(JSON.stringify(data.permissions));
               s.permissions.allow = data.permissions.allow || [];
               s.permissions.ask = data.permissions.ask || [];
               s.permissions.deny = data.permissions.deny || [];
@@ -5741,7 +5733,7 @@
             if (data.hooks) s.hooks = JSON.parse(JSON.stringify(data.hooks));
             if (data.sandbox) {
               s.sandbox.enabled = data.sandbox.enabled || false;
-              if (data.sandbox.mode) s.sandbox.mode = data.sandbox.mode;
+              s.sandbox._raw = JSON.parse(JSON.stringify(data.sandbox));
               if (data.sandbox.filesystem) {
                 s.sandbox.filesystem.allowWrite = data.sandbox.filesystem.allowWrite || [];
                 s.sandbox.filesystem.denyWrite = data.sandbox.filesystem.denyWrite || [];
@@ -5759,7 +5751,7 @@
             if (data.spinnerTipsEnabled !== undefined) s.spinnerTipsEnabled = data.spinnerTipsEnabled;
             if (data.showTurnDuration !== undefined) s.showTurnDuration = data.showTurnDuration;
             if (data.prefersReducedMotion !== undefined) s.prefersReducedMotion = data.prefersReducedMotion;
-            if (data.statusLine) s.statusLine = { ...s.statusLine, ...data.statusLine };
+            if (data.statusLine) s.statusLine = { ...s.statusLine, ...data.statusLine, _raw: JSON.parse(JSON.stringify(data.statusLine)) };
             if (data.attribution !== undefined) s.attribution = attributionFromFile(data.attribution);
             if (data.cleanupPeriodDays !== undefined) s.cleanupPeriodDays = data.cleanupPeriodDays;
             if (data.fastModePerSessionOptIn !== undefined) s.fastModePerSessionOptIn = data.fastModePerSessionOptIn;
@@ -5812,6 +5804,8 @@
             // Keys this editor used to write but Claude Code never read (or a typo of a real key): drop instead of round-tripping
             const legacyKeys = ['releaseChannel', 'fileSuggestions', 'autoDreamEnabled', 'teamateMode'];
             const droppedLegacy = legacyKeys.filter(k => data[k] !== undefined);
+            // sandbox.mode ("restrict"/"monitor") was invented by this editor; no Claude Code version reads it
+            if (data.sandbox && typeof data.sandbox === 'object' && data.sandbox.mode !== undefined) droppedLegacy.push('sandbox.mode');
             this._extraProps = {};
             for (const [key, value] of Object.entries(data)) {
               if (legacyKeys.includes(key) || key === 'voiceEnabled') continue;
@@ -5834,34 +5828,38 @@
           if (s.language) out.language = s.language;
           if (s.alwaysThinkingEnabled) out.alwaysThinkingEnabled = true;
           if (s.autoUpdatesChannel && s.autoUpdatesChannel !== 'latest') out.autoUpdatesChannel = s.autoUpdatesChannel;
-          const perms = {};
-          if (s.permissions.allow.length) perms.allow = [...s.permissions.allow];
-          if (s.permissions.ask.length) perms.ask = [...s.permissions.ask];
-          if (s.permissions.deny.length) perms.deny = [...s.permissions.deny];
-          if (s.permissions.additionalDirectories.length) perms.additionalDirectories = [...s.permissions.additionalDirectories];
-          if (s.permissions.defaultMode && s.permissions.defaultMode !== 'default') perms.defaultMode = s.permissions.defaultMode;
-          if (s.permissions.disableBypassPermissionsMode) perms.disableBypassPermissionsMode = s.permissions.disableBypassPermissionsMode;
-          if (s.permissions.disableAutoMode) perms.disableAutoMode = s.permissions.disableAutoMode;
-          if (Object.keys(perms).length) out.permissions = perms;
+          const perms = overlayOwned(s.permissions._raw, {
+            allow: s.permissions.allow.length ? [...s.permissions.allow] : undefined,
+            ask: s.permissions.ask.length ? [...s.permissions.ask] : undefined,
+            deny: s.permissions.deny.length ? [...s.permissions.deny] : undefined,
+            additionalDirectories: s.permissions.additionalDirectories.length ? [...s.permissions.additionalDirectories] : undefined,
+            defaultMode: s.permissions.defaultMode && s.permissions.defaultMode !== 'default' ? s.permissions.defaultMode : undefined,
+            disableBypassPermissionsMode: s.permissions.disableBypassPermissionsMode || undefined,
+            disableAutoMode: s.permissions.disableAutoMode || undefined,
+          });
+          if (perms) out.permissions = perms;
           const plugins = {};
           for (const [k, v] of Object.entries(s.enabledPlugins)) { if (v !== undefined) plugins[k] = v; }
           if (Object.keys(plugins).length) out.enabledPlugins = plugins;
           if (Object.keys(s.hooks).length) out.hooks = JSON.parse(JSON.stringify(s.hooks));
-          const sandbox = {};
-          if (s.sandbox.enabled) sandbox.enabled = true;
-          if (s.sandbox.mode && s.sandbox.mode !== 'restrict') sandbox.mode = s.sandbox.mode;
-          const fs = {};
-          if (s.sandbox.filesystem.allowWrite.length) fs.allowWrite = [...s.sandbox.filesystem.allowWrite];
-          if (s.sandbox.filesystem.denyWrite.length) fs.denyWrite = [...s.sandbox.filesystem.denyWrite];
-          if (s.sandbox.filesystem.denyRead.length) fs.denyRead = [...s.sandbox.filesystem.denyRead];
-          if (s.sandbox.filesystem.allowRead.length) fs.allowRead = [...s.sandbox.filesystem.allowRead];
-          if (Object.keys(fs).length) sandbox.filesystem = fs;
-          const net = {};
-          if (s.sandbox.network.allowedDomains.length) net.allowedDomains = [...s.sandbox.network.allowedDomains];
-          if (s.sandbox.network.allowLocalBinding) net.allowLocalBinding = true;
-          if (s.sandbox.network.allowAllUnixSockets) net.allowAllUnixSockets = true;
-          if (Object.keys(net).length) sandbox.network = net;
-          if (Object.keys(sandbox).length) out.sandbox = sandbox;
+          const sbRaw = s.sandbox._raw || {};
+          const sbFs = s.sandbox.filesystem, sbNet = s.sandbox.network;
+          const sandbox = overlayOwned(sbRaw, {
+            enabled: s.sandbox.enabled ? true : undefined,
+            mode: undefined,
+            filesystem: overlayOwned(sbRaw.filesystem, {
+              allowWrite: sbFs.allowWrite.length ? [...sbFs.allowWrite] : undefined,
+              denyWrite: sbFs.denyWrite.length ? [...sbFs.denyWrite] : undefined,
+              denyRead: sbFs.denyRead.length ? [...sbFs.denyRead] : undefined,
+              allowRead: sbFs.allowRead.length ? [...sbFs.allowRead] : undefined,
+            }),
+            network: overlayOwned(sbRaw.network, {
+              allowedDomains: sbNet.allowedDomains.length ? [...sbNet.allowedDomains] : undefined,
+              allowLocalBinding: sbNet.allowLocalBinding ? true : undefined,
+              allowAllUnixSockets: sbNet.allowAllUnixSockets ? true : undefined,
+            }),
+          });
+          if (sandbox) out.sandbox = sandbox;
           if (Object.keys(s.env).length) out.env = { ...s.env };
           if (!s.spinnerTipsEnabled) out.spinnerTipsEnabled = false;
           if (!s.showTurnDuration) out.showTurnDuration = false;
@@ -5871,12 +5869,12 @@
             const sl = { type: 'command', command: s.statusLine.command };
             if (s.statusLine.refresh && s.statusLine.refresh !== 5000) sl.refresh = s.statusLine.refresh;
             if (s.statusLine.disabled) sl.disabled = true;
-            out.statusLine = sl;
+            out.statusLine = overlayOwned(s.statusLine._raw, { type: undefined, command: undefined, url: undefined, refresh: undefined, disabled: undefined, ...sl });
           } else if (s.statusLine.type === 'http' && s.statusLine.url) {
             const sl = { type: 'http', url: s.statusLine.url };
             if (s.statusLine.refresh && s.statusLine.refresh !== 5000) sl.refresh = s.statusLine.refresh;
             if (s.statusLine.disabled) sl.disabled = true;
-            out.statusLine = sl;
+            out.statusLine = overlayOwned(s.statusLine._raw, { type: undefined, command: undefined, url: undefined, refresh: undefined, disabled: undefined, ...sl });
           }
           const attr = attributionToFile(s.attribution);
           if (attr) out.attribution = attr;
@@ -6296,12 +6294,6 @@
           const validThemes = ['', 'auto', 'light', 'dark'];
           if (s.theme && !validThemes.includes(s.theme)) {
             errors.push({ tab: 'general', field: 'theme', severity: 'error', message: this.t('validation.invalidTheme') + s.theme + this.t('validation.invalidThemeSuffix') });
-          }
-
-          // Sandbox mode
-          const validSandboxModes = ['', 'restrict', 'monitor'];
-          if (s.sandbox.mode && !validSandboxModes.includes(s.sandbox.mode)) {
-            errors.push({ tab: 'sandbox', field: 'sandboxMode', severity: 'error', message: this.t('validation.invalidSandboxMode') + s.sandbox.mode + this.t('validation.invalidSandboxModeSuffix') });
           }
 
           // Permissions: empty rules

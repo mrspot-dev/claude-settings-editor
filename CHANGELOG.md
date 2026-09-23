@@ -3,6 +3,17 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.6.1] — 2026-09-23
+
+Security-relevant round-trip fix for `permissions`, `sandbox` and `statusLine`.
+
+### Fixed
+- **Sub-keys the editor has no control for were dropped on save.** The editor rebuilt `permissions`, `sandbox` and `statusLine` from the few fields it edits, so every other sub-key disappeared: among them `permissions.blockReadsOutsideWorkingDirectories`, `sandbox.failIfUnavailable`, `sandbox.network.deniedDomains`, `sandbox.network.strictAllowlist`, `sandbox.filesystem.allowManagedReadPathsOnly`, `sandbox.credentials` and `sandbox.excludedCommands`. A saved file could end up with a weaker sandbox than the one it was opened with. The export now starts from the imported object and only overlays the fields the editor edits; turning a field off in the editor still removes it.
+- `sandbox.mode` (`restrict`/`monitor`) is gone. No Claude Code version reads it; the editor invented it in 1.2. An imported value is dropped with a notice, and the file is marked unsaved.
+
+### Added
+- `tools/roundtrip.test.js`: every nested key the settings reference documents goes through load and save and must come out unchanged; runs `loadJson`/`cleanJson` in Node without a browser.
+
 ## [1.6.0] — 2026-09-23
 
 Attribution round trip and safer doctor fixes for deprecated keys.
