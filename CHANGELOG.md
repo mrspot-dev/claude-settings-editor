@@ -3,7 +3,7 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [1.7.0] — RELEASE-DATUM
+## [1.7.0] — 2026-09-23
 
 Explanation layer and env conflicts (design 2026-08-03, sections 3.3 and 3.6).
 
