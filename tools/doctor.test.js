@@ -138,3 +138,27 @@ test('embedded SCHEMA_MAP: overrides parsed from the reference', () => {
   assert.ok(withEnv.length >= 28, 'only ' + withEnv.length + ' keys carry overrides');
   for (const k of Object.keys(map)) assert.ok(Array.isArray(map[k].overrides), k + ' has no overrides array');
 });
+
+test('managedFile: the managed-only finding disappears in a managed file', () => {
+  assert.deepEqual(doctorFindings({ claudeMd: 'x' }, MAP, { skipEnum: [], hints: {}, managedFile: true }), []);
+  assert.deepEqual(doctorFindings({ claudeMd: 'x' }, MAP, { skipEnum: [], hints: {} }).map(f => f.kind), ['managed']);
+});
+
+test('autoModeIgnoredHere: only settings.local.json, only with auto or an autoMode block', () => {
+  const autoModeIgnoredHere = ex.extractFunction(lf, 'autoModeIgnoredHere');
+  assert.equal(autoModeIgnoredHere({ permissions: { defaultMode: 'auto' } }, 'settings.local.json'), true);
+  assert.equal(autoModeIgnoredHere({ autoMode: { allow: ['$defaults'] } }, 'Settings.Local.JSON'), true);
+  assert.equal(autoModeIgnoredHere({ permissions: { defaultMode: 'auto' } }, 'settings.json'), false);
+  assert.equal(autoModeIgnoredHere({ permissions: { defaultMode: 'plan' } }, 'settings.local.json'), false);
+  assert.equal(autoModeIgnoredHere({}, ''), false);
+});
+
+test('the doctor raises no type or enum finding for a document made of every generic field', () => {
+  globalThis.extraFields = ex.extractFunction(lf, 'extraFields');
+  const map = ex.extractSchemaMap(lf).keys;
+  const sample = (info) => info.enum && info.enum.length ? info.enum[0] : ({ string: 'x', boolean: true, number: 1, integer: 1, object: {}, array: [] })[info.type || 'string'];
+  const doc = {};
+  for (const k of ex.extractFunction(lf, 'extraTopKeys')()) doc[k] = sample(map[k]);
+  const findings = doctorFindings(doc, map, { skipEnum: [], hints: {} });
+  assert.deepEqual(findings.filter(f => f.kind !== 'managed'), [], JSON.stringify(findings));
+});

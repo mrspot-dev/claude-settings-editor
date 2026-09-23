@@ -797,6 +797,7 @@
                 <div class="flex-1">
                   <span class="setting-label" id="label-ultracode" x-text="t('general.ultracode')"></span>
                   <p class="setting-desc" x-text="t('general.ultracodeDesc')"></p>
+                  <div x-facts="'ultracode'"></div>
                 </div>
                 <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.ultracode }" @click="settings.ultracode = !settings.ultracode; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-ultracode" :aria-checked="settings.ultracode" @keydown.enter="settings.ultracode = !settings.ultracode; markUnsaved()" @keydown.space.prevent="settings.ultracode = !settings.ultracode; markUnsaved()"></div>
               </div>
@@ -979,6 +980,11 @@
                 <span x-text="t('general.restartWizardBtn')"></span>
               </button>
             </div>
+            <!-- Generic fields (v1.8): extraFields() entries of this tab -->
+            <div x-show="extraFieldsFor('general', 'more').length" class="space-y-3">
+              <h3 class="font-display font-semibold text-sm text-fg" x-text="t('extra.moreTitle')"></h3>
+              <template x-for="f in extraFieldsFor('general', 'more')" :key="f.key"><div x-extra-field="f"></div></template>
+            </div>
           </div>
 
           <!-- ═══ TAB: Permissions ═══ -->
@@ -1051,6 +1057,7 @@
                     <div class="flex items-center gap-2 mb-0.5">
                       <span class="text-base" x-text="pp.icon"></span>
                       <span class="font-medium text-sm text-fg" x-text="td('data.preset.' + pp.id + '.name', pp.name)"></span>
+                      <span x-show="pp.recommended" class="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-accent/15 text-accent border border-accent/30" x-text="t('perm.recommended')"></span>
                     </div>
                     <p class="text-xs text-fg-dim leading-snug" x-text="td('data.preset.' + pp.id + '.desc', pp.desc)"></p>
                   </button>
@@ -1072,7 +1079,11 @@
                 <option value="manual" x-text="t('perm.modeManual')"></option>
                 <option value="delegate" x-text="t('perm.modeDelegate')"></option>
               </select>
+              <p x-show="settings.permissions.defaultMode === 'auto'" class="text-xs text-amber-300 mt-2" x-text="t('perm.autoWhere')"></p>
             </div>
+
+            <!-- Auto Mode group (v1.8) -->
+            <h3 id="setting-automode-group" class="font-display font-semibold text-sm text-fg" x-text="t('perm.autoGroup')"></h3>
 
             <div id="setting-classify-all-shell" class="settings-group flex items-start justify-between">
               <div class="flex-1">
@@ -1089,17 +1100,6 @@
                    @keydown.space.prevent="settings.autoMode = {...settings.autoMode, classifyAllShell: !settings.autoMode.classifyAllShell}; markUnsaved()"></div>
             </div>
 
-            <div id="setting-perm-bypass" class="settings-group flex items-start justify-between">
-              <div class="flex-1">
-                <label id="label-perm-bypass" class="setting-label" x-text="t('perm.bypass')"></label>
-                <p class="setting-desc" x-text="t('perm.bypassDesc')"></p>
-                <div x-facts="'permissions.disableBypassPermissionsMode'"></div>
-              </div>
-              <div class="toggle bg-bg-elevated mt-1"
-                   :class="{ 'active': settings.permissions.disableBypassPermissionsMode === 'disable' }"
-                   @click="settings.permissions.disableBypassPermissionsMode = settings.permissions.disableBypassPermissionsMode === 'disable' ? '' : 'disable'; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-perm-bypass" :aria-checked="settings.permissions.disableBypassPermissionsMode === 'disable'" @keydown.enter="settings.permissions.disableBypassPermissionsMode = settings.permissions.disableBypassPermissionsMode === 'disable' ? '' : 'disable'; markUnsaved()" @keydown.space.prevent="settings.permissions.disableBypassPermissionsMode = settings.permissions.disableBypassPermissionsMode === 'disable' ? '' : 'disable'; markUnsaved()"></div>
-            </div>
-
             <div id="setting-perm-disable-auto" class="settings-group flex items-start justify-between">
               <div class="flex-1">
                 <label id="label-perm-disable-auto" class="setting-label" x-text="t('perm.disableAutoMode')"></label>
@@ -1109,6 +1109,20 @@
               <div class="toggle bg-bg-elevated mt-1"
                    :class="{ 'active': settings.permissions.disableAutoMode === 'disable' }"
                    @click="settings.permissions.disableAutoMode = settings.permissions.disableAutoMode === 'disable' ? '' : 'disable'; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-perm-disable-auto" :aria-checked="settings.permissions.disableAutoMode === 'disable'" @keydown.enter="settings.permissions.disableAutoMode = settings.permissions.disableAutoMode === 'disable' ? '' : 'disable'; markUnsaved()" @keydown.space.prevent="settings.permissions.disableAutoMode = settings.permissions.disableAutoMode === 'disable' ? '' : 'disable'; markUnsaved()"></div>
+            </div>
+
+            <template x-for="f in extraFieldsFor('permissions', 'automode')" :key="f.key"><div x-extra-field="f"></div></template>
+            <button type="button" class="text-xs text-accent hover:underline" @click="jumpToSetting('advanced', 'setting-auto-mode')" x-text="t('perm.autoRulesLink')"></button>
+
+            <div id="setting-perm-bypass" class="settings-group flex items-start justify-between">
+              <div class="flex-1">
+                <label id="label-perm-bypass" class="setting-label" x-text="t('perm.bypass')"></label>
+                <p class="setting-desc" x-text="t('perm.bypassDesc')"></p>
+                <div x-facts="'permissions.disableBypassPermissionsMode'"></div>
+              </div>
+              <div class="toggle bg-bg-elevated mt-1"
+                   :class="{ 'active': settings.permissions.disableBypassPermissionsMode === 'disable' }"
+                   @click="settings.permissions.disableBypassPermissionsMode = settings.permissions.disableBypassPermissionsMode === 'disable' ? '' : 'disable'; markUnsaved()" tabindex="0" role="switch" aria-labelledby="label-perm-bypass" :aria-checked="settings.permissions.disableBypassPermissionsMode === 'disable'" @keydown.enter="settings.permissions.disableBypassPermissionsMode = settings.permissions.disableBypassPermissionsMode === 'disable' ? '' : 'disable'; markUnsaved()" @keydown.space.prevent="settings.permissions.disableBypassPermissionsMode = settings.permissions.disableBypassPermissionsMode === 'disable' ? '' : 'disable'; markUnsaved()"></div>
             </div>
 
             <!-- Allow Rules -->
@@ -1309,6 +1323,11 @@
                 </div>
               </div>
             </template>
+            <!-- Generic fields (v1.8): extraFields() entries of this tab -->
+            <div x-show="extraFieldsFor('plugins', 'more').length" class="space-y-3">
+              <h3 class="font-display font-semibold text-sm text-fg" x-text="t('extra.moreTitle')"></h3>
+              <template x-for="f in extraFieldsFor('plugins', 'more')" :key="f.key"><div x-extra-field="f"></div></template>
+            </div>
           </div>
 
           <!-- ═══ TAB: Hooks ═══ -->
@@ -1940,6 +1959,11 @@
                 </div>
               </div>
             </div>
+            <!-- Generic fields (v1.8): extraFields() entries of this tab -->
+            <div x-show="extraFieldsFor('display', 'more').length" class="space-y-3">
+              <h3 class="font-display font-semibold text-sm text-fg" x-text="t('extra.moreTitle')"></h3>
+              <template x-for="f in extraFieldsFor('display', 'more')" :key="f.key"><div x-extra-field="f"></div></template>
+            </div>
           </div>
 
           <!-- ═══ TAB: Attribution ═══ -->
@@ -2227,6 +2251,11 @@
               <div x-show="syncState.status === 'ok' && syncState.removed.length" class="mt-2 text-xs font-mono text-red-300"><span x-text="t('sync.removedKeys') + ' (' + syncState.removed.length + '): '"></span><span x-text="syncState.removed.join(', ')"></span></div>
               <div x-show="syncState.status === 'error'" class="mt-3 text-xs font-mono text-red-300" x-text="t('sync.failed') + ' ' + syncState.error"></div>
               <p class="text-[11px] text-fg-dim mt-3" x-text="t('sync.referenceNote')"></p>
+            </div>
+            <!-- Generic fields (v1.8): extraFields() entries of this tab -->
+            <div x-show="extraFieldsFor('advanced', 'more').length" class="space-y-3">
+              <h3 class="font-display font-semibold text-sm text-fg" x-text="t('extra.moreTitle')"></h3>
+              <template x-for="f in extraFieldsFor('advanced', 'more')" :key="f.key"><div x-extra-field="f"></div></template>
             </div>
           </div>
 
@@ -2955,6 +2984,7 @@
                 <div>
                   <span class="setting-label" x-text="t('memory.enabledLabel')"></span>
                   <p class="text-xs text-fg-dim mt-0.5" x-text="t('memory.enabledDesc')"></p>
+                  <div x-facts="'autoMemoryEnabled'"></div>
                 </div>
                 <div class="toggle bg-bg-elevated mt-1" :class="{ 'active': settings.autoMemoryEnabled }" @click="settings.autoMemoryEnabled = !settings.autoMemoryEnabled; markUnsaved()" tabindex="0" role="switch" :aria-checked="settings.autoMemoryEnabled" @keydown.enter="settings.autoMemoryEnabled = !settings.autoMemoryEnabled; markUnsaved()" @keydown.space.prevent="settings.autoMemoryEnabled = !settings.autoMemoryEnabled; markUnsaved()"></div>
               </div>
@@ -2963,6 +2993,7 @@
               <div class="py-3 px-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)]">
                 <span class="setting-label" x-text="t('memory.directoryLabel')"></span>
                 <p class="text-xs text-fg-dim mt-0.5 mb-2" x-text="t('memory.directoryDesc')"></p>
+                <div x-facts="'autoMemoryDirectory'" class="mb-2"></div>
                 <input type="text" class="setting-input w-full" x-model="settings.autoMemoryDirectory" @input="markUnsaved()" :placeholder="t('memory.directoryPlaceholder')">
               </div>
 
@@ -2988,62 +3019,6 @@
               </details>
             </div>
 
-            <!-- Section 2: Auto Dream -->
-            <div class="settings-group space-y-4" id="setting-auto-dream">
-              <div class="flex items-center gap-3 mb-2">
-                <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                  <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-                </div>
-                <div class="flex-1">
-                  <div class="flex items-center gap-2">
-                    <h3 class="font-display font-semibold text-sm text-fg" x-text="t('memory.dreamTitle')"></h3>
-                    <span class="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-400/15 text-indigo-300 border border-indigo-400/20" x-text="t('memory.dreamExperimental')"></span>
-                  </div>
-                  <p class="text-xs text-fg-dim mt-0.5" x-text="t('memory.dreamDesc')"></p>
-                </div>
-              </div>
-
-              <!-- Trigger Conditions -->
-              <div class="p-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)]">
-                <p class="text-xs font-semibold text-fg mb-3" x-text="t('memory.dreamTriggerTitle')"></p>
-                <div class="flex gap-3 mb-2">
-                  <div class="flex-1 p-3 rounded-lg bg-indigo-500/5 border border-indigo-500/10 text-center">
-                    <div class="text-2xl font-display font-bold text-indigo-400">24h</div>
-                    <p class="text-[10px] text-fg-dim mt-1" x-text="t('memory.dreamTrigger1')"></p>
-                  </div>
-                  <div class="flex items-center text-fg-dim text-lg font-bold">+</div>
-                  <div class="flex-1 p-3 rounded-lg bg-indigo-500/5 border border-indigo-500/10 text-center">
-                    <div class="text-2xl font-display font-bold text-indigo-400">5+</div>
-                    <p class="text-[10px] text-fg-dim mt-1" x-text="t('memory.dreamTrigger2')"></p>
-                  </div>
-                </div>
-                <p class="text-[10px] text-fg-dim text-center italic" x-text="t('memory.dreamTriggerBoth')"></p>
-              </div>
-
-              <!-- 4 Phases -->
-              <div class="p-4 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)]">
-                <p class="text-xs font-semibold text-fg mb-3" x-text="t('memory.dreamPhasesTitle')"></p>
-                <div class="space-y-2">
-                  <div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-indigo-500/15 text-indigo-400 text-[10px] font-bold flex items-center justify-center flex-shrink-0">1</span><span class="text-xs text-fg-dim" x-text="t('memory.dreamPhase1')"></span></div>
-                  <div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-indigo-500/15 text-indigo-400 text-[10px] font-bold flex items-center justify-center flex-shrink-0">2</span><span class="text-xs text-fg-dim" x-text="t('memory.dreamPhase2')"></span></div>
-                  <div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-indigo-500/15 text-indigo-400 text-[10px] font-bold flex items-center justify-center flex-shrink-0">3</span><span class="text-xs text-fg-dim" x-text="t('memory.dreamPhase3')"></span></div>
-                  <div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-indigo-500/15 text-indigo-400 text-[10px] font-bold flex items-center justify-center flex-shrink-0">4</span><span class="text-xs text-fg-dim" x-text="t('memory.dreamPhase4')"></span></div>
-                </div>
-              </div>
-
-              <!-- Manual Trigger + Safety -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div class="p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
-                  <p class="text-xs font-semibold text-indigo-300 mb-1" x-text="t('memory.dreamManualTitle')"></p>
-                  <p class="text-[11px] text-fg-dim" x-text="t('memory.dreamManualDesc')"></p>
-                </div>
-                <div class="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
-                  <p class="text-xs font-semibold text-emerald-300 mb-1">Safety</p>
-                  <p class="text-[11px] text-fg-dim" x-text="t('memory.dreamSafety')"></p>
-                </div>
-              </div>
-            </div>
-
             <!-- Section 3: Memory History -->
             <div class="settings-group space-y-4" id="setting-memory-history">
               <div class="flex items-center gap-3 mb-2">
@@ -3056,6 +3031,7 @@
                     <span class="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-400/15 text-amber-300 border border-amber-400/20" x-text="t('memory.historyRecommended')"></span>
                   </div>
                   <p class="text-xs text-fg-dim mt-0.5" x-text="t('memory.historyDesc')"></p>
+                  <div x-facts="'cleanupPeriodDays'"></div>
                 </div>
               </div>
 
@@ -3166,12 +3142,40 @@
               <ul class="mt-4 space-y-2.5 text-xs text-fg-dim">
                 <li class="flex items-start gap-2"><span class="text-emerald-400 mt-0.5">•</span><span x-text="t('memory.healthTip1')"></span></li>
                 <li class="flex items-start gap-2"><span class="text-emerald-400 mt-0.5">•</span><span x-text="t('memory.healthTip2')"></span></li>
-                <li class="flex items-start gap-2"><span class="text-emerald-400 mt-0.5">•</span><span x-text="t('memory.healthTip3')"></span></li>
                 <li class="flex items-start gap-2"><span class="text-emerald-400 mt-0.5">•</span><span x-text="t('memory.healthTip4')"></span></li>
                 <li class="flex items-start gap-2"><span class="text-emerald-400 mt-0.5">•</span><span x-text="t('memory.healthTip5')"></span></li>
               </ul>
             </details>
 
+          </div>
+
+          <!-- ═══ TAB: Managed ═══ -->
+          <div x-show="activeTab === 'managed'" class="tab-content space-y-6" role="tabpanel">
+            <div id="setting-managed-banner" class="settings-group" :class="managedFile ? 'border-emerald-500/30' : 'border-amber-500/30'">
+              <div class="flex items-start justify-between gap-4">
+                <div class="flex-1">
+                  <label id="label-managed-file" class="setting-label" x-text="t('managed.fileSwitch')"></label>
+                  <p class="setting-desc" x-text="managedFile ? t('managed.bannerOn') : t('managed.bannerOff')"></p>
+                </div>
+                <div class="toggle bg-bg-elevated mt-1 flex-shrink-0"
+                     :class="{ 'active': managedFile, 'opacity-50': (fileName || '').toLowerCase() === 'managed-settings.json' }"
+                     @click="toggleManagedFile()" tabindex="0" role="switch" aria-labelledby="label-managed-file" :aria-checked="managedFile"
+                     @keydown.enter="toggleManagedFile()" @keydown.space.prevent="toggleManagedFile()"></div>
+              </div>
+              <p class="text-xs font-semibold text-fg mt-3" x-text="t('managed.pathsTitle')"></p>
+              <ul class="text-xs text-fg-muted font-mono mt-1 space-y-0.5 break-all">
+                <li>macOS: /Library/Application Support/ClaudeCode/managed-settings.json</li>
+                <li>Linux, WSL: /etc/claude-code/managed-settings.json</li>
+                <li>Windows: C:\Program Files\ClaudeCode\managed-settings.json</li>
+              </ul>
+              <p class="text-xs text-fg-dim mt-2" x-text="t('managed.marketplaceNote')"></p>
+            </div>
+            <template x-for="g in managedGroups" :key="g">
+              <div class="space-y-3">
+                <h3 class="font-display font-semibold text-sm text-fg" x-text="t('managed.group.' + g)"></h3>
+                <template x-for="f in extraFieldsFor('managed', g)" :key="f.key"><div x-extra-field="f"></div></template>
+              </div>
+            </template>
           </div>
 
         </div>
@@ -3317,11 +3321,11 @@
           <h3 class="font-display font-bold text-xl text-white" x-text="t('wizard.permTitle')"></h3>
           <p class="text-sm text-fg-muted mt-2" x-text="t('wizard.permDesc')"></p>
           <div class="mt-4 space-y-2">
-            <template x-for="pm in [{id:'default',labelKey:'wizard.permDefault',descKey:'wizard.permDefaultDesc'},{id:'acceptEdits',labelKey:'wizard.permProductive',descKey:'wizard.permProductiveDesc'},{id:'plan',labelKey:'wizard.permReadOnly',descKey:'wizard.permReadOnlyDesc'},{id:'bypassPermissions',labelKey:'wizard.permAutopilot',descKey:'wizard.permAutopilotDesc'}]" :key="pm.id">
+            <template x-for="pm in [{id:'auto',labelKey:'wizard.permAuto',descKey:'wizard.permAutoDesc',rec:true},{id:'default',labelKey:'wizard.permDefault',descKey:'wizard.permDefaultDesc'},{id:'acceptEdits',labelKey:'wizard.permProductive',descKey:'wizard.permProductiveDesc'},{id:'plan',labelKey:'wizard.permReadOnly',descKey:'wizard.permReadOnlyDesc'},{id:'bypassPermissions',labelKey:'wizard.permAutopilot',descKey:'wizard.permAutopilotDesc'}]" :key="pm.id">
               <button @click="settings.permissions.defaultMode = pm.id; markUnsaved()"
                       class="w-full text-left p-3 rounded-xl border transition-all"
                       :class="settings.permissions.defaultMode === pm.id ? 'border-accent/40 bg-accent/5' : 'border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.15)]'">
-                <div class="font-display font-medium text-sm" :class="settings.permissions.defaultMode === pm.id ? 'text-accent' : 'text-fg'" x-text="t(pm.labelKey)"></div>
+                <div class="font-display font-medium text-sm" :class="settings.permissions.defaultMode === pm.id ? 'text-accent' : 'text-fg'"><span x-text="t(pm.labelKey)"></span><span x-show="pm.rec" class="ml-2 text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-accent/15 text-accent border border-accent/30" x-text="t('perm.recommended')"></span></div>
                 <div class="text-xs text-fg-muted mt-0.5" x-text="t(pm.descKey)"></div>
               </button>
             </template>
@@ -3481,7 +3485,145 @@
         strictKnownMarketplaces: [],
         blockedMarketplaces: [],
         pluginSuggestionMarketplaces: [],
+        extras: {},
       };
+    }
+
+    // Settings the editor edits generically (v1.8, docs/specs/2026-09-23-v18-managed-tab-design.md). This one list
+    // drives loadJson, cleanJson, knownKeys, the search index and the rendered fields; values live in settings.extras
+    // under the full key path. on: true marks a boolean whose default is on, so switching it off writes false.
+    function extraFields() {
+      return [
+        { key: 'allowManagedHooksOnly', tab: 'managed', group: 'lockdown', control: 'toggle' },
+        { key: 'allowManagedMcpServersOnly', tab: 'managed', group: 'lockdown', control: 'toggle' },
+        { key: 'allowManagedPermissionRulesOnly', tab: 'managed', group: 'lockdown', control: 'toggle' },
+        { key: 'allowAllClaudeAiMcps', tab: 'managed', group: 'lockdown', control: 'toggle' },
+        { key: 'strictPluginOnlyCustomization', tab: 'managed', group: 'lockdown', control: 'json' },
+        { key: 'disableCommandPluginSources', tab: 'managed', group: 'lockdown', control: 'toggle' },
+        { key: 'disableSideloadFlags', tab: 'managed', group: 'lockdown', control: 'toggle' },
+        { key: 'allowedChannelPlugins', tab: 'managed', group: 'plugins', control: 'json' },
+        { key: 'channelsEnabled', tab: 'managed', group: 'plugins', control: 'toggle' },
+        { key: 'pluginTrustMessage', tab: 'managed', group: 'plugins', control: 'text' },
+        { key: 'forceLoginGatewayUrl', tab: 'managed', group: 'login', control: 'text' },
+        { key: 'gatewayInternalNetworks', tab: 'managed', group: 'login', control: 'list' },
+        { key: 'requiredMinimumVersion', tab: 'managed', group: 'login', control: 'text' },
+        { key: 'requiredMaximumVersion', tab: 'managed', group: 'login', control: 'text' },
+        { key: 'forceRemoteSettingsRefresh', tab: 'managed', group: 'login', control: 'toggle' },
+        { key: 'policyHelper', tab: 'managed', group: 'policy', control: 'json' },
+        { key: 'managedSourcesBehavior', tab: 'managed', group: 'policy', control: 'select' },
+        { key: 'parentSettingsBehavior', tab: 'managed', group: 'policy', control: 'select' },
+        { key: 'wslInheritsWindowsSettings', tab: 'managed', group: 'policy', control: 'toggle' },
+        { key: 'claudeMd', tab: 'managed', group: 'policy', control: 'textarea' },
+        { key: 'disableDesktopLocalSessions', tab: 'managed', group: 'desktop', control: 'toggle' },
+        { key: 'disableMobileSimulatorTools', tab: 'managed', group: 'desktop', control: 'toggle' },
+        { key: 'disableBrowserExternalNavigation', tab: 'managed', group: 'desktop', control: 'toggle' },
+        // the desktop app also accepts "disable"; the editor offers the documented spelling and keeps a loaded one
+        { key: 'browserExternalPageTools', tab: 'managed', group: 'desktop', control: 'select', options: ['disabled'] },
+        { key: 'managedMcpServers', tab: 'managed', group: 'desktop', control: 'json' },
+        { key: 'sshHostAllowlist', tab: 'managed', group: 'desktop', control: 'list' },
+        { key: 'modelPricing', tab: 'managed', group: 'cost', control: 'json' },
+        { key: 'sandbox.bwrapPath', tab: 'managed', group: 'sandbox', control: 'text' },
+        { key: 'sandbox.socatPath', tab: 'managed', group: 'sandbox', control: 'text' },
+        { key: 'sandbox.filesystem.allowManagedReadPathsOnly', tab: 'managed', group: 'sandbox', control: 'toggle' },
+        { key: 'sandbox.network.allowManagedDomainsOnly', tab: 'managed', group: 'sandbox', control: 'toggle' },
+        { key: 'modelPicker', tab: 'general', group: 'more', control: 'json' },
+        { key: 'vimInsertModeRemaps', tab: 'general', group: 'more', control: 'json' },
+        { key: 'askUserQuestionTimeout', tab: 'display', group: 'more', control: 'select' },
+        { key: 'dialogExpiry', tab: 'display', group: 'more', control: 'select' },
+        { key: 'footerLinksRegexes', tab: 'display', group: 'more', control: 'json' },
+        { key: 'spellcheck', tab: 'display', group: 'more', control: 'json' },
+        { key: 'autoContinueAtUsageLimit', tab: 'advanced', group: 'more', control: 'toggle', on: true },
+        { key: 'desktopSessionCleanupPeriodDays', tab: 'advanced', group: 'more', control: 'number' },
+        { key: 'feedbackDrafts', tab: 'advanced', group: 'more', control: 'select' },
+        { key: 'processWrapper', tab: 'advanced', group: 'more', control: 'text' },
+        { key: 'sshConfigs', tab: 'advanced', group: 'more', control: 'json' },
+        { key: 'pluginConfigs', tab: 'plugins', group: 'more', control: 'json' },
+        { key: 'skipAutoPermissionPrompt', tab: 'permissions', group: 'automode', control: 'toggle' },
+        { key: 'useAutoModeDuringPlan', tab: 'permissions', group: 'automode', control: 'toggle', on: true },
+      ];
+    }
+
+    function extraTopKeys() {
+      return extraFields().map(f => f.key).filter(k => k.indexOf('.') < 0);
+    }
+
+    function getPath(o, path) {
+      return path.split('.').reduce((c, k) => (c && typeof c === 'object' && !Array.isArray(c) && Object.prototype.hasOwnProperty.call(c, k) ? c[k] : undefined), o);
+    }
+
+    function setPath(o, path, v) {
+      const p = path.split('.');
+      let c = o;
+      for (const k of p.slice(0, -1)) { if (!c[k] || typeof c[k] !== 'object' || Array.isArray(c[k])) c[k] = {}; c = c[k]; }
+      c[p[p.length - 1]] = v;
+    }
+
+    // Removes a path and every parent object the removal leaves empty.
+    function deletePath(o, path) {
+      const p = path.split('.');
+      const chain = [o];
+      for (const k of p.slice(0, -1)) {
+        const next = chain[chain.length - 1][k];
+        if (!next || typeof next !== 'object' || Array.isArray(next)) return;
+        chain.push(next);
+      }
+      delete chain[chain.length - 1][p[p.length - 1]];
+      for (let i = chain.length - 1; i > 0 && !Object.keys(chain[i]).length; i--) delete chain[i - 1][p[i - 1]];
+    }
+
+    function readExtras(data, fields) {
+      const extras = {};
+      for (const f of fields) { const v = getPath(data, f.key); if (v !== undefined) extras[f.key] = JSON.parse(JSON.stringify(v)); }
+      return extras;
+    }
+
+    // A set field is written as stored; an unset nested field is removed, so a value kept in sandbox._raw goes too.
+    function applyExtras(out, extras, fields) {
+      for (const f of fields) {
+        if (Object.prototype.hasOwnProperty.call(extras, f.key)) setPath(out, f.key, JSON.parse(JSON.stringify(extras[f.key])));
+        else if (f.key.indexOf('.') >= 0) deletePath(out, f.key);
+      }
+      return out;
+    }
+
+    // Stored value after a click on a toggle: only a deviation from the default is written, undefined = unset.
+    function extraToggleNext(field, current) {
+      const on = current === undefined ? !!field.on : current === true;
+      return !on === !!field.on ? undefined : !on;
+    }
+
+    // Control text -> stored value ({ value }, undefined = unset) or { error: 'number' | 'json' }.
+    function parseExtraInput(field, text) {
+      const s = text == null ? '' : String(text);
+      if (field.control === 'list') { const items = s.split('\n').map(x => x.trim()).filter(Boolean); return { value: items.length ? items : undefined }; }
+      if (field.control === 'textarea') return { value: s.trim() ? s : undefined };
+      if (!s.trim()) return { value: undefined };
+      if (field.control === 'number') { const n = Number(s); return Number.isFinite(n) ? { value: n } : { error: 'number' }; }
+      if (field.control === 'json') { try { return { value: JSON.parse(s) }; } catch (e) { return { error: 'json' }; } }
+      return { value: s.trim() };
+    }
+
+    function extraDisplay(field, value) {
+      if (value === undefined) return '';
+      if (field.control === 'list' && Array.isArray(value) && value.every(v => typeof v === 'string')) return value.join('\n');
+      if (field.control === 'json' || field.control === 'list' || typeof value === 'object') return JSON.stringify(value, null, 2);
+      return String(value);
+    }
+
+    // Hard deny rules of the Safety First and Auto Mode presets; deny rules block in every permission mode.
+    function safetyDenyRules() {
+      return [
+            'Bash(rm -rf *)', 'Bash(rm -rf /)', 'Bash(rmdir *)',
+            'Bash(sudo *)', 'Bash(shutdown *)', 'Bash(reboot *)', 'Bash(halt *)', 'Bash(poweroff *)',
+            'Bash(dd *)', 'Bash(mkfs *)', 'Bash(shred *)', 'Bash(fdisk *)',
+            'Bash(chmod *)', 'Bash(chown *)', 'Bash(chgrp *)',
+            'Bash(eval *)', 'Bash(exec *)',
+            'Bash(curl * | bash)', 'Bash(curl * | sh)',
+            'Bash(wget * | bash)', 'Bash(wget * | sh)',
+            'Bash(nc *)', 'Bash(socat *)', 'Bash(nmap *)',
+            'Read(./.env)', 'Read(./.env.*)',
+            'Read(~/.ssh/*)', 'Read(~/.aws/*)', 'Read(~/.gnupg/*)'
+      ];
     }
 
     function levenshtein(a, b) {
@@ -3525,7 +3667,7 @@
         const typeOk = !info.type || actual === info.type || (info.type === 'integer' && actual === 'number');
         if (!typeOk) findings.push({ key, kind: 'type', suggestion: '', actual, expected: info.type });
         else if (info.enum && info.enum.length && typeof v === 'string' && !skipEnum.has(key) && !info.enum.includes(v)) findings.push({ key, kind: 'enum', suggestion: '', actual: v, expected: info.enum.join(', ') });
-        if (info.scope === 'managed') findings.push({ key, kind: 'managed', suggestion: '', actual: '', expected: '' });
+        if (info.scope === 'managed' && !(opts && opts.managedFile)) findings.push({ key, kind: 'managed', suggestion: '', actual: '', expected: '' });
       }
       return findings;
     }
@@ -3537,6 +3679,13 @@
       const perModel = (doc && doc.modelSettings) || {};
       if (!level || Object.prototype.hasOwnProperty.call(perModel, 'claude-opus-5-5')) return null;
       return { type: 'modelSetting', key: 'claude-opus-5-5', effortLevel: level };
+    }
+
+    // defaultMode "auto" and the autoMode block have no effect from project files (permission-modes docs). Only
+    // settings.local.json is certain by its name; settings.json may be the user file, so it is not reported.
+    function autoModeIgnoredHere(doc, fileName) {
+      if (String(fileName || '').toLowerCase() !== 'settings.local.json') return false;
+      return !!(doc && doc.permissions && doc.permissions.defaultMode === 'auto') || !!(doc && doc.autoMode !== undefined);
     }
 
     // Attribution has three states per part: Claude Code's default text (key absent), own text, and hidden
@@ -3665,6 +3814,84 @@
         const view = evaluateLater('factsView(' + expression + ')');
         effect(() => view(v => renderFacts(details, v)));
       });
+
+      // Directive x-extra-field (its expression yields one entry of extraFields()): label, scope badge, curated
+      // sentence, control and fact sheet of a generic v1.8 field. Built with textContent only (spec 5.1).
+      Alpine.directive('extra-field', (el, { expression }, { evaluate, effect }) => {
+        const f = evaluate(expression);
+        const app = Alpine.$data(el);
+        const info = SCHEMA_MAP.keys[f.key] || {};
+        const id = 'extra-' + f.key.replace(/\./g, '-');
+        const make = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text) n.textContent = text; return n; };
+        el.id = id;
+        el.className = 'settings-group';
+        const head = make('div', 'flex items-start justify-between gap-4');
+        const body = make('div', 'flex-1 min-w-0');
+        const label = make('label', 'setting-label font-mono', f.key);
+        label.id = id + '-label';
+        // outside the Managed tab the scope matters: these keys work from the user file, not from project files
+        const badge = f.tab === 'managed' ? null : make('span', 'ml-2 align-middle text-[10px] font-sans font-medium px-1.5 py-0.5 rounded-md bg-sky-400/10 text-sky-300 border border-sky-400/20');
+        if (badge) label.appendChild(badge);
+        const desc = make('p', 'setting-desc');
+        const facts = make('details', 'key-facts mt-2');
+        body.append(label, desc, facts);
+        head.appendChild(body);
+        el.appendChild(head);
+        const err = make('p', 'text-xs text-red-400 mt-1');
+        err.hidden = true;
+        const current = () => (app.settings.extras || {})[f.key];
+        let control;
+        if (f.control === 'toggle') {
+          control = make('div', 'toggle bg-bg-elevated mt-1 flex-shrink-0');
+          control.tabIndex = 0;
+          control.setAttribute('role', 'switch');
+          control.setAttribute('aria-labelledby', label.id);
+          const flip = () => app.setExtra(f.key, extraToggleNext(f, current()));
+          control.addEventListener('click', flip);
+          control.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } });
+          head.appendChild(control);
+        } else {
+          control = f.control === 'select' ? make('select', 'setting-input mt-2')
+            : f.control === 'text' || f.control === 'number' ? make('input', 'setting-input mt-2 font-mono text-xs')
+            : make('textarea', 'setting-input w-full mt-2 font-mono text-xs');
+          // a plain text input: type="number" hands over "" for bad input, which would unset the value silently
+          if (f.control === 'number') control.inputMode = 'decimal';
+          if (control.tagName === 'TEXTAREA') control.rows = f.control === 'list' ? 3 : 5;
+          control.id = id + '-input';
+          label.htmlFor = control.id;
+          control.addEventListener('change', () => {
+            const r = parseExtraInput(f, control.value);
+            err.hidden = !r.error;
+            if (r.error === 'json') err.textContent = app.t('extra.invalidJson');
+            else if (r.error) err.textContent = app.t('extra.invalidNumber');
+            else app.setExtra(f.key, r.value);
+          });
+          body.append(control, err);
+        }
+        effect(() => {
+          const v = current();
+          desc.textContent = app.t('extra.' + f.key);
+          if (badge) badge.textContent = app.t('facts.scope.' + info.scope);
+          renderFacts(facts, app.factsView(f.key));
+          if (f.control === 'toggle') {
+            const on = v === undefined ? !!f.on : v === true;
+            control.classList.toggle('active', on);
+            control.setAttribute('aria-checked', String(on));
+            return;
+          }
+          if (f.control === 'select') {
+            const opts = (f.options || info.enum || []).slice();
+            if (v !== undefined && !opts.includes(v)) opts.push(String(v)); // a loaded spelling the list does not offer stays visible
+            const unset = make('option', '', app.t('extra.unset'));
+            unset.value = '';
+            control.replaceChildren(unset, ...opts.map(o => { const n = make('option', '', o); n.value = o; return n; }));
+            // the options were just rebuilt, so the choice must be set again even while the select has focus
+            control.value = v === undefined ? '' : String(v);
+            return;
+          }
+          if (document.activeElement !== control) { control.value = extraDisplay(f, v); err.hidden = true; }
+        });
+      });
     });
 
     // Pure schema sync: top-level key diff between the online schema and the embedded fact table (spec 3.5).
@@ -3686,7 +3913,7 @@
 
     const T = {
       // ─── App Shell ───
-      'app.version': { de: 'v1.7.0 · made with 💛', en: 'v1.7.0 · made with 💛', es: 'v1.7.0 · hecho con 💛', fr: 'v1.7.0 · fait avec 💛', ja: 'v1.7.0 · made with 💛', pt: 'v1.7.0 · feito com 💛' },
+      'app.version': { de: 'v1.8.0 · made with 💛', en: 'v1.8.0 · made with 💛', es: 'v1.8.0 · hecho con 💛', fr: 'v1.8.0 · fait avec 💛', ja: 'v1.8.0 · made with 💛', pt: 'v1.8.0 · feito com 💛' },
       'app.by': { de: 'von', en: 'by', es: 'por', fr: 'par', ja: '作成者', pt: 'por' },
       'sidebar.collapse': { de: 'Sidebar einklappen', en: 'Collapse sidebar', es: 'Contraer barra lateral', fr: 'Replier la barre laterale', ja: 'サイドバーを折りたたむ', pt: 'Recolher barra lateral' },
       'sidebar.expand': { de: 'Sidebar ausklappen', en: 'Expand sidebar', es: 'Expandir barra lateral', fr: 'Deplier la barre laterale', ja: 'サイドバーを展開する', pt: 'Expandir barra lateral' },
@@ -4158,7 +4385,7 @@
       'memory.historyDaysLabel': { de: 'Aufbewahrungsdauer in Tagen', en: 'Retention period in days', es: 'Periodo de retencion en dias', fr: 'Periode de conservation en jours', ja: '保持期間（日数）', pt: 'Periodo de retencao em dias' },
       'memory.historyDefault': { de: 'Standard: 30 Tage', en: 'Default: 30 days', es: 'Predeterminado: 30 dias', fr: 'Par defaut: 30 jours', ja: 'デフォルト: 30日', pt: 'Padrao: 30 dias' },
       'memory.historyMax': { de: '★ Empfohlen: 365 Tage', en: '★ Recommended: 365 days', es: '★ Recomendado: 365 dias', fr: '★ Recommande: 365 jours', ja: '★ 推奨: 365日', pt: '★ Recomendado: 365 dias' },
-      'memory.historyTip': { de: 'Bei aktivem Auto Memory und Auto Dream empfehlen wir 365 Tage, damit wertvolle Erkenntnisse nicht verloren gehen.', en: 'With Auto Memory and Auto Dream active, we recommend 365 days so valuable insights are not lost.', es: 'Con Auto Memory y Auto Dream activos, recomendamos 365 dias para no perder informacion valiosa.', fr: 'Avec Auto Memory et Auto Dream actifs, nous recommandons 365 jours pour ne pas perdre d\'informations.', ja: 'Auto MemoryとAuto Dreamが有効な場合、重要な洞察を失わないよう365日を推奨します。', pt: 'Com Auto Memory e Auto Dream ativos, recomendamos 365 dias para nao perder informacoes valiosas.' },
+      'memory.historyTip': { de: 'Bei aktivem Auto Memory empfehlen wir 365 Tage, damit wertvolle Erkenntnisse nicht verloren gehen.', en: 'With Auto Memory active, we recommend 365 days so valuable insights are not lost.', es: 'Con Auto Memory activo, recomendamos 365 días para no perder información valiosa.', fr: 'Avec Auto Memory actif, nous recommandons 365 jours pour ne pas perdre d’informations.', ja: 'Auto Memory が有効な場合、重要な洞察を失わないよう 365 日を推奨します。', pt: 'Com o Auto Memory ativo, recomendamos 365 dias para não perder informações valiosas.' },
       'adv.skipDangerousPrompt': { de: 'Bypass-Modus Warnung ueberspringen', en: 'Skip bypass mode warning', es: 'Omitir advertencia del modo bypass', fr: 'Ignorer l\'avertissement du mode bypass', ja: 'バイパスモードの警告をスキップ', pt: 'Pular aviso do modo bypass' },
       'adv.skipDangerousPromptDesc': { de: 'Keine Bestaetigungs-Abfrage beim Wechsel in den Bypass-Permissions-Modus', en: 'No confirmation prompt when entering bypass permissions mode', es: 'Sin confirmacion al entrar en modo bypass de permisos', fr: 'Pas de confirmation lors du passage en mode bypass', ja: 'バイパス権限モードに入る際の確認なし', pt: 'Sem confirmacao ao entrar no modo bypass de permissoes' },
       'adv.extraMarketplaces': { de: 'Extra Marketplaces', en: 'Extra Marketplaces', es: 'Marketplaces adicionales', fr: 'Marketplaces supplementaires', ja: '追加マーケットプレイス', pt: 'Marketplaces adicionais' },
@@ -4387,7 +4614,7 @@
 
       // ─── Memory Tab ───
       'memory.title': { de: 'Memory', en: 'Memory', es: 'Memoria', fr: 'Memoire', ja: 'メモリ', pt: 'Memoria' },
-      'memory.desc': { de: 'Auto Memory, Auto Dream und Session Memory verwalten', en: 'Manage Auto Memory, Auto Dream and Session Memory', es: 'Gestionar Auto Memory, Auto Dream y Session Memory', fr: 'Gerer Auto Memory, Auto Dream et Session Memory', ja: 'Auto Memory、Auto Dream、Session Memoryを管理', pt: 'Gerenciar Auto Memory, Auto Dream e Session Memory' },
+      'memory.desc': { de: 'Auto Memory und Session Memory verwalten', en: 'Manage Auto Memory and Session Memory', es: 'Gestionar Auto Memory y Session Memory', fr: 'Gérer Auto Memory et Session Memory', ja: 'Auto Memory と Session Memory を管理', pt: 'Gerenciar Auto Memory e Session Memory' },
       'memory.autoMemoryTitle': { de: 'Auto Memory', en: 'Auto Memory', es: 'Auto Memory', fr: 'Auto Memory', ja: 'Auto Memory', pt: 'Auto Memory' },
       'memory.autoMemoryDesc': { de: 'Claude notiert sich automatisch Patterns, Build-Commands und Debugging-Insights waehrend der Arbeit.', en: 'Claude automatically notes patterns, build commands and debugging insights while working.', es: 'Claude anota automaticamente patrones, comandos de build e insights de depuracion durante el trabajo.', fr: 'Claude note automatiquement les patterns, commandes de build et insights de debogage pendant le travail.', ja: 'Claudeは作業中にパターン、ビルドコマンド、デバッグの知見を自動的にメモします。', pt: 'Claude anota automaticamente padroes, comandos de build e insights de depuracao durante o trabalho.' },
       'memory.enabledLabel': { de: 'Auto Memory aktiviert', en: 'Auto Memory enabled', es: 'Auto Memory activado', fr: 'Auto Memory active', ja: 'Auto Memory有効', pt: 'Auto Memory ativado' },
@@ -4402,21 +4629,6 @@
       'memory.savedItem2': { de: 'Build-Commands und Test-Konventionen', en: 'Build commands and test conventions', es: 'Comandos de build y convenciones de testing', fr: 'Commandes de build et conventions de test', ja: 'ビルドコマンドとテスト規約', pt: 'Comandos de build e convencoes de teste' },
       'memory.savedItem3': { de: 'Architektur-Notizen und Datei-Beziehungen', en: 'Architecture notes and file relationships', es: 'Notas de arquitectura y relaciones entre archivos', fr: 'Notes d\'architecture et relations entre fichiers', ja: 'アーキテクチャメモとファイルの関係性', pt: 'Notas de arquitetura e relacoes entre arquivos' },
       'memory.savedItem4': { de: 'Coding-Preferences und Korrekturen', en: 'Coding preferences and corrections', es: 'Preferencias de codigo y correcciones', fr: 'Preferences de codage et corrections', ja: 'コーディング設定と修正', pt: 'Preferencias de codigo e correcoes' },
-      'memory.dreamTitle': { de: 'Auto Dream', en: 'Auto Dream', es: 'Auto Dream', fr: 'Auto Dream', ja: 'Auto Dream', pt: 'Auto Dream' },
-      'memory.dreamDesc': { de: 'Periodische Konsolidierung — wie REM-Schlaf fuer Claudes Memory. Entfernt Widersprueche, mergt Duplikate, konvertiert relative Daten.', en: "Periodic consolidation — like REM sleep for Claude's memory. Removes contradictions, merges duplicates, converts relative dates.", es: 'Consolidacion periodica — como sueno REM para la memoria de Claude. Elimina contradicciones, fusiona duplicados, convierte fechas relativas.', fr: 'Consolidation periodique — comme le sommeil paradoxal pour la memoire de Claude. Supprime les contradictions, fusionne les doublons, convertit les dates relatives.', ja: '定期的な統合 — ClaudeのメモリのためのREMスリープ。矛盾を除去し、重複をマージし、相対日付を変換します。', pt: 'Consolidacao periodica — como sono REM para a memoria do Claude. Remove contradicoes, mescla duplicatas, converte datas relativas.' },
-      'memory.dreamExperimental': { de: 'Experimentell', en: 'Experimental', es: 'Experimental', fr: 'Experimental', ja: '実験的', pt: 'Experimental' },
-      'memory.dreamTriggerTitle': { de: 'Trigger-Bedingungen', en: 'Trigger conditions', es: 'Condiciones de activacion', fr: 'Conditions de declenchement', ja: 'トリガー条件', pt: 'Condicoes de ativacao' },
-      'memory.dreamTrigger1': { de: '24 Stunden seit letzter Konsolidierung', en: '24 hours since last consolidation', es: '24 horas desde la ultima consolidacion', fr: '24 heures depuis la derniere consolidation', ja: '最後の統合から24時間経過', pt: '24 horas desde a ultima consolidacao' },
-      'memory.dreamTrigger2': { de: 'Mehr als 5 Sessions seit letzter Konsolidierung', en: 'More than 5 sessions since last consolidation', es: 'Mas de 5 sesiones desde la ultima consolidacion', fr: 'Plus de 5 sessions depuis la derniere consolidation', ja: '最後の統合から5セッション以上経過', pt: 'Mais de 5 sessoes desde a ultima consolidacao' },
-      'memory.dreamTriggerBoth': { de: 'Beide Bedingungen muessen erfuellt sein.', en: 'Both conditions must be met.', es: 'Ambas condiciones deben cumplirse.', fr: 'Les deux conditions doivent etre remplies.', ja: '両方の条件を満たす必要があります。', pt: 'Ambas as condicoes devem ser atendidas.' },
-      'memory.dreamPhasesTitle': { de: '4 Phasen', en: '4 Phases', es: '4 Fases', fr: '4 Phases', ja: '4つのフェーズ', pt: '4 Fases' },
-      'memory.dreamPhase1': { de: 'Orient — Memory-Verzeichnis scannen', en: 'Orient — Scan memory directory', es: 'Orient — Escanear directorio de memoria', fr: 'Orient — Scanner le repertoire de memoire', ja: 'Orient — メモリディレクトリをスキャン', pt: 'Orient — Escanear diretorio de memoria' },
-      'memory.dreamPhase2': { de: 'Gather — Signal aus Session-Transkripten', en: 'Gather — Extract signals from session transcripts', es: 'Gather — Extraer senales de transcripciones de sesion', fr: 'Gather — Extraire les signaux des transcriptions de session', ja: 'Gather — セッショントランスクリプトからシグナルを抽出', pt: 'Gather — Extrair sinais das transcricoes de sessao' },
-      'memory.dreamPhase3': { de: 'Consolidate — Mergen, Prunen, Daten absolutieren', en: 'Consolidate — Merge, prune, convert dates to absolute', es: 'Consolidate — Fusionar, podar, absolutizar fechas', fr: 'Consolidate — Fusionner, elaguer, absolutiser les dates', ja: 'Consolidate — マージ、剪定、日付を絶対化', pt: 'Consolidate — Mesclar, podar, absolutizar datas' },
-      'memory.dreamPhase4': { de: 'Index — MEMORY.md unter 200 Zeilen halten', en: 'Index — Keep MEMORY.md under 200 lines', es: 'Index — Mantener MEMORY.md bajo 200 lineas', fr: 'Index — Maintenir MEMORY.md sous 200 lignes', ja: 'Index — MEMORY.mdを200行以内に保つ', pt: 'Index — Manter MEMORY.md abaixo de 200 linhas' },
-      'memory.dreamManualTitle': { de: 'Manuell triggern', en: 'Trigger manually', es: 'Activar manualmente', fr: 'Declencher manuellement', ja: '手動でトリガー', pt: 'Ativar manualmente' },
-      'memory.dreamManualDesc': { de: 'Tippe /dream oder "consolidate my memory files" in Claude Code.', en: 'Type /dream or "consolidate my memory files" in Claude Code.', es: 'Escribe /dream o "consolidate my memory files" en Claude Code.', fr: 'Tapez /dream ou "consolidate my memory files" dans Claude Code.', ja: 'Claude Codeで /dream または "consolidate my memory files" と入力してください。', pt: 'Digite /dream ou "consolidate my memory files" no Claude Code.' },
-      'memory.dreamSafety': { de: 'Sicherheit: Read-only auf Code, Lock-File verhindert parallele Runs, laeuft im Hintergrund.', en: 'Safety: Read-only on code, lock file prevents parallel runs, runs in background.', es: 'Seguridad: Solo lectura en codigo, archivo lock previene ejecuciones paralelas, se ejecuta en segundo plano.', fr: "Securite: Lecture seule sur le code, fichier lock empeche les executions paralleles, s'execute en arriere-plan.", ja: '安全性: コードは読み取り専用、ロックファイルで並列実行を防止、バックグラウンドで実行。', pt: 'Seguranca: Somente leitura no codigo, arquivo lock previne execucoes paralelas, executa em segundo plano.' },
       'memory.sessionTitle': { de: 'Session Memory', en: 'Session Memory', es: 'Session Memory', fr: 'Session Memory', ja: 'Session Memory', pt: 'Session Memory' },
       'memory.sessionDesc': { de: 'Automatische Zusammenfassungen im Hintergrund — macht /compact instant.', en: 'Automatic background summaries — makes /compact instant.', es: 'Resumenes automaticos en segundo plano — hace /compact instantaneo.', fr: 'Resumes automatiques en arriere-plan — rend /compact instantane.', ja: 'バックグラウンドでの自動要約 — /compactを即座に実行可能にします。', pt: 'Resumos automaticos em segundo plano — torna /compact instantaneo.' },
       'memory.sessionCadence': { de: 'Erste Extraktion nach ~10.000 Tokens, dann alle ~5.000 Tokens oder 3 Tool-Calls.', en: 'First extraction after ~10,000 tokens, then every ~5,000 tokens or 3 tool calls.', es: 'Primera extraccion despues de ~10.000 tokens, luego cada ~5.000 tokens o 3 llamadas de herramientas.', fr: "Premiere extraction apres ~10 000 tokens, puis tous les ~5 000 tokens ou 3 appels d'outils.", ja: '最初の抽出は約10,000トークン後、以降は約5,000トークンまたは3ツールコールごと。', pt: 'Primeira extracao apos ~10.000 tokens, depois a cada ~5.000 tokens ou 3 chamadas de ferramentas.' },
@@ -4433,7 +4645,6 @@
       'memory.healthTitle': { de: 'Memory Health Tipps', en: 'Memory Health Tips', es: 'Consejos de salud de memoria', fr: 'Conseils de sante memoire', ja: 'メモリヘルスのヒント', pt: 'Dicas de saude da memoria' },
       'memory.healthTip1': { de: 'MEMORY.md unter 200 Zeilen halten — darueber wird abgeschnitten', en: 'Keep MEMORY.md under 200 lines — content above that gets truncated', es: 'Mantener MEMORY.md bajo 200 lineas — por encima se trunca', fr: 'Maintenir MEMORY.md sous 200 lignes — au-dela, le contenu est tronque', ja: 'MEMORY.mdを200行以内に保つ — 超過分は切り捨てられます', pt: 'Manter MEMORY.md abaixo de 200 linhas — acima disso e truncado' },
       'memory.healthTip2': { de: 'Relative Daten vermeiden ("gestern" → konkretes Datum)', en: 'Avoid relative dates ("yesterday" → specific date)', es: 'Evitar fechas relativas ("ayer" → fecha concreta)', fr: 'Eviter les dates relatives ("hier" → date concrete)', ja: '相対日付を避ける（「昨日」→ 具体的な日付）', pt: 'Evitar datas relativas ("ontem" → data concreta)' },
-      'memory.healthTip3': { de: 'Nach grossen Refactors: /dream manuell triggern', en: 'After major refactors: trigger /dream manually', es: 'Despues de grandes refactors: activar /dream manualmente', fr: 'Apres de gros refactors: declencher /dream manuellement', ja: '大規模なリファクタリング後: /dreamを手動でトリガー', pt: 'Apos grandes refatoracoes: ativar /dream manualmente' },
       'memory.healthTip4': { de: 'CI/CD: CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 setzen', en: 'CI/CD: set CLAUDE_CODE_DISABLE_AUTO_MEMORY=1', es: 'CI/CD: establecer CLAUDE_CODE_DISABLE_AUTO_MEMORY=1', fr: 'CI/CD: definir CLAUDE_CODE_DISABLE_AUTO_MEMORY=1', ja: 'CI/CD: CLAUDE_CODE_DISABLE_AUTO_MEMORY=1を設定', pt: 'CI/CD: definir CLAUDE_CODE_DISABLE_AUTO_MEMORY=1' },
       'memory.healthTip5': { de: '/memory oeffnet das Memory-Dashboard in Claude Code', en: '/memory opens the Memory Dashboard in Claude Code', es: '/memory abre el panel de memoria en Claude Code', fr: '/memory ouvre le tableau de bord memoire dans Claude Code', ja: '/memoryでClaude Codeのメモリダッシュボードを開く', pt: '/memory abre o painel de memoria no Claude Code' },
       // ─── Memory Search Registry ───
@@ -4528,7 +4739,78 @@
       'facts.docs': { de: 'Claude-Code-Referenz (Englisch)', en: 'Claude Code reference', es: 'Referencia de Claude Code (en inglés)', fr: 'Référence Claude Code (en anglais)', ja: 'Claude Code リファレンス（英語）', pt: 'Referência do Claude Code (em inglês)' },
       'doctor.wrongType': { de: 'Falscher Typ bei ', en: 'Wrong type for ', es: 'Tipo incorrecto en ', fr: 'Type incorrect pour ', ja: '型が不正: ', pt: 'Tipo incorreto em ' },
       'doctor.notInEnum': { de: 'Wert nicht erlaubt: ', en: 'Value not allowed: ', es: 'Valor no permitido: ', fr: 'Valeur non autorisée : ', ja: '許可されていない値: ', pt: 'Valor não permitido: ' },
-      'doctor.managedOnly': { de: 'Greift nur aus managed-settings.json, hier wirkungslos: ', en: 'Only takes effect from managed-settings.json, no effect here: ', es: 'Solo actúa desde managed-settings.json, sin efecto aquí: ', fr: 'N’agit que depuis managed-settings.json, sans effet ici : ', ja: 'managed-settings.json からのみ有効、ここでは無効: ', pt: 'Só vale a partir de managed-settings.json, sem efeito aqui: ' },
+      'doctor.managedOnly': { de: 'Wirkt nur aus der Managed-Konfiguration (Tab Managed), hier wirkungslos: ', en: 'Only takes effect from managed sources (Managed tab), no effect here: ', es: 'Solo actúa desde fuentes gestionadas (pestaña Managed), sin efecto aquí: ', fr: 'N’agit que depuis les sources gérées (onglet Managed), sans effet ici : ', ja: '管理ソースからのみ有効（Managed タブ）、ここでは無効: ', pt: 'Só vale a partir de fontes gerenciadas (aba Managed), sem efeito aqui: ' },
+      'tab.managed.desc': { de: 'Einstellungen, die nur aus einer verteilten Managed-Konfiguration wirken', en: 'Settings that only take effect from a deployed managed configuration', es: 'Ajustes que solo actúan desde una configuración gestionada desplegada', fr: 'Réglages qui n’agissent que depuis une configuration gérée déployée', ja: '配布された管理設定からのみ有効になる設定', pt: 'Configurações que só valem a partir de uma configuração gerenciada distribuída' },
+      'managed.fileSwitch': { de: 'Diese Datei ist eine Managed-Datei', en: 'This file is a managed file', es: 'Este archivo es un archivo gestionado', fr: 'Ce fichier est un fichier géré', ja: 'このファイルは管理ファイルです', pt: 'Este arquivo é um arquivo gerenciado' },
+      'managed.bannerOff': { de: 'Diese Einstellungen wirken nur aus der Managed-Konfiguration: managed-settings.json und managed-settings.d/ im Systemverzeichnis, ein MDM-Profil oder die Einstellungen aus der claude.ai-Konsole. In einer User- oder Projektdatei stehen sie wirkungslos.', en: 'These settings only take effect from managed sources: managed-settings.json and managed-settings.d/ in the system directory, an MDM profile, or server-managed settings from the claude.ai console. In a user or project file they do nothing.', es: 'Estos ajustes solo actúan desde fuentes gestionadas: managed-settings.json y managed-settings.d/ en el directorio del sistema, un perfil MDM o la configuración del servidor desde la consola de claude.ai. En un archivo de usuario o de proyecto no tienen efecto.', fr: 'Ces réglages n’agissent que depuis des sources gérées : managed-settings.json et managed-settings.d/ dans le répertoire système, un profil MDM ou les réglages serveur de la console claude.ai. Dans un fichier utilisateur ou projet, ils sont sans effet.', ja: 'これらの設定は管理ソースからのみ有効です：システムディレクトリの managed-settings.json と managed-settings.d/、MDM プロファイル、または claude.ai コンソールのサーバー管理設定。ユーザーファイルやプロジェクトファイルでは効果がありません。', pt: 'Estas configurações só valem a partir de fontes gerenciadas: managed-settings.json e managed-settings.d/ no diretório do sistema, um perfil MDM ou as configurações do servidor no console do claude.ai. Em um arquivo de usuário ou de projeto, não têm efeito.' },
+      'managed.bannerOn': { de: 'Managed-Datei: Die Einstellungen hier greifen. Ungültiges JSON in einer Managed-Datei verhindert den Start von Claude Code.', en: 'Managed file: the settings here take effect. Invalid JSON in a managed file stops Claude Code from starting.', es: 'Archivo gestionado: los ajustes de aquí tienen efecto. Un JSON no válido en un archivo gestionado impide que Claude Code arranque.', fr: 'Fichier géré : les réglages ici s’appliquent. Un JSON invalide dans un fichier géré empêche Claude Code de démarrer.', ja: '管理ファイル：ここでの設定が有効になります。管理ファイルの JSON が不正だと Claude Code は起動しません。', pt: 'Arquivo gerenciado: as configurações aqui valem. Um JSON inválido em um arquivo gerenciado impede o Claude Code de iniciar.' },
+      'managed.pathsTitle': { de: 'Systemverzeichnisse', en: 'System directories', es: 'Directorios del sistema', fr: 'Répertoires système', ja: 'システムディレクトリ', pt: 'Diretórios do sistema' },
+      'managed.marketplaceNote': { de: 'Ebenfalls nur Managed: strictKnownMarketplaces, blockedMarketplaces und pluginSuggestionMarketplaces im Tab Advanced.', en: 'Also managed only: strictKnownMarketplaces, blockedMarketplaces and pluginSuggestionMarketplaces in the Advanced tab.', es: 'También solo gestionados: strictKnownMarketplaces, blockedMarketplaces y pluginSuggestionMarketplaces en la pestaña Advanced.', fr: 'Également réservés au géré : strictKnownMarketplaces, blockedMarketplaces et pluginSuggestionMarketplaces dans l’onglet Advanced.', ja: 'Advanced タブの strictKnownMarketplaces、blockedMarketplaces、pluginSuggestionMarketplaces も管理専用です。', pt: 'Também só gerenciados: strictKnownMarketplaces, blockedMarketplaces e pluginSuggestionMarketplaces na aba Advanced.' },
+      'managed.group.lockdown': { de: 'Sperren', en: 'Lockdown', es: 'Bloqueos', fr: 'Verrouillages', ja: 'ロック', pt: 'Bloqueios' },
+      'managed.group.plugins': { de: 'Plugins und Kanäle', en: 'Plugins and channels', es: 'Plugins y canales', fr: 'Plugins et canaux', ja: 'プラグインとチャネル', pt: 'Plugins e canais' },
+      'managed.group.login': { de: 'Anmeldung und Version', en: 'Login and version', es: 'Inicio de sesión y versión', fr: 'Connexion et version', ja: 'ログインとバージョン', pt: 'Login e versão' },
+      'managed.group.policy': { de: 'Richtlinien', en: 'Policy sources', es: 'Fuentes de directivas', fr: 'Sources de stratégie', ja: 'ポリシーのソース', pt: 'Fontes de política' },
+      'managed.group.desktop': { de: 'Desktop und Browser', en: 'Desktop and browser', es: 'Escritorio y navegador', fr: 'Bureau et navigateur', ja: 'デスクトップとブラウザ', pt: 'Desktop e navegador' },
+      'managed.group.cost': { de: 'Kosten', en: 'Cost', es: 'Costes', fr: 'Coûts', ja: 'コスト', pt: 'Custos' },
+      'managed.group.sandbox': { de: 'Sandbox', en: 'Sandbox', es: 'Sandbox', fr: 'Sandbox', ja: 'サンドボックス', pt: 'Sandbox' },
+      'extra.moreTitle': { de: 'Weitere Einstellungen', en: 'More settings', es: 'Más ajustes', fr: 'Autres réglages', ja: 'その他の設定', pt: 'Mais configurações' },
+      'extra.unset': { de: '— nicht gesetzt —', en: '— not set —', es: '— sin definir —', fr: '— non défini —', ja: '— 未設定 —', pt: '— não definido —' },
+      'extra.invalidJson': { de: 'Kein gültiges JSON, der bisherige Wert bleibt.', en: 'Not valid JSON; the previous value stays.', es: 'JSON no válido; se mantiene el valor anterior.', fr: 'JSON invalide ; la valeur précédente reste.', ja: '有効な JSON ではありません。以前の値のままです。', pt: 'JSON inválido; o valor anterior permanece.' },
+      'extra.invalidNumber': { de: 'Keine Zahl, der bisherige Wert bleibt.', en: 'Not a number; the previous value stays.', es: 'No es un número; se mantiene el valor anterior.', fr: 'Pas un nombre ; la valeur précédente reste.', ja: '数値ではありません。以前の値のままです。', pt: 'Não é um número; o valor anterior permanece.' },
+      'extra.allowManagedHooksOnly': { de: 'Nur Hooks aus der Managed-Konfiguration laufen; alle anderen Hooks bleiben aus.', en: 'Only hooks from managed settings run; all other hooks stay off.', es: 'Solo se ejecutan los hooks de la configuración gestionada; los demás quedan desactivados.', fr: 'Seuls les hooks des réglages gérés s’exécutent ; tous les autres restent désactivés.', ja: '管理設定のフックだけが実行され、それ以外のフックは無効になります。', pt: 'Só rodam os hooks da configuração gerenciada; todos os outros ficam desativados.' },
+      'extra.allowManagedMcpServersOnly': { de: 'Nur die Managed-Allowlist für MCP-Server gilt; Allowlists aus anderen Dateien zählen nicht.', en: 'Only the managed MCP server allowlist applies; allowlists from other files are ignored.', es: 'Solo cuenta la lista de servidores MCP permitidos gestionada; se ignoran las de otros archivos.', fr: 'Seule la liste d’autorisation MCP gérée s’applique ; celles des autres fichiers sont ignorées.', ja: '管理設定の MCP サーバー許可リストだけが適用され、他のファイルの許可リストは無視されます。', pt: 'Só vale a lista de servidores MCP permitidos gerenciada; as de outros arquivos são ignoradas.' },
+      'extra.allowManagedPermissionRulesOnly': { de: 'Allow-, Ask- und Deny-Regeln gelten nur noch aus der Managed-Konfiguration.', en: 'Allow, ask and deny rules come only from managed settings; all others are ignored.', es: 'Las reglas allow, ask y deny solo se aplican desde la configuración gestionada.', fr: 'Les règles allow, ask et deny ne viennent plus que des réglages gérés.', ja: 'allow・ask・deny ルールは管理設定からのみ適用されます。', pt: 'As regras allow, ask e deny só valem a partir da configuração gerenciada.' },
+      'extra.allowAllClaudeAiMcps': { de: 'Lädt die claude.ai-Connectors auch dann, wenn eine managed-mcp.json verteilt ist.', en: 'Loads the claude.ai connectors even when a managed-mcp.json is deployed.', es: 'Carga los conectores de claude.ai aunque haya un managed-mcp.json desplegado.', fr: 'Charge les connecteurs claude.ai même si un managed-mcp.json est déployé.', ja: 'managed-mcp.json が配布されていても claude.ai コネクタを読み込みます。', pt: 'Carrega os conectores do claude.ai mesmo com um managed-mcp.json distribuído.' },
+      'extra.strictPluginOnlyCustomization': { de: 'Nur noch Plugins oder Managed dürfen Skills, Agents, Hooks und MCP-Server liefern; true sperrt alle.', en: 'Skills, agents, hooks and MCP servers only from plugins or managed; true locks all four.', es: 'Skills, agentes, hooks y servidores MCP solo desde plugins o gestión; true bloquea los cuatro.', fr: 'Skills, agents, hooks et serveurs MCP uniquement via plugins ou géré ; true verrouille les quatre.', ja: 'スキル・エージェント・フック・MCP をプラグインか管理設定のみに限定。true で 4 種すべてロック。', pt: 'Skills, agentes, hooks e servidores MCP só de plugins ou gerenciados; true bloqueia os quatro.' },
+      'extra.disableCommandPluginSources': { de: 'Blockiert Plugins, die sich per Befehl auf dem Rechner installieren; bestehende laden nicht mehr.', en: 'Blocks plugins that install by running a command; installed ones stop loading.', es: 'Bloquea los plugins que se instalan ejecutando un comando; los instalados dejan de cargarse.', fr: 'Bloque les plugins installés via une commande ; ceux déjà installés ne se chargent plus.', ja: 'コマンド実行でインストールするプラグインを禁止し、導入済みのものも読み込まなくなります。', pt: 'Bloqueia plugins que se instalam executando um comando; os já instalados deixam de carregar.' },
+      'extra.disableSideloadFlags': { de: 'Weist --plugin-dir, --plugin-url, --agents und --mcp-config beim Start ab.', en: 'Rejects --plugin-dir, --plugin-url, --agents and --mcp-config at startup.', es: 'Rechaza --plugin-dir, --plugin-url, --agents y --mcp-config al arrancar.', fr: 'Refuse --plugin-dir, --plugin-url, --agents et --mcp-config au démarrage.', ja: '起動時に --plugin-dir、--plugin-url、--agents、--mcp-config を拒否します。', pt: 'Rejeita --plugin-dir, --plugin-url, --agents e --mcp-config na inicialização.' },
+      'extra.allowedChannelPlugins': { de: 'Legt fest, welche Channel-Plugins Nachrichten in Sitzungen schicken dürfen.', en: 'Sets which channel plugins may push messages into sessions.', es: 'Define qué plugins de canal pueden enviar mensajes a las sesiones.', fr: 'Définit quels plugins de canal peuvent envoyer des messages dans les sessions.', ja: 'セッションにメッセージを送れるチャネルプラグインを指定します。', pt: 'Define quais plugins de canal podem enviar mensagens para as sessões.' },
+      'extra.channelsEnabled': { de: 'Erlaubt Channels; auf Team- und Enterprise-Plänen sind sie sonst gesperrt.', en: 'Allows channels; on Team and Enterprise plans they are blocked otherwise.', es: 'Permite los canales; en los planes Team y Enterprise están bloqueados si no.', fr: 'Autorise les canaux ; sur les offres Team et Enterprise, ils sont sinon bloqués.', ja: 'チャネルを許可します。Team と Enterprise プランでは、未設定だとブロックされます。', pt: 'Permite canais; nos planos Team e Enterprise eles ficam bloqueados sem isso.' },
+      'extra.pluginTrustMessage': { de: 'Eigener Text, der in der Warnung vor jeder Plugin-Installation zusätzlich erscheint.', en: 'Your own text shown in the trust warning before a plugin is installed.', es: 'Texto propio que aparece en el aviso de confianza antes de instalar un plugin.', fr: 'Texte propre affiché dans l’avertissement de confiance avant l’installation d’un plugin.', ja: 'プラグインのインストール前の信頼警告に表示する独自のテキスト。', pt: 'Texto próprio exibido no aviso de confiança antes de instalar um plugin.' },
+      'extra.forceLoginGatewayUrl': { de: 'Gateway-Adresse, mit der sich der Cloud-Gateway-Login ohne Eintippen verbindet.', en: 'Gateway URL the cloud gateway login connects to, so nobody has to type it.', es: 'URL del gateway al que se conecta el inicio de sesión, sin tener que escribirla.', fr: 'URL de passerelle à laquelle la connexion se relie, sans avoir à la saisir.', ja: 'クラウドゲートウェイのログインが接続する URL。入力は不要になります。', pt: 'URL do gateway ao qual o login se conecta, sem precisar digitá-la.' },
+      'extra.gatewayInternalNetworks': { de: 'Öffentliche IPv4-Blöcke des Firmennetzes, in denen /login ein Gateway akzeptiert.', en: 'Public IPv4 blocks of your internal network where /login accepts a gateway.', es: 'Bloques IPv4 públicos de la red interna en los que /login acepta un gateway.', fr: 'Blocs IPv4 publics du réseau interne où /login accepte une passerelle.', ja: '/login がゲートウェイを受け入れる、社内ネットワークのパブリック IPv4 ブロック。', pt: 'Blocos IPv4 públicos da rede interna em que o /login aceita um gateway.' },
+      'extra.requiredMinimumVersion': { de: 'Älteste Claude-Code-Version, die starten darf; ältere beenden sich beim Start.', en: 'Oldest Claude Code version allowed to start; older versions exit at startup.', es: 'Versión más antigua de Claude Code que puede arrancar; las anteriores se cierran.', fr: 'Plus ancienne version de Claude Code autorisée ; les plus anciennes s’arrêtent au démarrage.', ja: '起動を許可する最も古い Claude Code バージョン。より古いと起動時に終了します。', pt: 'Versão mais antiga do Claude Code que pode iniciar; as anteriores encerram na inicialização.' },
+      'extra.requiredMaximumVersion': { de: 'Jüngste Claude-Code-Version, die starten darf; spätere beenden sich beim Start.', en: 'Newest Claude Code version allowed to start; newer versions exit at startup.', es: 'Versión más reciente de Claude Code que puede arrancar; las posteriores se cierran.', fr: 'Version la plus récente de Claude Code autorisée ; les suivantes s’arrêtent au démarrage.', ja: '起動を許可する最も新しい Claude Code バージョン。より新しいと起動時に終了します。', pt: 'Versão mais recente do Claude Code que pode iniciar; as posteriores encerram na inicialização.' },
+      'extra.forceRemoteSettingsRefresh': { de: 'Start wartet auf frisch geladene Server-Einstellungen und bricht ab, wenn das scheitert.', en: 'Startup waits for freshly fetched server-managed settings and exits if that fails.', es: 'El arranque espera la configuración del servidor recién descargada y se cierra si falla.', fr: 'Le démarrage attend les réglages serveur fraîchement chargés et s’arrête en cas d’échec.', ja: '起動時にサーバー管理設定の再取得を待ち、失敗すると終了します。', pt: 'A inicialização espera as configurações do servidor recém-buscadas e encerra se falhar.' },
+      'extra.policyHelper': { de: 'Programm, das die Managed-Einstellungen beim Start berechnet, etwa aus Gerätestatus.', en: 'A program that computes the managed settings at startup, for example from device posture.', es: 'Programa que calcula la configuración gestionada al arrancar, por ejemplo según el dispositivo.', fr: 'Programme qui calcule les réglages gérés au démarrage, par exemple selon l’état de l’appareil.', ja: '起動時に管理設定を算出するプログラム。端末の状態などから決められます。', pt: 'Programa que calcula as configurações gerenciadas na inicialização, por exemplo pelo dispositivo.' },
+      'extra.managedSourcesBehavior': { de: 'Nur die wichtigste Managed-Quelle anwenden (first-wins) oder alle zusammenführen (merge).', en: 'Apply only the highest-priority managed source (first-wins) or combine all of them (merge).', es: 'Aplicar solo la fuente gestionada prioritaria (first-wins) o combinarlas todas (merge).', fr: 'Appliquer seulement la source gérée prioritaire (first-wins) ou toutes les combiner (merge).', ja: '最優先の管理ソースだけを適用する（first-wins）か、すべてを統合する（merge）かを選びます。', pt: 'Aplicar só a fonte gerenciada prioritária (first-wins) ou combinar todas (merge).' },
+      'extra.parentSettingsBehavior': { de: 'Ob Einstellungen eines einbettenden Hosts (SDK, IDE) neben der Admin-Ebene gelten.', en: 'Whether settings from an embedding host (SDK, IDE) apply alongside the admin tier.', es: 'Si la configuración de un host integrador (SDK, IDE) se aplica junto al nivel de administración.', fr: 'Si les réglages d’un hôte intégrant (SDK, IDE) s’appliquent à côté du niveau admin.', ja: '埋め込みホスト（SDK、IDE）の設定を管理者レベルと併せて適用するかどうか。', pt: 'Se as configurações de um host incorporador (SDK, IDE) valem junto com o nível de administração.' },
+      'extra.wslInheritsWindowsSettings': { de: 'Claude Code unter WSL liest die Managed-Einstellungen von Windows mit.', en: 'Claude Code on WSL also reads the Windows managed settings.', es: 'Claude Code en WSL también lee la configuración gestionada de Windows.', fr: 'Claude Code sous WSL lit aussi les réglages gérés de Windows.', ja: 'WSL 上の Claude Code が Windows の管理設定も読み込みます。', pt: 'O Claude Code no WSL também lê as configurações gerenciadas do Windows.' },
+      'extra.claudeMd': { de: 'Anweisungen wie in einer CLAUDE.md, als Firmen-Memory vor User- und Projektdateien geladen.', en: 'CLAUDE.md-style instructions loaded as organization memory before user and project files.', es: 'Instrucciones al estilo CLAUDE.md, cargadas como memoria de la organización antes de las demás.', fr: 'Instructions façon CLAUDE.md, chargées comme mémoire d’organisation avant les autres fichiers.', ja: 'CLAUDE.md 形式の指示。組織のメモリとしてユーザー・プロジェクトのファイルより先に読み込まれます。', pt: 'Instruções no estilo CLAUDE.md, carregadas como memória da organização antes dos demais arquivos.' },
+      'extra.disableDesktopLocalSessions': { de: 'Schaltet lokale Sitzungen in der Desktop-App ab, gearbeitet wird dann nur per SSH.', en: 'Turns off local sessions in the desktop app, so work happens over SSH only.', es: 'Desactiva las sesiones locales en la app de escritorio; solo se trabaja por SSH.', fr: 'Désactive les sessions locales de l’app de bureau ; on travaille alors uniquement via SSH.', ja: 'デスクトップアプリのローカルセッションを無効にし、作業は SSH 経由のみになります。', pt: 'Desativa as sessões locais no app para desktop; o trabalho passa a ser só via SSH.' },
+      'extra.disableMobileSimulatorTools': { de: 'Nimmt Claude den Zugriff auf den iOS-Simulator der Desktop-App; von Hand bleibt er nutzbar.', en: 'Removes Claude’s access to the desktop app’s iOS Simulator; manual use stays available.', es: 'Quita a Claude el acceso al simulador de iOS de la app de escritorio; el uso manual sigue.', fr: 'Retire à Claude l’accès au simulateur iOS de l’app de bureau ; l’usage manuel reste possible.', ja: 'デスクトップアプリの iOS シミュレーターへの Claude のアクセスを外します。手動操作は可能です。', pt: 'Remove o acesso do Claude ao simulador iOS do app para desktop; o uso manual continua.' },
+      'extra.disableBrowserExternalNavigation': { de: 'Sperrt externe Seiten im Browser-Bereich der Desktop-App für alle; localhost bleibt offen.', en: 'Blocks external sites in the desktop app’s browser pane for everyone; localhost stays open.', es: 'Bloquea los sitios externos en el navegador de la app de escritorio; localhost sigue abierto.', fr: 'Bloque les sites externes dans le navigateur de l’app de bureau ; localhost reste accessible.', ja: 'デスクトップアプリのブラウザで外部サイトを全員に対してブロック。localhost は使えます。', pt: 'Bloqueia sites externos no navegador do app para desktop; o localhost continua aberto.' },
+      'extra.browserExternalPageTools': { de: '"disabled" hindert Claude, externe Seiten im Browser-Bereich zu lesen oder zu bedienen.', en: '"disabled" stops Claude from reading or acting on external pages in the browser pane.', es: '"disabled" impide que Claude lea o use páginas externas en el navegador de la app.', fr: '"disabled" empêche Claude de lire ou d’utiliser les pages externes du navigateur.', ja: '"disabled" にすると、Claude はブラウザで外部ページを読んだり操作したりできません。', pt: '"disabled" impede o Claude de ler ou usar páginas externas no navegador do app.' },
+      'extra.managedMcpServers': { de: 'Remote-MCP-Server für alle Nutzer, die diese weder ändern noch entfernen können.', en: 'Remote MCP servers for every user, who can neither edit nor remove them.', es: 'Servidores MCP remotos para todos los usuarios, que no pueden editarlos ni quitarlos.', fr: 'Serveurs MCP distants pour tous les utilisateurs, qui ne peuvent ni les modifier ni les retirer.', ja: '全ユーザーに配るリモート MCP サーバー。ユーザーは編集も削除もできません。', pt: 'Servidores MCP remotos para todos os usuários, que não podem editá-los nem removê-los.' },
+      'extra.sshHostAllowlist': { de: 'Hosts, mit denen sich SSH-Sitzungen der Desktop-App verbinden dürfen; * erlaubt alle.', en: 'Hosts that desktop SSH sessions may connect to; * allows any host.', es: 'Hosts a los que pueden conectarse las sesiones SSH de escritorio; * permite cualquiera.', fr: 'Hôtes auxquels les sessions SSH de bureau peuvent se connecter ; * les autorise tous.', ja: 'デスクトップの SSH セッションが接続できるホスト。* ですべて許可します。', pt: 'Hosts aos quais as sessões SSH do desktop podem se conectar; * permite qualquer um.' },
+      'extra.modelPricing': { de: 'Eigene Vertragspreise, damit die angezeigten Kosten zur Rechnung passen.', en: 'Your contracted rates, so the costs shown match your bill.', es: 'Tarifas contratadas propias, para que los costes mostrados coincidan con la factura.', fr: 'Vos tarifs contractuels, pour que les coûts affichés correspondent à la facture.', ja: '契約単価を指定し、表示されるコストを請求額に合わせます。', pt: 'Tarifas contratadas próprias, para que os custos exibidos batam com a fatura.' },
+      'extra.sandbox.bwrapPath': { de: 'Pfad zu bubblewrap, wenn es nicht im PATH liegt, etwa auf abgeschotteten Rechnern.', en: 'Path to bubblewrap when it is not on PATH, for example on air-gapped hosts.', es: 'Ruta a bubblewrap cuando no está en el PATH, por ejemplo en equipos aislados.', fr: 'Chemin vers bubblewrap s’il n’est pas dans le PATH, par exemple sur des hôtes isolés.', ja: 'bubblewrap が PATH にない場合のパス（隔離されたホストなど）。', pt: 'Caminho do bubblewrap quando ele não está no PATH, por exemplo em máquinas isoladas.' },
+      'extra.sandbox.socatPath': { de: 'Pfad zu socat für den Netzwerk-Proxy der Sandbox, wenn es nicht im PATH liegt.', en: 'Path to socat for the sandbox network proxy when it is not on PATH.', es: 'Ruta a socat para el proxy de red de la sandbox cuando no está en el PATH.', fr: 'Chemin vers socat pour le proxy réseau de la sandbox s’il n’est pas dans le PATH.', ja: 'socat が PATH にない場合の、サンドボックスのネットワークプロキシ用パス。', pt: 'Caminho do socat para o proxy de rede da sandbox quando ele não está no PATH.' },
+      'extra.sandbox.filesystem.allowManagedReadPathsOnly': { de: 'Nur allowRead-Einträge aus Managed gelten; gesperrte Pfade lassen sich nicht wieder öffnen.', en: 'Only managed allowRead entries count, so blocked paths cannot be reopened.', es: 'Solo cuentan las entradas allowRead gestionadas; las rutas bloqueadas no se pueden reabrir.', fr: 'Seules les entrées allowRead gérées comptent ; les chemins bloqués ne peuvent être rouverts.', ja: '管理設定の allowRead だけが有効で、ブロックされたパスを再び開けません。', pt: 'Só valem entradas allowRead gerenciadas; caminhos bloqueados não podem ser reabertos.' },
+      'extra.sandbox.network.allowManagedDomainsOnly': { de: 'Nur Managed-Domains sind erlaubt; andere werden ohne Rückfrage blockiert.', en: 'Only managed domains are allowed; others are blocked without a prompt.', es: 'Solo se permiten los dominios gestionados; los demás se bloquean sin preguntar.', fr: 'Seuls les domaines gérés sont autorisés ; les autres sont bloqués sans demander.', ja: '管理設定のドメインだけを許可し、それ以外は確認なしでブロックします。', pt: 'Só domínios gerenciados são permitidos; os demais são bloqueados sem perguntar.' },
+      'extra.modelPicker': { de: 'Eigene Einträge und Namen für die Modellauswahl von /model, zusätzlich oder als Ersatz.', en: 'Your own entries and labels for the /model picker, added to or replacing the built-in list.', es: 'Entradas y nombres propios para el selector de /model, añadidos o en lugar de los integrados.', fr: 'Vos entrées et libellés pour le sélecteur /model, en plus ou à la place de la liste intégrée.', ja: '/model のピッカーに独自の項目と名前を追加、または組み込みの一覧を置き換えます。', pt: 'Entradas e rótulos próprios para o seletor do /model, somados ou no lugar da lista padrão.' },
+      'extra.vimInsertModeRemaps': { de: 'Zwei-Tasten-Folgen wie "jk", die im Vim-Insert-Modus als Escape wirken.', en: 'Two-key sequences such as "jk" that act as Escape in vim INSERT mode.', es: 'Secuencias de dos teclas como "jk" que funcionan como Escape en el modo INSERT de vim.', fr: 'Séquences de deux touches comme "jk" qui valent Échap en mode INSERT de vim.', ja: 'vim の INSERT モードで Escape として働く 2 キーの並び（"jk" など）。', pt: 'Sequências de duas teclas como "jk" que funcionam como Escape no modo INSERT do vim.' },
+      'extra.askUserQuestionTimeout': { de: 'Unbeantwortete Rückfragen gehen nach dieser Zeit mit der bisherigen Auswahl weiter.', en: 'Unanswered questions continue with the current selection after this time.', es: 'Las preguntas sin respuesta continúan con la selección actual tras este tiempo.', fr: 'Les questions sans réponse continuent avec la sélection actuelle après ce délai.', ja: '未回答の質問は、この時間が過ぎると現在の選択のまま進みます。', pt: 'Perguntas sem resposta seguem com a seleção atual depois desse tempo.' },
+      'extra.dialogExpiry': { de: 'Frist für Dialoge, die an einen Remote-Client wie Remote Control weitergereicht werden.', en: 'Deadline for dialogs forwarded to a remote client such as Remote Control.', es: 'Plazo para los diálogos reenviados a un cliente remoto como Remote Control.', fr: 'Délai des dialogues transmis à un client distant comme Remote Control.', ja: 'Remote Control などのリモートクライアントに転送されるダイアログの期限。', pt: 'Prazo para diálogos encaminhados a um cliente remoto como o Remote Control.' },
+      'extra.footerLinksRegexes': { de: 'Macht IDs aus der Ausgabe per Regex zu klickbaren Links unter dem Eingabefeld.', en: 'Turns IDs in the output into clickable links below the input box via regex.', es: 'Convierte los ID de la salida en enlaces clicables bajo el campo de entrada mediante regex.', fr: 'Transforme par regex les identifiants de la sortie en liens cliquables sous la saisie.', ja: '出力内の ID を正規表現で入力欄の下のクリック可能なリンクにします。', pt: 'Transforma IDs da saída em links clicáveis abaixo do campo de entrada via regex.' },
+      'extra.spellcheck': { de: 'Unterstreicht Tippfehler im Eingabefeld; braucht aspell, hunspell oder ispell.', en: 'Underlines typos in the input box; needs aspell, hunspell or ispell.', es: 'Subraya errores ortográficos en el campo de entrada; requiere aspell, hunspell o ispell.', fr: 'Souligne les fautes dans la zone de saisie ; nécessite aspell, hunspell ou ispell.', ja: '入力欄のスペルミスに下線を引きます。aspell、hunspell、ispell のいずれかが必要です。', pt: 'Sublinha erros de digitação no campo de entrada; requer aspell, hunspell ou ispell.' },
+      'extra.autoContinueAtUsageLimit': { de: 'Setzt die Aufgabe nach einem Nutzungslimit automatisch fort, sobald es zurückgesetzt ist.', en: 'Continues the task automatically once a usage limit resets.', es: 'Continúa la tarea automáticamente cuando se restablece el límite de uso.', fr: 'Reprend la tâche automatiquement dès que la limite d’usage est réinitialisée.', ja: '使用量の上限がリセットされると、タスクを自動で再開します。', pt: 'Retoma a tarefa automaticamente quando o limite de uso é redefinido.' },
+      'extra.desktopSessionCleanupPeriodDays': { de: 'Nach so vielen Tagen löscht Claude Code Transkripte aus Desktop und Cowork; 0 = nie.', en: 'Days after which transcripts from Desktop and Cowork are deleted; 0 means never.', es: 'Días tras los que se borran las transcripciones de Desktop y Cowork; 0 significa nunca.', fr: 'Jours après lesquels les transcriptions de Desktop et Cowork sont supprimées ; 0 = jamais.', ja: 'Desktop と Cowork のトランスクリプトを削除するまでの日数。0 は削除しません。', pt: 'Dias após os quais as transcrições do Desktop e do Cowork são apagadas; 0 significa nunca.' },
+      'extra.feedbackDrafts': { de: 'Ob Claude Feedback-Entwürfe anlegen darf und ob eine Karte darauf hinweist.', en: 'Whether Claude may queue feedback drafts and whether a card points them out.', es: 'Si Claude puede preparar borradores de comentarios y si una tarjeta lo avisa.', fr: 'Si Claude peut préparer des brouillons de retour et si une carte le signale.', ja: 'Claude がフィードバックの下書きを作れるか、カードで知らせるかを決めます。', pt: 'Se o Claude pode preparar rascunhos de feedback e se um cartão avisa sobre eles.' },
+      'extra.processWrapper': { de: 'Firmen-Launcher, der vor die Hintergrundprozesse von Claude Code gesetzt wird (macOS, Linux).', en: 'A corporate launcher placed in front of Claude Code’s background processes (macOS, Linux).', es: 'Lanzador corporativo que se antepone a los procesos en segundo plano (macOS, Linux).', fr: 'Lanceur d’entreprise placé devant les processus d’arrière-plan de Claude Code (macOS, Linux).', ja: 'Claude Code のバックグラウンドプロセスの前に置く社内ランチャー（macOS、Linux）。', pt: 'Lançador corporativo colocado antes dos processos em segundo plano (macOS, Linux).' },
+      'extra.sshConfigs': { de: 'Vorkonfigurierte SSH-Verbindungen für die Desktop-App; aus Managed nicht änderbar.', en: 'Preconfigured SSH connections for the desktop app; locked when set in managed settings.', es: 'Conexiones SSH preconfiguradas para la app de escritorio; bloqueadas si vienen de gestión.', fr: 'Connexions SSH préconfigurées pour l’app de bureau ; verrouillées si elles viennent du géré.', ja: 'デスクトップアプリ用の事前設定 SSH 接続。管理設定からのものは変更できません。', pt: 'Conexões SSH pré-configuradas para o app para desktop; bloqueadas quando vêm do gerenciado.' },
+      'extra.pluginConfigs': { de: 'Antworten aus dem Konfigurationsdialog von Plugins; Claude Code schreibt sie selbst.', en: 'Answers from a plugin’s configuration dialog; Claude Code writes them itself.', es: 'Respuestas del diálogo de configuración de un plugin; Claude Code las escribe solo.', fr: 'Réponses du dialogue de configuration d’un plugin ; Claude Code les écrit lui-même.', ja: 'プラグインの設定ダイアログの回答。Claude Code が自動で書き込みます。', pt: 'Respostas da caixa de configuração de um plugin; o Claude Code as grava sozinho.' },
+      'extra.skipAutoPermissionPrompt': { de: 'Blendet den einmaligen Hinweis aus, wenn man Auto Mode selbst einschaltet.', en: 'Skips the one-time notice when you switch auto mode on yourself.', es: 'Omite el aviso único al activar tú mismo el modo auto.', fr: 'Masque l’avis unique lorsque vous activez vous-même le mode auto.', ja: '自分で auto モードに切り替えたときの一度きりの案内を表示しません。', pt: 'Pula o aviso único quando você mesmo ativa o modo auto.' },
+      'extra.useAutoModeDuringPlan': { de: 'Im Plan-Modus prüft der Auto-Mode-Classifier Befehle, statt jedes Mal zu fragen.', en: 'In plan mode the auto mode classifier reviews commands instead of asking each time.', es: 'En el modo plan, el clasificador del modo auto revisa los comandos en vez de preguntar.', fr: 'En mode plan, le classifieur du mode auto vérifie les commandes au lieu de demander.', ja: 'プランモードで、毎回確認する代わりに auto モードの分類器がコマンドを審査します。', pt: 'No modo plan, o classificador do modo auto revisa os comandos em vez de perguntar.' },
+      'data.preset.pp-auto.name': { de: 'Auto Mode', en: 'Auto Mode', es: 'Modo auto', fr: 'Mode auto', ja: 'auto モード', pt: 'Modo auto' },
+      'data.preset.pp-auto.desc': { de: 'Ein Classifier prüft jede Aktion, harte Deny-Regeln bleiben. Wirkt aus ~/.claude/settings.json, braucht Opus 4.6+, Sonnet 4.6+ oder Fable.', en: 'A classifier reviews every action, hard deny rules stay. Works from ~/.claude/settings.json; needs Opus 4.6+, Sonnet 4.6+ or Fable.', es: 'Un clasificador revisa cada acción y las reglas de denegación se mantienen. Funciona desde ~/.claude/settings.json; requiere Opus 4.6+, Sonnet 4.6+ o Fable.', fr: 'Un classifieur vérifie chaque action, les règles de refus restent. Agit depuis ~/.claude/settings.json ; nécessite Opus 4.6+, Sonnet 4.6+ ou Fable.', ja: '分類器がすべての操作を審査し、拒否ルールは維持されます。~/.claude/settings.json で有効。Opus 4.6 以降、Sonnet 4.6 以降、または Fable が必要です。', pt: 'Um classificador revisa cada ação e as regras de negação ficam. Vale a partir de ~/.claude/settings.json; requer Opus 4.6+, Sonnet 4.6+ ou Fable.' },
+      'perm.recommended': { de: 'Empfohlen', en: 'Recommended', es: 'Recomendado', fr: 'Recommandé', ja: 'おすすめ', pt: 'Recomendado' },
+      'perm.autoWhere': { de: 'Auto Mode wirkt nur aus ~/.claude/settings.json (oder Managed), nicht aus Projektdateien.', en: 'Auto mode only takes effect from ~/.claude/settings.json (or managed), not from project files.', es: 'El modo auto solo actúa desde ~/.claude/settings.json (o gestionado), no desde archivos de proyecto.', fr: 'Le mode auto n’agit que depuis ~/.claude/settings.json (ou géré), pas depuis les fichiers de projet.', ja: 'auto モードは ~/.claude/settings.json（または管理設定）でのみ有効で、プロジェクトファイルでは効きません。', pt: 'O modo auto só vale a partir de ~/.claude/settings.json (ou gerenciado), não de arquivos de projeto.' },
+      'perm.autoGroup': { de: 'Auto Mode', en: 'Auto mode', es: 'Modo auto', fr: 'Mode auto', ja: 'auto モード', pt: 'Modo auto' },
+      'perm.autoRulesLink': { de: 'Classifier-Regeln (autoMode) im Tab Advanced bearbeiten →', en: 'Edit the classifier rules (autoMode) in the Advanced tab →', es: 'Editar las reglas del clasificador (autoMode) en la pestaña Advanced →', fr: 'Modifier les règles du classifieur (autoMode) dans l’onglet Advanced →', ja: 'Advanced タブで分類器のルール（autoMode）を編集 →', pt: 'Editar as regras do classificador (autoMode) na aba Advanced →' },
+      'wizard.permAuto': { de: 'Auto Mode', en: 'Auto mode', es: 'Modo auto', fr: 'Mode auto', ja: 'auto モード', pt: 'Modo auto' },
+      'wizard.permAutoDesc': { de: 'Ein Classifier prüft jede Aktion statt Rückfragen; wirkt aus ~/.claude/settings.json', en: 'A classifier reviews each action instead of prompts; works from ~/.claude/settings.json', es: 'Un clasificador revisa cada acción en lugar de preguntar; funciona desde ~/.claude/settings.json', fr: 'Un classifieur vérifie chaque action au lieu de demander ; agit depuis ~/.claude/settings.json', ja: '確認の代わりに分類器が各操作を審査します。~/.claude/settings.json で有効', pt: 'Um classificador revisa cada ação em vez de perguntar; vale a partir de ~/.claude/settings.json' },
+      'doctor.autoIgnoredHere': { de: 'Auto Mode und der autoMode-Block wirken aus settings.local.json nicht. Nach ~/.claude/settings.json verschieben.', en: 'Auto mode and the autoMode block have no effect from settings.local.json. Move them to ~/.claude/settings.json.', es: 'El modo auto y el bloque autoMode no tienen efecto desde settings.local.json. Muévelos a ~/.claude/settings.json.', fr: 'Le mode auto et le bloc autoMode sont sans effet depuis settings.local.json. Déplacez-les vers ~/.claude/settings.json.', ja: 'auto モードと autoMode ブロックは settings.local.json では無効です。~/.claude/settings.json に移してください。', pt: 'O modo auto e o bloco autoMode não têm efeito a partir de settings.local.json. Mova-os para ~/.claude/settings.json.' },
       'doctor.mcpServersHint': { de: 'mcpServers wird nicht aus settings.json gelesen — gehört in .mcp.json oder ~/.claude.json', en: 'mcpServers is not read from settings.json — it belongs in .mcp.json or ~/.claude.json', es: 'mcpServers no se lee desde settings.json — va en .mcp.json o ~/.claude.json', fr: 'mcpServers n’est pas lu depuis settings.json — il va dans .mcp.json ou ~/.claude.json', ja: 'mcpServers は settings.json から読み込まれません — .mcp.json か ~/.claude.json に置きます', pt: 'mcpServers não é lido do settings.json — fica em .mcp.json ou ~/.claude.json' },
       'doctor.apply': { de: 'beheben', en: 'fix', es: 'corregir', fr: 'corriger', ja: '修正', pt: 'corrigir' },
       'doctor.applied': { de: 'Behoben: ', en: 'Fixed: ', es: 'Corregido: ', fr: 'Corrigé : ', ja: '修正しました: ', pt: 'Corrigido: ' },
@@ -4917,6 +5199,12 @@
         lastOpenedFileName: localStorage.getItem('claude-settings-last-file') || '',
         fileHandle: null,
         fileName: '',
+        // file name the user marked as managed (a managed-settings.d drop-in can have any name); null = none
+        managedMarkedFor: null,
+        managedGroups: ['lockdown', 'plugins', 'login', 'policy', 'desktop', 'cost', 'sandbox'],
+        get managedFile() {
+          return (this.fileName || '').toLowerCase() === 'managed-settings.json' || (this.managedMarkedFor !== null && this.managedMarkedFor === this.fileName);
+        },
         syncState: { status: 'idle', added: [], removed: [], remoteVersion: '', error: '', checkedAt: '' },
         unsaved: false,
         pluginSearch: '',
@@ -5010,6 +5298,8 @@
           { tab: 'advanced', label: 'sync.title', desc: 'sync.desc', keywords: ['schema', 'sync', 'stand', 'update', 'schemastore', 'doctor', 'doktor'], id: 'setting-schema-sync' },
           { tab: 'memory', label: 'search.sessionMemory', desc: 'search.sessionMemory.desc', keywords: ['session', 'compact', 'summary', 'zusammenfassung'], id: 'setting-session-memory' },
           { tab: 'memory', label: 'search.claudeMd', desc: 'search.claudeMd.desc', keywords: ['claude.md', 'instructions', 'regeln', 'rules', 'hierarchy'], id: 'setting-claudemd-overview' },
+          // generic v1.8 fields: the key is the label (t() returns an unknown key as is), the curated sentence the description
+          ...extraFields().map(f => ({ tab: f.tab, label: f.key, desc: 'extra.' + f.key, keywords: [f.key.toLowerCase()], id: 'extra-' + f.key.replace(/\./g, '-') })),
         ],
 
         // === Settings Diff ===
@@ -5196,6 +5486,7 @@
         askSuggestions: ['Bash(git push *)', 'Bash(git reset *)', 'Bash(docker *)', 'Bash(rm *)', 'Bash(firebase deploy *)', 'Bash(npm publish *)', 'Bash(gh pr *)'],
 
         permPresets: [
+          { id: 'pp-auto', name: 'Auto Mode', desc: 'Classifier prüft jede Aktion, harte Deny-Regeln bleiben.', icon: '✨', color: 'text-accent border-accent/40 hover:bg-accent/10', recommended: true },
           { id: 'pp-safety', name: 'Safety First', desc: 'Breite Allow-Liste + harte Deny-Rules. Max Flow, min Risiko.', icon: '🛡', color: 'text-red-400 border-red-500/30 hover:bg-red-500/10' },
           { id: 'pp-productive', name: 'Produktiv', desc: 'Gängige Dev-Tools erlaubt, kaum Deny. Schnelles Arbeiten.', icon: '⚡', color: 'text-blue-400 border-blue-500/30 hover:bg-blue-500/10' },
           { id: 'pp-readonly', name: 'Nur Lesen', desc: 'Nur Read/Glob/Grep. Kein Schreiben, kein Bash.', icon: '👁', color: 'text-violet-400 border-violet-500/30 hover:bg-violet-500/10' },
@@ -5296,7 +5587,8 @@
           { id: 'display', label: 'Display & UI', desc: 'Spinner, Status Line und visuelle Einstellungen', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>' },
           { id: 'attribution', label: 'Attribution', desc: 'Commit- und PR-Attribution konfigurieren', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>' },
           { id: 'advanced', label: 'Advanced', desc: 'Auth, Performance und erweiterte Optionen', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>' },
-          { id: 'memory', label: 'Memory', desc: 'Auto Memory, Auto Dream und Session Memory', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>' },
+          { id: 'memory', label: 'Memory', desc: 'Auto Memory und Session Memory', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>' },
+          { id: 'managed', label: 'Managed', desc: 'Einstellungen, die nur aus einer verteilten Managed-Konfiguration wirken', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>' },
           { id: 'separator' },
           { id: 'design-prompts', label: 'Design Prompts', desc: '30 kuratierte Design-Aesthetiken mit AI-ready Prompts', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>' },
           { id: 'terminal-prompts', label: 'Terminal Prompts', desc: 'Prompts für Claude Code CLI und CLAUDE.md Snippets', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>' },
@@ -5501,6 +5793,22 @@
           return Object.prototype.hasOwnProperty.call(SCHEMA_MAP.keys, key) ? SCHEMA_MAP.keys[key] : null;
         },
         // ─── i18n Helper ───
+        extraFieldsFor(tab, group) {
+          return extraFields().filter(f => f.tab === tab && (!group || f.group === group));
+        },
+
+        setExtra(key, value) {
+          const { [key]: _old, ...rest } = this.settings.extras || {};
+          this.settings.extras = value === undefined ? rest : { ...rest, [key]: value };
+          this.markUnsaved();
+        },
+
+        toggleManagedFile() {
+          if ((this.fileName || '').toLowerCase() === 'managed-settings.json') return; // named so, it is managed
+          this.managedMarkedFor = this.managedFile ? null : this.fileName;
+          this.validateSettings();
+        },
+
         factsView(key) {
           const f = keyFacts(key, SCHEMA_MAP.keys);
           if (!f) return null;
@@ -5538,7 +5846,7 @@
             'general': 'tab.general.desc', 'permissions': 'tab.permissions.desc', 'plugins': 'tab.plugins.desc',
             'hooks': 'tab.hooks.desc', 'mcp': 'tab.mcp.desc', 'sandbox': 'tab.sandbox.desc',
             'env': 'tab.env.desc', 'display': 'tab.display.desc', 'attribution': 'tab.attribution.desc',
-            'advanced': 'tab.advanced.desc', 'memory': 'memory.desc', 'design-prompts': 'tab.designPrompts.desc', 'terminal-prompts': 'tab.terminalPrompts.desc'
+            'advanced': 'tab.advanced.desc', 'memory': 'memory.desc', 'managed': 'tab.managed.desc', 'design-prompts': 'tab.designPrompts.desc', 'terminal-prompts': 'tab.terminalPrompts.desc'
           };
           return map[tabId] ? this.t(map[tabId]) : '';
         },
@@ -5958,6 +6266,7 @@
             if (data.theme) this.settings.theme = data.theme;
             if (data.fileSuggestion && data.fileSuggestion.command) this.settings.fileSuggestion.command = data.fileSuggestion.command;
             if (data.modelOverrides) this.settings.modelOverrides = JSON.parse(JSON.stringify(data.modelOverrides));
+            s.extras = readExtras(data, extraFields());
             // Preserve unknown properties for roundtrip fidelity
             const knownKeys = new Set([
               'model', 'effortLevel', 'maxEffortLevel', 'ultracode', 'modelSettings', 'outputStyle', 'language', 'alwaysThinkingEnabled',
@@ -5972,7 +6281,8 @@
               'fastMode', 'voice', 'editorMode', 'theme',
               'fileSuggestion', 'modelOverrides',
               'fallbackModel', 'enforceAvailableModels', 'autoMode',
-              'strictKnownMarketplaces', 'blockedMarketplaces', 'pluginSuggestionMarketplaces', 'bashEditDiffEnabled'
+              'strictKnownMarketplaces', 'blockedMarketplaces', 'pluginSuggestionMarketplaces', 'bashEditDiffEnabled',
+              ...extraTopKeys()
             ]);
             // Keys this editor used to write but Claude Code never read (or a typo of a real key): drop instead of round-tripping
             const legacyKeys = ['releaseChannel', 'fileSuggestions', 'autoDreamEnabled', 'teamateMode'];
@@ -6092,6 +6402,7 @@
           if (s.theme && s.theme !== 'auto') out.theme = s.theme;
           if (s.fileSuggestion?.command) out.fileSuggestion = { type: 'command', command: s.fileSuggestion.command };
           if (Object.keys(s.modelOverrides).length) out.modelOverrides = { ...s.modelOverrides };
+          applyExtras(out, s.extras || {}, extraFields());
           // Re-attach unknown properties preserved from import
           if (!settingsOverride && this._extraProps) {
             for (const [key, value] of Object.entries(this._extraProps)) {
@@ -6145,7 +6456,15 @@
         _applyPermPresetData(id) {
           const p = this.settings.permissions;
 
-          if (id === 'pp-safety') {
+          if (id === 'pp-auto') {
+            // auto mode drops broad allow rules anyway; ask rules would still prompt, so the preset sets none
+            p.defaultMode = 'auto';
+            // choosing the preset asks for auto mode, so a lock in the same file would contradict it
+            p.disableAutoMode = '';
+            p.allow = [];
+            p.ask = [];
+            p.deny = safetyDenyRules();
+          } else if (id === 'pp-safety') {
             p.defaultMode = 'acceptEdits';
             p.allow = [
               'Bash(npm *)', 'Bash(npx *)', 'Bash(node *)', 'Bash(bun *)',
@@ -6162,18 +6481,7 @@
               'Bash(gh pr *)', 'Bash(gh issue *)',
               'Bash(docker *)', 'Bash(rm *)'
             ];
-            p.deny = [
-              'Bash(rm -rf *)', 'Bash(rm -rf /)', 'Bash(rmdir *)',
-              'Bash(sudo *)', 'Bash(shutdown *)', 'Bash(reboot *)', 'Bash(halt *)', 'Bash(poweroff *)',
-              'Bash(dd *)', 'Bash(mkfs *)', 'Bash(shred *)', 'Bash(fdisk *)',
-              'Bash(chmod *)', 'Bash(chown *)', 'Bash(chgrp *)',
-              'Bash(eval *)', 'Bash(exec *)',
-              'Bash(curl * | bash)', 'Bash(curl * | sh)',
-              'Bash(wget * | bash)', 'Bash(wget * | sh)',
-              'Bash(nc *)', 'Bash(socat *)', 'Bash(nmap *)',
-              'Read(./.env)', 'Read(./.env.*)',
-              'Read(~/.ssh/*)', 'Read(~/.aws/*)', 'Read(~/.gnupg/*)'
-            ];
+            p.deny = safetyDenyRules();
           } else if (id === 'pp-productive') {
             p.defaultMode = 'acceptEdits';
             p.allow = [
@@ -6569,6 +6877,7 @@
             const findings = doctorFindings(doc, SCHEMA_MAP.keys, {
               skipEnum: ['effortLevel', 'maxEffortLevel', 'editorMode', 'theme', 'teammateMode', 'autoUpdatesChannel', 'outputStyle'],
               hints: { mcpServers: true },
+              managedFile: this.managedFile,
             });
             for (const f of findings) {
               let message = '', severity = 'warn', fix = null;
@@ -6583,6 +6892,7 @@
               errors.push({ tab: this._tabForKey(f.key), field: f.key, severity, message, fix });
             }
             const effortFix = opus55EffortHint(doc);
+            if (autoModeIgnoredHere(doc, this.fileName)) errors.push({ tab: 'permissions', field: 'permissions.defaultMode', severity: 'warn', message: this.t('doctor.autoIgnoredHere'), fix: null });
             if (effortFix) errors.push({ tab: 'general', field: 'effortLevel', severity: 'info', message: this.t('doctor.effortOpus55') + effortFix.effortLevel, fix: effortFix });
             for (const c of envConflicts(doc, SCHEMA_MAP.keys)) {
               const message = c.env + '=' + c.envValue + this.t(c.kind === 'off' ? 'doctor.envOff' : 'doctor.envWins') + c.key;
@@ -6606,7 +6916,8 @@
             spinnerVerbs: 'display', spinnerTipsEnabled: 'display', showTurnDuration: 'display', prefersReducedMotion: 'display', statusLine: 'display', terminalProgressBarEnabled: 'display',
             attribution: 'attribution', autoMemoryEnabled: 'memory', autoMemoryDirectory: 'memory', cleanupPeriodDays: 'memory',
             model: 'general', effortLevel: 'general', maxEffortLevel: 'general', ultracode: 'general', modelSettings: 'general', outputStyle: 'general', language: 'general', alwaysThinkingEnabled: 'general', autoUpdatesChannel: 'general', fastMode: 'general', voice: 'general', editorMode: 'general', theme: 'general', fileSuggestion: 'general', modelOverrides: 'general' };
-          return tabs[key] || 'advanced';
+          const extra = extraFields().find(f => f.key === key);
+          return tabs[key] || (extra ? extra.tab : 'advanced');
         },
 
         applyDoctorFix(fix) {

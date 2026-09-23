@@ -67,7 +67,7 @@ On Windows, you can also double-click `open-editor.bat`.
 ## Features
 
 ### Core
-- **16 Tabs** covering every `settings.json` option
+- **15 Tabs** covering every `settings.json` option
 - **6 Languages** — full i18n support (Deutsch, English, Español, Français, 日本語, Português)
 - **Live JSON Preview** — see the output as you edit
 - **File System Access API** — open and save `settings.json` directly (no copy-paste)
@@ -85,7 +85,7 @@ On Windows, you can also double-click `open-editor.bat`.
 | Tab | What it covers |
 |-----|----------------|
 | General | Model, effort level (visual card selector), output style, language, thinking mode, fast mode, voice, vim mode, theme, update channel, file suggestion command, model overrides |
-| Permissions | Allow/Ask/Deny rules, default mode, presets, conflict detection |
+| Permissions | Allow/Ask/Deny rules, default mode, presets, conflict detection, Auto Mode preset (recommended) and auto mode group |
 | Skills & Plugins | Toggle 80+ plugins with categories, search, availability badges, 35+ custom skills |
 | Hooks | 25 events in 7 groups, 4 handler types (command, http, prompt, agent), conditional `if` + `shell` |
 | MCP Servers | stdio/http/sse config, env vars, headers, 14 quick-add presets, status check |
@@ -94,12 +94,13 @@ On Windows, you can also double-click `open-editor.bat`.
 | Display & UI | Spinner verbs (8 themed packs + custom), status line, motion preferences |
 | Attribution | Commit and PR attribution strings, each hideable, and the session link in commits |
 | Advanced | API key helper, plans directory, cleanup period, Bash edit diff, available models, **Privacy & Telemetry** (disable Statsig/Sentry) |
-| Memory | Auto Memory toggle, **Memory History** (retention period presets: 30/90/180/365 days), Auto Dream, Session Memory, CLAUDE.md overview |
+| Memory | Auto Memory toggle, **Memory History** (retention period presets: 30/90/180/365 days), Session Memory, CLAUDE.md overview |
+| Managed | Keys that only act from managed settings, grouped (lockdown, plugins and channels, login and version, policy sources, desktop and browser, cost, sandbox), managed-file switch |
 | Companion Tools | 14 recommended tools for the Claude Code workflow (Happy Coder, Warp, LazyGit, etc.) |
 | Design Prompts | 30 curated design styles with AI prompts and color palettes + [designprompts.dev](https://www.designprompts.dev/) |
 | Terminal Prompts | 26 prompts in 9 categories + CLAUDE.md Builder |
 
-Every setting in the General, Permissions, Sandbox, Display, Attribution and Advanced tabs carries a collapsible **Details and facts** block with the key's scope, type, allowed values, default and overriding environment variables, taken from the embedded key table, plus a link to the Claude Code settings reference. The Environment tab flags variables in `env` that override a key in the same file.
+Every setting in the General, Permissions, Sandbox, Display, Attribution, Advanced, Memory and Managed tabs carries a collapsible **Details and facts** block with the key's scope, type, allowed values, default and overriding environment variables, taken from the embedded key table, plus a link to the Claude Code settings reference. The Environment tab flags variables in `env` that override a key in the same file.
 
 ### Editing Tools
 - **Drag & Drop** — reorder permission rules, hook groups, sandbox paths by dragging

@@ -17,8 +17,8 @@ GUI-Editor für Claude Code `settings.json`-Dateien. Erklärt jede Einstellung a
 - **Schema-Extrakt erneuern:** `node tools/build-schema-map.js --fetch` (schreibt SCHEMA_MAP in die HTML; `tools/sources/settings-reference.md` bleibt gitignored)
 
 ## Constraints & Gotchas
-- **16 Tabs, 6 Sprachen (de, en, es, fr, ja, pt):** jedes neue User-facing Text-Element braucht einen Key im `T`-Objekt in **allen** 6 Sprachen — nicht nur Deutsch.
-- **Jedes neue Setting braucht 4 Stellen:** `defaultSettings()`, `cleanJson()`, `loadJson()`, `knownKeys` — sonst wird es beim Export/Import silent gedroppt (bereits mehrfach passiert, z. B. `env`-Vars, `cleanupPeriodDays`).
+- **15 Tabs, 6 Sprachen (de, en, es, fr, ja, pt):** jedes neue User-facing Text-Element braucht einen Key im `T`-Objekt in **allen** 6 Sprachen — nicht nur Deutsch.
+- **Jedes neue Setting braucht 4 Stellen:** `defaultSettings()`, `cleanJson()`, `loadJson()`, `knownKeys` — sonst wird es beim Export/Import silent gedroppt (bereits mehrfach passiert, z. B. `env`-Vars, `cleanupPeriodDays`) — außer es läuft über `extraFields()` (v1.8): dann ein Listeneintrag plus `extra.<key>` in sechs Sprachen, der Selbst-Check prüft beides.
 - **Boolean-Export-Falle:** Settings mit Default `false` (z. B. `spinnerTipsEnabled`, `showTurnDuration`) müssen bei `true` exportiert werden, nicht invertiert — war ein wiederkehrender Bug.
 - **Alpine.js-Reaktivität:** kein `delete`-Operator auf reaktiven Objekten verwenden — Object-Reassign-Pattern nutzen, sonst bricht die Reaktivität.
 - **Roundtrip-Sicherheit:** unbekannte/fremde Properties aus importierten `settings.json`-Dateien werden über `_extraProps` erhalten, nicht verworfen — beim Ändern der Import/Export-Logik darauf achten.

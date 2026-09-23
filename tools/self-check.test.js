@@ -73,3 +73,36 @@ test('an x-facts key that SCHEMA_MAP does not know is a hard finding; a dynamic 
   const r = sc.selfCheck(mini({ groups: '<div id="setting-model" class="settings-group"><p class="setting-desc" x-text="t(\'a.x\')"></p><div x-facts="\'nope\'"></div><div x-facts="\'model\'"></div><div x-facts="\'sandbox.filesystem.\' + list.key"></div></div>' }));
   assert.deepEqual(r.hard.filter(h => h.startsWith('x-facts')), ['x-facts: nope is not in SCHEMA_MAP']);
 });
+
+test('generic fields: wiring in loadJson, cleanJson and knownKeys is checked, and every key must be in SCHEMA_MAP', () => {
+  const fields = "const tabs = [{ id: 'managed', label: 'M' }];\n    function extraFields() {\n      return [{ key: 'claudeMd', tab: 'managed' }, { key: 'nope', tab: 'managed' }];\n    }\n";
+  const base = { defaults: "model: '', extras: {}", mapKeys: '"model":{},"claudeMd":{}', known: "'model', ...extraTopKeys()" };
+  const wired = { load: 'if (data.model) s.model = data.model; s.extras = readExtras(data, extraFields());', clean: 'if (s.model) out.model = s.model; applyExtras(out, s.extras || {}, extraFields());' };
+  const r = sc.selfCheck(mini({ ...base, ...wired, groups: '<div id="setting-model" class="settings-group"><p class="setting-desc" x-text="t(\'a.x\')"></p></div>' }).replace('<script>', '<script>\n    ' + fields));
+  assert.ok(r.hard.includes('extras: nope is not in SCHEMA_MAP'), r.hard.join(' | '));
+  assert.ok(!r.hard.some(h => h.startsWith('extras: claudeMd')), r.hard.join(' | '));
+  const r2 = sc.selfCheck(mini({ ...base, known: "'model'" }).replace('<script>', '<script>\n    ' + fields));
+  assert.ok(r2.hard.includes('extras: not read in loadJson'), r2.hard.join(' | '));
+  assert.ok(r2.hard.includes('extras: not written in cleanJson'), r2.hard.join(' | '));
+  assert.ok(r2.hard.includes('extras: extraTopKeys() missing in knownKeys'), r2.hard.join(' | '));
+});
+
+test('generic fields: a field that names a tab the editor does not have is a hard finding', () => {
+  const wired = { defaults: "model: '', extras: {}", mapKeys: '"model":{},"claudeMd":{}', known: "'model', ...extraTopKeys()", load: 'if (data.model) s.model = data.model; s.extras = readExtras(data, extraFields());', clean: 'if (s.model) out.model = s.model; applyExtras(out, s.extras || {}, extraFields());' };
+  const withTab = (tab) => mini(wired).replace('<script>', "<script>\n    const tabs = [{ id: 'managed', label: 'M' }];\n    function extraFields() {\n      return [{ key: 'claudeMd', tab: '" + tab + "' }];\n    }\n");
+  assert.ok(sc.selfCheck(withTab('nowhere')).hard.includes('extras: claudeMd names the unknown tab nowhere'));
+  assert.ok(!sc.selfCheck(withTab('managed')).hard.some(h => h.includes('unknown tab')));
+});
+
+test('generic fields: a field without its extra.<key> sentence is a hard finding', () => {
+  const fields = "const tabs = [{ id: 'managed', label: 'M' }];\n    function extraFields() {\n      return [{ key: 'claudeMd', tab: 'managed' }];\n    }\n";
+  const wired = { defaults: "model: '', extras: {}", mapKeys: '"model":{},"claudeMd":{}', known: "'model', ...extraTopKeys()", load: 'if (data.model) s.model = data.model; s.extras = readExtras(data, extraFields());', clean: 'if (s.model) out.model = s.model; applyExtras(out, s.extras || {}, extraFields());' };
+  const r = sc.selfCheck(mini(wired).replace('<script>', '<script>\n    ' + fields));
+  assert.deepEqual(r.hard, ['extras: extra.claudeMd missing in T']);
+  const withText = mini({ ...wired, t: "'a.x': { de: 'Schlüssel', en: 'Key', es: 'Clave', fr: 'Clé', ja: 'キー', pt: 'Chave' },\n      'extra.claudeMd': { de: 'Firmen-Anweisungen', en: 'Org instructions', es: 'Instrucciones', fr: 'Instructions', ja: '指示', pt: 'Instruções' }," });
+  assert.deepEqual(sc.selfCheck(withText.replace('<script>', '<script>\n    ' + fields)).hard, []);
+  const twoLanguages = mini({ ...wired, t: "'a.x': { de: 'Schlüssel', en: 'Key', es: 'Clave', fr: 'Clé', ja: 'キー', pt: 'Chave' },\n      'extra.claudeMd': { de: 'Firmen-Anweisungen', en: 'Org instructions' }," });
+  const hard = sc.selfCheck(twoLanguages.replace('<script>', '<script>\n    ' + fields)).hard;
+  assert.ok(hard.includes('extras: extra.claudeMd missing in T'), hard.join(' | '));
+  assert.ok(hard.some(h => h.startsWith('i18n: 1 T lines do not carry all six languages')), hard.join(' | '));
+});
