@@ -29,5 +29,8 @@ GUI-Editor für Claude Code `settings.json`-Dateien. Erklärt jede Einstellung a
 - **Erfundene Keys nicht stillschweigend behalten:** `legacyKeys` in `loadJson()` listet Schlüssel, die der Editor früher schrieb, Claude Code aber nie las (`releaseChannel`, `fileSuggestions`, `autoDreamEnabled`, `teamateMode`). Sie werden beim Import mit Hinweis verworfen statt über `_extraProps` zurückgeschrieben; Wert-Migrationen (Typo, Groß-/Kleinschreibung) direkt daneben.
 - **Datei ist durchgehend CRLF** — Patch-Skripte erst normalisieren (LF), am Ende zurück; `grep -c` zählt Zeilen, nicht Vorkommen (`grep -o | wc -l`).
 - **Neue Keys:** zusätzlich zu den 4 Stellen muss der Key in SCHEMA_MAP existieren (sonst schlägt self-check an) — erfundene Keys fallen damit auf.
+- Migrations-Fix für einen veralteten, aber noch wirksamen Key: ins neue Feld übersetzen, nicht löschen.
+- Dynamisch eingefügte Hinweistexte können Buttons aus dem sichtbaren Fenster schieben — Lage in allen Sprachen nachmessen.
+- Ein ausdrückliches `false` in geschichteten Settings ist etwas anderes als ein fehlender Key — beim Speichern erhalten.
 
 Status & offene Aufgaben: siehe Obsidian-Note 01 - PROJECTS/In Progress/claude-settings-editor.md
