@@ -1,46 +1,49 @@
 <p align="center">
-  <img src="logo.svg" alt="Claude Settings Editor Logo" width="120" height="120">
+  <img src="logo.svg" alt="Claude Settings Editor logo" width="120" height="120">
 </p>
 
 <h1 align="center">Claude Settings Editor</h1>
 
 <p align="center">
-  A visual GUI editor for Claude Code <code>settings.json</code> files.<br>
-  Single standalone HTML file — no build step, no server, no dependencies to install. Just open and edit.
+  A visual editor for Claude Code <code>settings.json</code> that runs as a single HTML file in your browser.
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/HTML-single%20file-orange" alt="HTML">
-  <img src="https://img.shields.io/badge/Tailwind%20CSS-CDN-06B6D4" alt="Tailwind CSS">
-  <img src="https://img.shields.io/badge/Alpine.js-3.14-8BC0D0" alt="Alpine.js">
-  <img src="https://img.shields.io/badge/i18n-6%20languages-blueviolet" alt="i18n">
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
+  <a href="https://github.com/mrspot-dev/claude-settings-editor/releases/latest"><img src="https://img.shields.io/github/v/release/mrspot-dev/claude-settings-editor" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/runs%20in-Chrome%20%7C%20Edge%20%7C%20Arc-blue" alt="Runs in Chrome, Edge and Arc">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license"></a>
 </p>
 
-## Quick Start
+<p align="center">
+  <img src="assets/editor-permissions.png" alt="The Permissions tab with the preset cards and the live JSON preview below" width="900">
+</p>
+
+## Quick start
 
 **Try it online:** [mrspot-dev.github.io/claude-settings-editor](https://mrspot-dev.github.io/claude-settings-editor/)
 
-The hosted version runs entirely in your browser. Your `settings.json` is read and written directly on your own machine through the File System Access API — nothing is uploaded. It saves you the download when you just want a look.
+The hosted version runs entirely in your browser. Your `settings.json` is read and written on your own machine through the File System Access API, and nothing is uploaded.
 
-For regular use, prefer a local copy. A file you downloaded changes only when you replace it, while a hosted page always serves whatever is currently deployed — worth keeping in mind for a file that may contain API keys.
+For regular use, keep a local copy of `claude-settings-editor.html`. A downloaded file changes only when you replace it, while a hosted page always serves whatever is currently deployed. That matters for a file that may contain API keys.
 
-**Option A — Manual:**
-1. Download `claude-settings-editor.html`
-2. Open in any Chromium browser (Chrome, Edge, Arc)
-3. Click **Open** to load your `settings.json`
-4. Edit visually, then **Save** back to disk
+**Option A: open the file**
 
-**Option B — Auto-Detect (recommended):**
-1. Download the repo (or just `claude-settings-editor.html` + `open-editor.py`)
+1. Download `claude-settings-editor.html`.
+2. Open it in a Chromium browser (Chrome, Edge, Arc).
+3. Click **Open** and pick your `settings.json`.
+4. Edit, then click **Save** to write it back to disk.
+
+**Option B: let the script find your files**
+
+1. Download the repo, or just `claude-settings-editor.html` and `open-editor.py`.
 2. Run the companion script:
    ```bash
    python open-editor.py
    ```
-3. The script finds all your `settings.json` files, lets you pick one, and opens the editor pre-loaded
+3. It lists the `settings.json` files it finds, you pick one, and the editor opens with it loaded.
 
 ```
-  Claude Settings Editor — Auto-Detect
+  Claude Settings Editor: Auto-Detect
   ========================================
 
   Found 3 settings files:
@@ -60,70 +63,58 @@ For regular use, prefer a local copy. A file you downloaded changes only when yo
   Priority: Local > Project > User > Defaults
 ```
 
-On Windows, you can also double-click `open-editor.bat`.
-
-> Uses the [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_Access_API) for direct read/write. Works best in Chromium-based browsers.
+On Windows you can also double-click `open-editor.bat`.
 
 ## Features
 
-### Core
-- **15 Tabs** covering every `settings.json` option
-- **6 Languages** — full i18n support (Deutsch, English, Español, Français, 日本語, Português)
-- **Live JSON Preview** — see the output as you edit
-- **File System Access API** — open and save `settings.json` directly (no copy-paste)
-- **Auto-Detect** — point to your home or project folder, finds `.claude/settings.json` automatically
-- **File Scope Indicator** — shows whether you're editing a Global or Project config
-- **Templates** — built-in presets + save/load your own custom templates
-- **Import/Export Bundles** — backup settings + templates + spinner packs as a single JSON file
-- **Share via URL** — Base64-encoded settings in the URL hash for easy sharing
-- **Guided Setup Wizard** — 6-step onboarding for first-time users (includes language selection)
-- **Roundtrip-safe** — unknown properties are preserved on import/export
-- **Privacy controls** — disable Statsig telemetry and Sentry error reporting with one toggle
+**Every setting has a form.** Fifteen tabs cover the whole file, from model and permissions to hooks, MCP servers and the sandbox. Each setting carries a collapsible "Details and facts" block with its scope, type, allowed values and default.
 
-### Tabs
+<p align="center">
+  <img src="assets/editor-general.png" alt="The General tab with the model and fallback model settings" width="900">
+</p>
+
+**Permission presets with conflict detection.** Presets from "Read Only" to "Full Send" fill the allow, ask and deny lists in one click. The editor warns when an allow rule and a deny rule overlap.
+
+**Live JSON preview.** The bottom panel shows the file as it will be written while you edit. Properties the editor does not know are kept on save, so a round trip does not lose anything.
+
+**Settings Doctor.** It flags unknown, deprecated, mistyped and managed-only keys and offers a fix for each. One click compares the embedded key table with the official schema.
+
+**Templates, bundles and share links.** Save your own templates, export settings with templates and spinner packs as one JSON file, or put a configuration into a URL to pass it on.
+
+**Six languages.** Deutsch, English, Español, Français, 日本語 and Português, switchable at any time.
+
+<details>
+<summary>All tabs</summary>
 
 | Tab | What it covers |
 |-----|----------------|
-| General | Model, effort level (visual card selector), output style, language, thinking mode, fast mode, voice, vim mode, theme, update channel, file suggestion command, model overrides |
-| Permissions | Allow/Ask/Deny rules, default mode, presets, conflict detection, Auto Mode preset (recommended) and auto mode group |
-| Skills & Plugins | Toggle 80+ plugins with categories, search, availability badges, 35+ custom skills |
-| Hooks | 25 events in 7 groups, 4 handler types (command, http, prompt, agent), conditional `if` + `shell` |
-| MCP Servers | stdio/http/sse config, env vars, headers, 14 quick-add presets, status check |
-| Sandbox | On/off switch, filesystem allow/deny/read paths, network domains; unknown sandbox keys are kept on save |
-| Environment | Custom environment variables |
-| Display & UI | Spinner verbs (8 themed packs + custom), status line, motion preferences |
-| Attribution | Commit and PR attribution strings, each hideable, and the session link in commits |
-| Advanced | API key helper, plans directory, cleanup period, Bash edit diff, available models, **Privacy & Telemetry** (disable Statsig/Sentry) |
-| Memory | Auto Memory toggle, **Memory History** (retention period presets: 30/90/180/365 days), Session Memory, CLAUDE.md overview |
-| Managed | Keys that only act from managed settings, grouped (lockdown, plugins and channels, login and version, policy sources, desktop and browser, cost, sandbox), managed-file switch |
-| Companion Tools | 14 recommended tools for the Claude Code workflow (Happy Coder, Warp, LazyGit, etc.) |
-| Design Prompts | 30 curated design styles with AI prompts and color palettes + [designprompts.dev](https://www.designprompts.dev/) |
-| Terminal Prompts | 26 prompts in 9 categories + CLAUDE.md Builder |
+| General | Model, effort level, output style, language, thinking mode, fast mode, voice, vim mode, theme, update channel, model overrides |
+| Permissions | Allow, ask and deny rules, default mode, presets, conflict detection, auto mode |
+| Skills & Plugins | Toggle plugins by category with search and availability badges, custom skills |
+| Hooks | 25 events in 7 groups, 4 handler types (command, http, prompt, agent), conditional `if` and `shell` |
+| MCP Servers | stdio, http and sse configuration, environment variables, headers, quick-add presets, status check |
+| Sandbox | On and off switch, filesystem paths, network domains |
+| Environment | Custom environment variables, with a flag when one overrides a key in the same file |
+| Display & UI | Spinner verbs, status line, motion preferences |
+| Attribution | Commit and pull request attribution strings and the session link in commits |
+| Advanced | API key helper, plans directory, cleanup period, available models, privacy and telemetry |
+| Memory | Auto memory, memory history with retention presets, session memory, CLAUDE.md overview |
+| Managed | Keys that only act from managed settings, grouped by purpose |
+| Companion Tools | Recommended tools for the Claude Code workflow |
+| Design Prompts | Curated design styles with prompts and color palettes |
+| Terminal Prompts | Prompts in 9 categories and a CLAUDE.md builder |
 
-Every setting in the General, Permissions, Sandbox, Display, Attribution, Advanced, Memory and Managed tabs carries a collapsible **Details and facts** block with the key's scope, type, allowed values, default and overriding environment variables, taken from the embedded key table, plus a link to the Claude Code settings reference. The Environment tab flags variables in `env` that override a key in the same file.
+</details>
 
-### Editing Tools
-- **Drag & Drop** — reorder permission rules, hook groups, sandbox paths by dragging
-- **Settings Validation** — real-time warnings for invalid values, missing fields, duplicates
-- **Permission Conflict Detection** — warns when Allow and Deny rules overlap
-- **Settings Diff View** — compare current settings against defaults or a custom template
-- **Global Search** — find any setting across all tabs (`/` shortcut)
-- **Undo/Redo** — 50-step history with debounced snapshots (`Ctrl+Z` / `Ctrl+Y`)
-- **MCP Server Status Check** — test button to verify HTTP/SSE server connectivity
-- **Settings Doctor** — flags unknown, deprecated, mistyped and managed-only keys with one-click fixes
-- **Schema Sync** — one click compares the embedded key table with the official schema
+<details>
+<summary>Editing tools and keyboard shortcuts</summary>
 
-### Permission Presets
-
-| Preset | Mode | Description |
-|--------|------|-------------|
-| Safety First | acceptEdits | Broad allow list + comprehensive deny rules |
-| Productive | acceptEdits | Common dev tools allowed, minimal deny |
-| Read Only | plan | Read/Glob/Grep only, no writes |
-| Lockdown | default | Minimal rights, maximum deny list |
-| Full Send | bypassPermissions | Everything allowed, only destructive ops denied |
-
-### Keyboard Shortcuts
+- Drag and drop to reorder permission rules, hook groups and sandbox paths
+- Validation while you type: invalid values, missing fields, duplicates
+- Diff view against the defaults or a template
+- Global search across all tabs
+- Undo and redo with 50 steps
+- Guided setup for first use
 
 | Shortcut | Action |
 |----------|--------|
@@ -132,50 +123,29 @@ Every setting in the General, Permissions, Sandbox, Display, Attribution, Advanc
 | `Ctrl+1-9` | Switch tabs |
 | `Ctrl+Shift+P` | Toggle JSON preview |
 | `/` | Focus global search |
-| `?` | Show shortcuts overlay |
-| `Esc` | Close modals |
+| `?` | Show shortcuts |
+| `Esc` | Close dialogs |
 
-### Accessibility
-- Keyboard-navigable toggles with `role="switch"` and `aria-checked`
-- ARIA roles for tabs, modals, alerts, search results
-- Label associations for all form inputs
-- Focus trapping in modal dialogs
-- WCAG AA contrast ratios
+</details>
 
-### Design
-- Dark theme (off-black `#0A0A0F` base with amber `#F59E0B` accent)
-- Glassmorphism panels with noise texture overlay
-- Staggered tab transition animations
-- Collapsible sidebar with icon-only mode
-- Responsive layout with mobile-friendly header
-- Touch-friendly drag handles
+## Limits
 
-## Tech Stack
+- Direct open and save needs the File System Access API, which only Chromium browsers have. Firefox and Safari fall back to a file input and cannot save in place.
+- The page loads Tailwind CSS and Alpine.js from a CDN, so the first start needs a network connection.
+- The model list and the key table are a snapshot. Claude Code ships faster than this editor, so a very new setting can be missing until the next release. Unknown keys in your file are kept either way.
+- This is a community project and not an official Anthropic tool.
 
-- **[Tailwind CSS](https://tailwindcss.com/)** via CDN — utility-first styling
-- **[Alpine.js](https://alpinejs.dev/)** — reactive state without a build step
-- **JetBrains Mono** + **DM Sans** — font stack
-- **File System Access API** — native browser file read/write
+## How it works
 
-Zero dependencies. No `node_modules`. No `package.json`. Just one HTML file.
+One HTML file with Tailwind CSS for styling and Alpine.js for state. There is no build step, no server and no `package.json`. Your file never leaves the browser tab.
 
-## Browser Support
+The editor embeds a compact fact table (`SCHEMA_MAP`) generated by `tools/build-schema-map.js`. Regenerate it with `node tools/build-schema-map.js --fetch`. The schema version and fetch dates are shown in the Advanced tab.
 
-| Browser | Support |
-|---------|---------|
-| Chrome / Edge / Arc | Full (File System Access API) |
-| Firefox | Partial (fallback file input, no direct save) |
-| Safari | Partial (fallback file input, no direct save) |
+## License and data sources
 
-## Data sources & attribution
+MIT, see [LICENSE](LICENSE).
 
-The editor embeds a compact fact table (`SCHEMA_MAP`) generated by `tools/build-schema-map.js` from two sources:
+The embedded fact table comes from two sources:
 
-- **SchemaStore** — `claude-code-settings.json`, Apache License 2.0. The English key descriptions shown by the doctor come from this file. See `tools/sources/NOTICE-schemastore.txt`.
-- **Claude Code settings reference** (`code.claude.com/docs/en/settings-reference`) — only facts are extracted (scope, type, allowed values, default, minimum version, environment variable). No text from the reference is embedded.
-
-Regenerate with `node tools/build-schema-map.js --fetch`. The embedded stand (schema version and fetch dates) is shown in the Advanced tab.
-
-## License
-
-MIT
+- **SchemaStore**, `claude-code-settings.json`, Apache License 2.0. The English key descriptions shown by the Settings Doctor come from this file. See `tools/sources/NOTICE-schemastore.txt`.
+- **Claude Code settings reference** (`code.claude.com/docs/en/settings-reference`). Only facts are taken from it (scope, type, allowed values, default, minimum version, environment variable). No text from the reference is embedded.
